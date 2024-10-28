@@ -156,7 +156,7 @@ int main() {
 }
 ```
 
-### 有默认实参的模板类型形参
+### 有默认实参的函数模板形参
 
 [详情看这里：函数模板 | 现代 C++ 模板教程](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/01函数模板#有默认实参的模板类型形参)
 
@@ -425,5 +425,133 @@ int main() {
 
 ### 模板分文件
 
+#### include指令
 
+```c++
+#include<iostream>
+
+int main(){
+    int arr[] = {
+#include"array.txt"
+    };
+}
+```
+
+ `#include`指令仅仅做一个替换。`#include"array.txt"` 直接被替换为了 `1,2,3,4,5`，
+
+#### 分文件原理（链接过程？？？）
+
+我们通常将函数声明放在 `.h` 文件中，将函数定义放在 `.cpp` 文件中，我们只需要在需要使用的文件中 `include` 一个 `.h` 文件；我们前面也说了，`include` 就是复制，事实上是把函数声明复制到了我们当前的文件中。
+
+```c++
+//main.cpp
+#include "test.h"
+
+int main(){
+    f();    // 非模板，OK
+}
+```
+
+[`test.h`](https://mq-b.github.io/Modern-Cpp-templates-tutorial/code/01模板分文件/test.h) 只是存放了函数声明，函数定义在 [`test.cpp`](https://mq-b.github.io/Modern-Cpp-templates-tutorial/code/01模板分文件/test.cpp) 中，我们编译的时候是选择编译了 `main.cpp` 与 `test.cpp` 这两个文件，那么为什么程序可以成功编译运行呢？
+
+是怎么找到函数定义的呢？明明我们的 `main.cpp` 其实预处理过后只有函数声明而没有函数定义**（∵此时test.h中的代码被复制到了main.cpp和test.cpp里面）**。
+
+这就是链接器做的事情，如果编译器在编译一个翻译单元（如 main.cpp）的时候，如果发现找不到函数的定义，那么就会空着一个符号地址，将它编译为目标文件。期待链接器在链接的时候去其他的翻译单元找到定义来填充符号。
+
+我们的 `test.cpp` 里面存放了 `f` 的函数定义，并且具备外部链接，在编译成目标文件之后之后，和 `main.cpp` 编译的目标文件进行链接，链接器能找到函数 `f` 的符号。
+
+**不单单是函数，全局变量等都是这样，这是编译链接的基本原理和步骤**。
+
+> 类会有所不同，总而言之后续视频会单独讲解的。
+
+------
+
+那么不能模板不能分文件[[4\]](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/01函数模板#fn4)的原因就显而易见了，我们在讲[使用模板](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/01函数模板#使用模板)的时候就说了：
+
+- **模板，只有你“用”了它，才会生成实际的代码**。
+
+你单纯的放在一个 `.cpp` 文件中，它不会生成任何实际的代码，自然也没有函数定义，也谈不上链接器找符号了**（就是在test.cpp中，没有模板实例化的代码；同样的，在main.cpp中，也不会有实例化的代码，因为test.h中只是申明了一个模板，并没有定义，所以main.cpp期待链接器在链接的时候去其他的翻译单元找到定义来填充符号）。**
+
+> 所以模板通常是直接放在 `.h` 文件中，而不会分文件。或者说用 `.hpp` 这种后缀，这种约定俗成的，代表这个文件里放的是模板。
+
+### 初识类模板与参数推导
+
+[比较简单，看这里：类模板](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/02类模板#初识类模板)
+
+注意类模板参数推导在c++17以上可用
+
+### 用户定义的推导指引
+
+注意该语法在：1. C++17以上；2. 进行类模板参数推导时；这两种情况同时满足时可用
+
+- 语法：
+
+  `模板名称(实际被推导的类型a)->模板名称<想要让a被推导为的类型>`
+
+- 示例：
+
+  1. 我要让一个类模板，如果推导为 int，就让它实际成为 size_t：
+
+     ```c++
+     template<typename T>
+     struct Test{
+         Test(T v) :t{ v } {}
+     private:
+         T t;
+     };
+     Test(int) -> Test<std::size_t>;	// 推导指引
+     
+     int main(){
+         Test t(1);      // t 是 Test<size_t>
+     }
+     ```
+
+  2. 我要让类模板 `Test` 如果推导为指针类型，就让它实际成为数组：
+
+     如果涉及的是类类型，那么就需要加上 `template`，然后使用它的模板形参。
+
+     ```c++
+     //接上面的test定义
+     template<typename T>
+     Test(T*) -> Test<T[]>;	// 推导指引
+     
+     int main(){
+         char* p = nullptr;
+     	Test t(p);      // t 是 Test<char[]>
+     }
+     ```
+
+  3. 我们提一个稍微有点难度的需求：
+
+     ```c++
+     template<class Ty, std::size_t size>
+     struct array {
+         Ty arr[size];
+     };
+     
+     ::array arr{1, 2, 3, 4, 5};     // Error!
+     ```
+
+     类模板 array 同时使用了类型模板形参与非类型模板形参，保有了一个成员是数组。
+
+     它无法被我们直接推导出类型，此时就需要我们自己**定义推导指引**。
+
+     这会用到我们之前在函数模板里学习到的形参包。
+
+     ```c++
+     template<typename T, typename ...Args>
+     array(T t,Args...) -> array<T, sizeof...(Args) + 1>;
+     
+     ::array arr{1, 2, 3, 4, 5};		// right！
+     ```
+
+     原理很简单，我们要给出 array 的模板类型，那么就让模板形参单独写一个 T 占位，放到形参列表中，并且写一个模板类型形参包用来处理任意个参数；获取 array 的 size 也很简单，直接使用 sizeof... 获取形参包的元素个数，然后再 +1 ，因为先前我们用了一个模板形参占位。**（T是通过捕获第1个参数来进行推导的，也就是1，然后2，3，4，5被Args...捕获，所以第二个参数的结果要+1）**
+
+     标准库的 [`std::array`](https://zh.cppreference.com/w/cpp/container/array/deduction_guides) 的推导指引，原理和这个一样。
+
+### 有默认实参的类模板形参
+
+[看这个就行：类模板](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/02类模板#有默认实参的模板形参)
+
+不管C++标准是多少，使用模板时最好都要带上<>
 
