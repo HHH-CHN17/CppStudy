@@ -1,3 +1,5 @@
+[现代 C++ 模板教程](https://mq-b.github.io/Modern-Cpp-templates-tutorial/)
+
 [c++11-17 模板核心概念 - 知乎](https://www.zhihu.com/column/c_1306966457508118528)
 
 ### 初识函数模板
@@ -557,7 +559,65 @@ int main(){
 
 ### 模板模板形参
 
-类模板的模板类型形参可以接受一个类模板作为参数，我们将它称为：模板模板形参。
+[类模板 | 现代 C++ 模板教程](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/02类模板#模板模板形参)
 
+函数/类模板的模板类型形参可以接受一个**类模板**作为参数，我们将它称为：模板模板形参。
 
+- 语法：
 
+  ```c++
+  template< 形参列表 >class 名字(可选)              (1)
+  template< 形参列表 >class 名字(可选) = default    (2)
+  template< 形参列表 >class... 名字(可选)           (3) (C++11 起)
+  ```
+
+- 示例：
+
+  注意C表示的是一个类模板，一个没有经过实例化的类模板。class前面部分表示该类模板的模板参数，符合该模板参数的类模板都可以作为类模板Array的模板模板形参。
+
+  也就是说：模板形参有三种类型：（当然除此之外还有形参包）
+
+  1. 非类型模板形参：模板形参是一个变量
+  2. 类型模板形参：模板形参是一个类型（或者经过实例化的模板）
+  3. 模板模板形参：模板形参是一个类模板
+
+  以上三种类型的形参可以一起使用，都可以拥有默认模板参数和形参包
+
+  ```c++
+  template<typename T>
+  struct my_array{
+      T arr[10] = {};
+  };
+  
+  template<
+  	typename Ty,
+  	template<typename T>class C = my_array >	// 	注意C表示的是一个类模板
+  struct Array {
+      C<Ty> MyArr;		// 注意此时MyArr是一个实例化的类对象
+  };
+  
+  Array<int, my_array>arr;    // arr 保有的成员是     my_array<int> 而它保有了 int arr[10]
+  ```
+
+### 成员函数模板
+
+- 类模板中的成员函数模板
+
+  ```c++
+  template<typename T>
+  struct Class_template{
+      template<typename... Args>
+      void f(Args&&...args) {}
+  };
+  ```
+
+- 普通类中的成员函数模板
+
+  ```c++
+  struct Test{
+      template<typename...Args>
+      void f(Args&&...args){}		// Args&&是模式
+  };
+  ```
+
+  
