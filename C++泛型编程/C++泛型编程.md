@@ -563,6 +563,18 @@ int main(){
 
 不管C++标准是多少，使用类模板时最好都要带上<>
 
+```c++
+template<typename T = int>
+struct X{};
+
+int main(){
+	X x;    // x 是 X<int> C++17 起 OK
+	X<> x2; // x2 是 X<int>
+}
+```
+
+
+
 ### 模板模板形参
 
 [类模板 | 现代 C++ 模板教程](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/02类模板#模板模板形参)
@@ -693,7 +705,13 @@ int main() {
 
 - 同一个变量模板生成不同类型的模板实例时，模板实例之间没有区别；在同一作用域下生成多个同种类型的模板实例时，模板实例会被合并为一个（`v<int, 1>`和`v<int, 1>`是同一个，但`v<int, 1>`和`v<double, 1.4>`不是同一个）
 
-  
 
-  
+### 变量模板默认实参与非类型模板形参
 
+[很简单，看这个：变量模板](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/03变量模板#有默认实参的模板形参)
+
+### 可变参数变量模板
+
+[很简单，看这个：变量模板](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/03变量模板#可变参数变量模板)
+
+### 类的静态成员模板
