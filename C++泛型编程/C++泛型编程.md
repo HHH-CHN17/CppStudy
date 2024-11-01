@@ -715,3 +715,35 @@ int main() {
 [很简单，看这个：变量模板](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/03变量模板#可变参数变量模板)
 
 ### 类的静态成员模板
+
+#### ODR规则？？？
+
+[C/C++编程：单一定义规则ODR（不理解）_c++ ord-CSDN博客](https://blog.csdn.net/zhizhengguan/article/details/114988629)
+
+[ODR规则](https://blog.csdn.net/m0_51165837/article/details/141463073#)
+
+[定义与 ODR （单一定义规则） - C++中文 - API参考文档](https://www.apiref.com/cpp-zh/cpp/language/definition.html)
+
+#### 类的静态成员
+
+```c++
+struct X{
+    static int n;	// 申明
+};
+int X::n;		// 定义
+```
+
+或者在 C++17 以 inline 或者 constexpr 修饰。
+
+> 因为 C++17 规定了 **inline** 修饰静态数据成员，那么这就是在类内定义，不再需要类外定义。constexpr 在 C++17 修饰静态数据成员的时候，蕴含了 **inline**。
+
+```c++
+struct X {
+    inline static int n;
+};
+
+struct X {
+    constexpr static int n = 1;      // constexpr 必须初始化，并且它还有 const 属性
+};
+```
+
