@@ -651,6 +651,8 @@ void main()
 
 ### C++constexpr
 
+[C++11关键字constexpr看这篇就够了-CSDN博客](https://blog.csdn.net/yao_hou/article/details/109301290)
+
 https://zhuanlan.zhihu.com/p/20206577
 
 ### 在派生类中隐藏基类的方法
