@@ -1489,5 +1489,61 @@ int main() {
   }
   ```
 
+- 作业
+
+  说出以下代码使用的折叠表达式语法，以及它的效果，详细解析，使用 Markdown 语法。
+
+  ```c++
+  template<class ...Args>
+  auto Reverse(Args&&... args) {
+      std::vector<std::common_type_t<Args...>> res{};
+      bool tmp{ false };
+      (tmp = ... = (res.push_back(args), false));
+      return res;
+  }
+  ```
+
+## 待决名
+
+[详情看这里：待决名 | 现代 C++ 模板教程](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/09待决名#待决名)
+
+[待决名 - cppreference.com](https://zh.cppreference.com/w/cpp/language/dependent_name)
+
+- 定义：
+
+  在模板（类模板和函数模板）定义中，某些构造的含义可以在不同的实例化间有所不同。特别是，类型和表达式可能会取决于类型模板形参的类型和非类型模板形参的值。
+
+- 解析：
+
+  1. 待决名指的是一个表达式，是一个等待判断，决断的名字，需要确定它到底代表什么，是指一些有歧义的情况
+  2.  待决名的意思是在定义的地方，类型还不能决断，需要延后到实例化确定时。而非待决名指类型在定义的地方已经确定（这么看待决名像一个编译期的名字，应该作用于编译期的语义分析时期）。
+  3. 延后将导致此时无法在定义点进行错误检查，以及消除`typename`和`template`歧义，这导致需要在调用点加上template
+
+- 例子：
+
+  ```c++
+  template<typename T>
+  struct X : B<T> // "B<T>" 取决于 T，"B<T>"不是待决名？？？？
+  {
+      typename T::A* pa; // "T::A" 取决于 T，"T::A"是待决名，pa是类型待决的成员变量
+                         // （如果不用 "typename"，编译器会认为A是T中的成员变量）
+      void f(B<T>* pb)
+      {
+          static int i = B<T>::i; // "B<T>::i" 取决于 T，B<T>::i是待决名
+          pb->j++; // "pb->j" 取决于 T，pb->j++是待决名
+      }
+  };
+  ```
+
   
+
+### 待决名的 `typename` 消除歧义符
+
+> - 注意：有歧义的地方是类型，`typename`的作用是告诉编译器将特定的名字识别成类型
+
+> **在模板（包括别名模版）的声明或定义中，不是当前实例化的成员且取决于某个模板形参的名字不会被认为是类型，除非使用关键词 typename 或它已经被设立为类型名（例如用 typedef 声明或通过用作基类名）**。
+
+
+
+### 待决名的 `template` 消除歧义符
 
