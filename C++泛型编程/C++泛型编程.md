@@ -1754,21 +1754,23 @@ int main() {
 
 ## SFINAE
 
-### 初识代换失败不是错误
+[详情看这里：SFINAE | 现代 C++ 模板教程](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/10了解与利用SFINAE#sfinae)
+
+### 初识SFINAE
 
 “代换失败不是错误” (Substitution（代替，替换） Failure Is Not An Error)
 
-在**函数模板的重载决议**[[1\]](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/10了解与利用SFINAE#fn1)中会应用此规则：当模板形参在替换成显式指定的类型或推导出的类型失败时，从重载集中丢弃这个特化，*而非导致编译失败*。
+在**函数模板的重载决议（函数被重载后，编译器必须决定调用哪个重载）**中会应用此规则：当模板形参在替换成显式指定的类型或推导出的类型失败时，从重载集中丢弃这个特化（**可以理解成丢弃掉了该实例化版本**），*而非导致编译失败*。
 
 此特性被用于模板元编程。
 
 > 注意：**本节非常非常的重要，是模板基础中的基础，最为基本的特性和概念**。
 
-- 例子：
+- 例1：
 
   ```c++
   template <typename T, typename T2 = typename T::type>
-  void func(int) { cout << "int" << endl; }
+  void func(T2) { cout << "int" << endl; }
   
   int main() {
   	func<int>(1); // func：未找到匹配的重载函数
@@ -1779,5 +1781,111 @@ int main() {
 
   - 为什么错误不是 实例化失败 而是 未找到匹配的重载函数 ：
 
-    因为“代换失败不是错误”，在实例化的过程中，编译器会把T替换成int，T2替换成int::type，显然出现了错误，所以代换失败，但这并不是错误，编译器会抛弃T=int的这个特化版本，在命名空间中找其他版本的可用的模板，但显然没有，所以提示：func：未找到匹配的重载函数
+    因为“代换失败不是错误”，在实例化的过程中，编译器会把`T`替换成`int`，`T2`替换成`int::type`，显然出现了错误，所以代换失败，但这并不是错误，编译器会抛弃`T = int`的这个特化版本，在命名空间中找其他版本的可用的模板，但显然没有，所以提示：`func：未找到匹配的重载函数`
+    
+  - 解决办法：
+  
+    ```c++
+    template <typename T, typename T2 = typename T::type>
+    void func(int) { cout << "int" << endl; }
+    
+    template <typename T>
+    void func(double){cout << "double" << endl; }
+    
+    int main() {
+        func<int>(1); // double，代换失败影响了重载决议
+    }
+    ```
+  
+- 例2
 
+  ```c++
+  template <typename T, typename T2>
+  void func(T2){cout << "double" << endl; }
+  
+  int main() {
+      func<int>(1.1); // 函数模板形参发生了两次代换
+  }
+  ```
+
+  解释：
+
+  - 实例化时对函数模板形参进行两次代换（由模板实参所替代）：
+
+    - 在模板实参推导前，对显式指定的模板实参进行代换
+    - 在模板实参推导后，对推导出的实参和从默认项获得的实参进行替换
+
+    代换的实参写出时非良构（程序拥有语法错误或可诊断的语义错误）[[2\]](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/10了解与利用SFINAE#fn2)（并带有必要的诊断）的任何场合，都是*代换失败*（在例1中，实例化`func()`时，`int::type`就是一个非良构）。
+
+    > ”对显式指定的模板实参进行代换“这里的显式指定，就比如 `f<int>()` 就是显式指明了。我知道你肯定有疑问：我都显式指明了，那下面还推导啥？对，如果模板函数 `f` 只有一个模板形参，而你显式指明了，的确第二次代换没用，因为根本没啥好推导的。
+
+    > 两次代换都有作用，是在于有多个模板形参，显式指定一些，又根据传入参数推导一些。
+
+- 例3（先看完代换失败与硬错误再看这个例子）
+
+  ```c++
+  struct C { using type = int; };
+  
+  template<typename A>
+  struct B { using typeB = typename A::type; }; // 待决名
+  
+  template<
+      class T,
+      class U = typename T::type,              // 如果 T 没有成员 type 那么就是 SFINAE 失败（代换失败，但这并不是错误，不影响编译）
+      class V = typename B<T>::typeB>           // 如果 T 没有成员 type 那么B<T>中就没有typeB，就是硬错误 不过标准保证这里不会发生硬错误，因为到 U 的默认模板实参中的代换会首先失败
+  void foo(int) { puts("SFINAE T::type B<T>::type"); }
+  
+  template<typename T>
+  void foo(double) { puts("SFINAE T"); }
+  
+  int main(){
+      foo<C>(1);			// void foo(int)
+      foo<void>(1);		// void foo(double) void::type 非良构，SFNIAE失败，选择另一个版本
+  }
+  ```
+
+  解释：
+
+  - 注意`class V = typename B<T>::typeB>`这段代码，从上下文中可知：标准保证这里不会发生硬错误，因为到 U 的默认模板实参中的代换会首先失败
+
+### 代换失败与硬错误
+
+> **只有在函数类型或其模板形参类型或其 explicit 说明符 (C++20 起)的\*立即语境\*中的类型与表达式中的失败，才是 \*SFINAE 错误\*。如果对代换后的类型/表达式的\*求值导致副作用\*，例如实例化某模板特化、生成某隐式定义的成员函数等，那么这些副作用中的错误都被当做\*硬错误\***。
+
+> 代换失败就是指 SFINAE 错误。
+
+以上概念中注意关键词“SFINAE 错误”、“硬错误”，这些解释不用在意，先看完以下示例再去看概念理解。
+
+```c++
+// 类
+struct C { using type = int; };
+
+// 类模板
+template<typename A>
+struct B { using type = typename A::type; };
+
+// 函数模板foo(double)
+template<typename T>
+void foo(double) { puts("SFINAE T"); }
+
+// 函数模板foo(int)
+template<
+    class T,
+    class V = typename B<T>::type>
+void foo(V) { puts("SFINAE T::type B<T>::type"); }
+
+int main(){
+    foo<C>(0);
+    foo<int>(1.1);  // 模板会先尝试特化所有可能的模板，生成重载集，然后选择最合适的那一个进行匹配，此处在特化foo(int)时，发生硬错误
+}
+```
+
+解释：
+
+- 代码中提到了*硬错误*？为啥它是硬错误？其实最开始的概念已经说了：
+
+  > 如果对代换后的类型/表达式的求值导致副作用，例如实例化某模板特化、生成某隐式定义的成员函数等，那么这些副作用中的错误都被当做硬错误。
+
+  `B<T>` 显然是对代换后的类型求值导致了副作用，结合本例也就是实例化`B<int>`，实例化失败自然被当做硬错误。
+
+  > 注意，你应当关注 `B<T>` 而非 `B<T>::type`，因为是直接在实例化模板 B 的时候就失败了，被当成硬错误；如果 `B<T>` 实例化成功，而没有 `::type`，则被当成**代换失败**（不过这里是不可能）
