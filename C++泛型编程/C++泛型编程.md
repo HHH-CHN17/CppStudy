@@ -254,7 +254,7 @@ int main(){
 
 **类型模板实参**传的是类型
 
-**非类型模板实参**传的是值/对象
+**非类型模板实参**传的是值/对象**（是一个常量，可以当作编译期常量来看待）**
 
 ```c++
 template<std::size_t N = 100>
@@ -1244,9 +1244,9 @@ int main() {
 
 > - 用于替代C++11中的模板递归处理形参包的场景
 >
-> - 左折叠：`...` 是在“形参包”右边
+> - 左折叠：`...` 是在“形参包”左边
 >
->   右折叠：`...` 是在“形参包”左边
+>   右折叠：`...` 是在“形参包”右边
 >
 > - 折叠表达式展开诀窍：
 >
@@ -1507,6 +1507,73 @@ int main() {
   }
   ```
 
+## 模板编译的过程
+
+作者：匿名用户
+链接：https://www.zhihu.com/question/31845821/answer/575319562
+来源：知乎
+
+
+
+**名字查找**
+
+名字查找，是当程序中出现一个名字时，将其与引入它的声明联系起来的过程。对于模板来说，一个名字可以有多个声明。对于函数而言，这有一个天坑“参数依赖查找”。参数依赖查找可能会引入新的声明，从而可能改变重载集，简直是万恶之源。这里就先不说参数依赖查找了。
+
+**模板实参推导**
+
+模板参数推导时会对函数模板形参进行两次代换（由模板实参所替代）：
+
+- 在模板实参推导前，对显式指定的模板实参进行代换
+- 在模板实参推导后，对推导出的实参和从默认项获得的实参进行替换（详情可见“[初识SFINAE](#初识SFINAE)”中的例子）
+
+找到名字的多个声明之后，我们要对函数模板进行模板实参推导。推导的意思是编译器必须根据函数模板的“函数参数”推导出“每个模板参数的类型”。
+
+```c++
+template <typename T, typename D> 
+void f(T, D) {}
+```
+
+假如我们有这样的函数模板，那么对于`f(5, "abc");`进行推导，得到的结果是`[T = int, D = const char*]`。当然，显式指定的参数，例如`f<int, double>(5, 2.3);`直接得到`[T = int, D = double]`（`T`，`D`是模板形参，`int`，`double`是模板实参）。
+
+如果推导失败的话（例如，两个函数参数共同推导一个模板参数，但推导出来的结果不一样）那么放弃这个声明，去看别的声明。如果推导成立，那么这个函数成为了“候选函数”。
+
+**重载决议**
+
+如果我们最后有若干个候选函数，那么需要决定到底该选谁。对于函数模板的调用`f<>(2, 3.5);`的意思是只对重载集合中的函数模板进行重载决议，而`f(2, 3.5);`则允许[非模板函数](https://zhida.zhihu.com/search?content_id=134672291&content_type=Answer&match_order=1&q=非模板函数&zhida_source=entity)参与重载决议。
+
+怎么决定呢？我们先把推导出来的类型带入函数模板中。如果替换失败了（例如我们推导出来`[T = int]`，但是函数模板的签名中有`typename T::type`），那么这个候选函数就从重载集合中扔掉。这就是传说中的“SFINAE”。
+
+对于推导出来的类型，我们有一套偏序规则，来决定剩下的候选函数哪个更好。注意，只有泛化的函数模板参与重载决议。只有在重载决议选择最佳匹配的[泛化函数](https://zhida.zhihu.com/search?content_id=134672291&content_type=Answer&match_order=1&q=泛化函数&zhida_source=entity)模板后，才去看这个函数模板的特化版本[1]。
+
+**实例化**
+
+经过了以上旅程，我们终于可以实例化了。实例化有两种，一种是显式实例化，一种是隐式实例化。显式实例化的应用场景比较少。事实上，对于函数模板的调用语句，如果当前翻译单元没有模板的定义，只有模板的声明，那么模板是不会隐式实例化的，编译器仅仅把函数的调用当作调用而已。如果当前的函数模板已经被实例化了，编译器也不会进行隐式实例化，编译器仅仅把函数的调用当作调用而已。
+
+实例化的内容比较简单，就是编译器把参数都带入进函数模板里，然后生成一个函数实例[2]。在这之后，在各种意义上，一个函数模板的调用就和正常的非模板函数没有区别了。
+
+注意，模板只是实例化的模式，函数模板根本不是函数，类模板也根本不是类。所以，对于题主说的“链接错误”，这和普通的非模板函数的声明和调用没什么区别。在链接阶段，链接器不能根据声明找到定义，自然就会出现链接错误了。一定要记住，模板只是一个模式，而不是具体的东西。
+
+所以，这就是很坑的地方。如果我的翻译单元A里面隐式的实例化了函数模板，翻译单元B依赖于这个隐式实例化。如果A不小心改了这个[隐式实例化](https://zhida.zhihu.com/search?content_id=134672291&content_type=Answer&match_order=5&q=隐式实例化&zhida_source=entity)，那B就不能正常工作了。所以我们需要[显式实例化](https://zhida.zhihu.com/search?content_id=134672291&content_type=Answer&match_order=3&q=显式实例化&zhida_source=entity)。关于这部分，有更加理论化（哲学）的包含模型、[分离模型](https://zhida.zhihu.com/search?content_id=134672291&content_type=Answer&match_order=1&q=分离模型&zhida_source=entity)什么的。这里就不展开了。
+
+
+
+[1].实际上，特化的函数模板甚至都不算一个“名字”。[偏特化](https://zhida.zhihu.com/search?content_id=134672291&content_type=Answer&match_order=1&q=偏特化&zhida_source=entity)也是一样。可以认为，在名字查找的时候，都没有看到特化的函数模板，特化的函数模板更不可能出现在重载集中了。也就是说，对于这样的代码。
+
+```c++
+template <typename T> void f(T) {} // 1
+template <> void f(int*) {} // 2
+template <typename T> void f(T*) {} // 3
+
+int* p = nullptr;
+f(p);
+```
+
+调用的是3。因为2是1的特化，在重载决议的时候，只考虑1和3的偏序关系，显然3优于1。
+
+当然，重载决议决定了当前的泛化模板，编译器去看这个泛化模板的偏特化版本的时候，也需要进行推导和替换。此时，SFINAE也会发挥作用，这也是类模板可以进行SFINAE的原因。
+
+[2].在**实例化**的过程中，对于**函数体**里的依赖于模板参数的名字进行名字查找（和一开始的那个名字查找不是一个意思）。实际上，模板有二段名称查找规则。第一遍（模板定义时）查找函数体里不依赖于模板参数的名字以及进行必要的语法分析。第二遍（模板实例化时）查找函数体里依赖于模板参数的名字以及生成实例。就是因为有二段名称查找，所以我们在模板语境下才需要写`template`和`typename`让编译器在函数模板的第一遍名字查找的时候，对语法有一个正确的分析。考虑`T::foo<5>(4);`。在正确的二段名称查找的规则下，这个语句应该被理解为`T::foo < 5`的结果和`(4)`比大小。
+
 ## 待决名
 
 [详情看这里：待决名 | 现代 C++ 模板教程](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/09待决名#待决名)
@@ -1520,7 +1587,7 @@ int main() {
 - 解析：
 
   1. 待决名指的是一个**表达式**，是一个等待判断，决断的名字，需要确定它到底代表什么，是指一些有歧义的情况
-  2.  待决名的意思是在定义的地方，类型还不能决断，需要延后到实例化确定时。而非待决名指类型在定义的地方已经确定（这么看待决名像一个编译期的名字，应该作用于编译期的语义分析时期）。
+  2.  待决名的意思是在定义的地方，类型还不能决断，需要延后到**模板实参已知时**。而非待决名指类型在定义的地方已经确定（这么看待决名像一个编译期的名字，应该作用于编译期的语义分析时期）。
   3. 延后将导致此时无法在定义点进行错误检查，以及消除`typename`和`template`歧义，这导致需要在调用点加上template
 
 - 例子：
@@ -1546,7 +1613,7 @@ int main() {
 
 - 使用规则：
 
-  **在模板（包括别名模版）的声明或定义中，不是当前实例化的成员且取决于某个模板形参的名字不会被认为是类型，除非使用关键词 typename 或它已经被设立为类型名（例如用 typedef 声明或通过用作基类名）**。
+  **在模板（包括别名模版）的声明或定义中，不是当前实例化的成员且取决于某个模板形参的名字不会被认为是类型，除非使用关键词 `typename` 或它已经被设立为类型名（例如用 `typedef` 声明或通过用作基类名）**。
 
 - 例子：
 
@@ -1648,9 +1715,9 @@ int main() {
 
 > **对待决名和非待决名的名字查找和绑定有所不同**。
 >
-> **非待决名在模板定义点查找并绑定。即使在模板实例化点有更好的匹配，也保持此绑定**
+> **查找时间：非待决名在模板定义点查找并绑定。即使在模板实例化点有更好的匹配，也保持此绑定**
 >
-> **非待决名在模板定义点的查找范围由 当前类->父类->全局逐步扩大 进行查找并绑定。在找到匹配的函数之后立即绑定，即使外面的作用域中有更匹配的函数，也不会更改绑定**
+> **查找范围：非待决名在模板定义点由 当前类->父类->全局逐步扩大 进行查找并绑定。在找到匹配的函数之后立即绑定，即使外面的作用域中有更匹配的函数，也不会更改绑定**
 
 ```c++
 #include <iostream>
@@ -1696,7 +1763,7 @@ int main(){
 
 - 该阶段发生在实例化点（隐式/显式实例化）之后，通过类对象调用该函数/变量时
 
-- 对于在模板定义中所使用的**待决名（Dependent Name，注意这里讲的是待决名，对于其他的诸如模板变量定义之类的，在实例化阶段完成）**，**它的查找会推迟到得知它的模板实参之时（调用时）**。此时：
+- 对于在模板定义中所使用的**待决名（Dependent Name，注意这里讲的是待决名，对于其他的诸如模板变量定义之类的，在实例化阶段完成）**，**它的查找会推迟到待决名得知它的模板实参之时（调用时，实例化后进行语义分析时）**。此时：
   - ADL（参数依赖查找是一种对无限定名的**函数**调用**附加**查找规则） 将同时在 模板的定义语境 和在 模板的实例化语境 中检查可见的具有外部连接的 (C++11 前)函数声明。
   - 非 ADL 的查找只会检查在 模板的定义语境 中可见的具有外部连接的 (C++11 前)函数声明。（换句话说，在模板定义之后添加新的函数声明，除非通过 ADL 否则仍是不可见的。）如果在 ADL 查找所检查的命名空间中，在某个别的翻译单元中声明了一个具有外部连接的更好的匹配声明，或者如果当同样检查这些翻译单元时其查找会导致歧义，那么行为未定义。
 
@@ -1704,7 +1771,8 @@ int main(){
 
 - 定义点：模板的定义
 - 实例化点：隐式/显式实例化时生成的具体的类
-- 得知模板实参：指的是通过类对象调用该函数的时候
+- 得知模板实参：指的是通过**实例化对象**调用该待决名的时候（不是运行期，是编译期，**语义分析**时期）
+- 语法分析 关注的是程序的语法结构是否正确，而 语义分析 则关注程序的实际含义
 
 ```c++
 void f() { std::cout << "全局\n"; }
@@ -1714,14 +1782,21 @@ template<class T>
 struct X {
 	void f()const { std::cout << "X\n"; }
 };
+
+template<class T>
+struct Z { };
+
 template<class T>
 struct Y : X<T> {
 	void t()const {
 		this->f();	// this不是当前实例化的成员，this->f()是待决名，所以延后到得知模板实参的时候查找
+		z.f();
+		z.f = 1;	// 明显可以看到，上面两行都是非法的，但如果不调用t()，编译器则不会对该函数进行语义检查，也不会生成对应的汇编代码，也不会报错
 	}
 	void t2()const {
 		f();		// 无限定的非待决名，按照 Y1->全局 的顺序逐步进行查找，找到后立刻绑定，后续不再更改
 	}
+    Z<T> z;
 };
 
 /*******************************普通类中的查找规则*******************************/
@@ -1751,6 +1826,11 @@ int main() {
 }
 
 ```
+
+解析：
+
+- **如果在模板定义中有地方调用了待决名或者包含待决名的函数，并且编译器实例化了这部分代码，则在语义分析时期会产生编译错误。但如果没有任何地方使用了这个函数，编译器则不会去检查这部分代码，也不会对该段代码进行编译，错误也就没有暴露出来**
+- 也就是说，如果不调用`y.t()`，则不会有编译报错，编译器也不会产生该函数的汇编代码
 
 ## SFINAE
 
@@ -1821,19 +1901,22 @@ int main() {
 
     > ”对显式指定的模板实参进行代换“这里的显式指定，就比如 `f<int>()` 就是显式指明了。我知道你肯定有疑问：我都显式指明了，那下面还推导啥？对，如果模板函数 `f` 只有一个模板形参，而你显式指明了，的确第二次代换没用，因为根本没啥好推导的。
 
-    > 两次代换都有作用，是在于有多个模板形参，显式指定一些，又根据传入参数推导一些，**两次代换依次发生，选择最合理的一个作为最终的推导结果**，举例：
+    > 两次代换都有作用，是在于有多个模板形参，显式指定一些，又根据传入参数推导一些，**两次代换在模板形参推导时依次发生，推导完成后对 推导出的实参（`Z`被替换为`int`） 和 从默认项获得的实参（`typename B<T>::type`被代换为`double`） 进行替换**，举例：
     >
     > ```c++
-    > template<typename A> 
+    > template<typename A>
     > struct B {using type = typename A::type;};
     > template<
-    > 	class T,
-    > 	class V = typename B<T>::type>
-    > void foo(V) { puts("111"); }
+    > 	class T,						// 模板实参推导前，对显式指定的模板实参进行代换，T被代换为int
+    > 	class Z,
+    > 	class V = typename B<T>::type>	  // 显然此处的::type也是个待决名，该待决名得知模板实参之时是 模板实参推导时第一次模板形参代换 的时候
+    > void foo(Z z, V v) { puts("111"); }
     > int main(){
-    >     foo<int>(1.1);	// V被认为是double，而不是B<int>::type
+    >     foo<int>(1, 1,1);
     > }
     > ```
+    >
+    > 注意在第一次代换结束时，由于`B<int>`实例化失败，`V`被推导代换为`<missing>`，在第二次代换结束时，`V`才被推导代换为`double`
 
 - 例3（先看完代换失败与硬错误再看这个例子）
 
@@ -1957,6 +2040,8 @@ C++ 的模板，很多时候就像拼图一样，我们带入进去想，很多�
 
   - 在[重载决议]([重载决议 - cppreference.com](https://zh.cppreference.com/w/cpp/language/overload_resolution))阶段，显然在立即语境中（也就是进行参数代换生成重载集时），会推导函数的返回值，在推导时，显然t1+t2错误，所以抛弃该特化版本，且不会对该特化版本进行实例化
 
+    ![image-20241109122910931](./assets/image-20241109122910931.png)
+
 - 总结
 
   这里的重点是什么？**是模板实例化，能不要实例化就不要实例化**，我们当前的示例只是因为 `add` 函数模板非常的简单，即使实例化错误，编译器依然可以很轻松的报错告诉你，是因为没有 `operator+`。但是很多模板是非常复杂的，编译器实例化模板经常会产生一些完全不可读的报错；如果我们使用 SFINAE，编译器就是直接告诉我：“未找到匹配的重载函数”，我们自然知道就是传入的参数没有满足要求。而且实例化模板也是有开销的，很多时候甚至很大。
@@ -1967,11 +2052,18 @@ C++ 的模板，很多时候就像拼图一样，我们带入进去想，很多�
 
 ### 标准库支持
 
-#### enable_if
+#### enable_if_t
 
 [先看这个：std::enable_if](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/10了解与利用SFINAE#std-enable-if)
 
+- 使用场景：
+
+  1. 当传入的模板实参能使`enable_if`中的`bool`为`true`时，`SFINAE`通过，允许模板实例化
+  2. 通常用于过滤特定类型的模板形参（更加强调模板实参的**类型**）
+
 - 实现：
+
+  > `enable_if<>`是类模板，`enable_if_t<>`是类型
 
   ```c++
   template<bool B, class T = void>
@@ -2013,15 +2105,259 @@ C++ 的模板，很多时候就像拼图一样，我们带入进去想，很多�
       当变量模板为`true`时，此时类模板中有类型`type`且`type`为`T`（如果不指定类型的话，`type`默认为`void`），`::type`SFINAE正确；
 
       当变量模板为`false`时，类模板中没有类型`type`的定义，`::type`SFINAE错误，编译器从重载集中抛弃该特化版本
+      
+      注意此处的`::type`表示类型，之前在`is_same<>`中我们还接触过`::value`，这个`::value`表示值
+      
+      所以显然，**`enable_if_t<bool, T>`这个模板就是类型`T`，`is_same_v<>`这个模板就是`bool`类型的 静态编译期常量**
 
 - 更加复杂的示例：
 
+  [用户定义的推导指引](#用户定义的推导指引)
+  
   ```c++
   // std::array定义
   template<typename _Tp, typename... _Up>
     array(_Tp, _Up...)
-      -> array<enable_if_t<(is_same_v<_Tp, _Up> && ...), _Tp>,
+      -> array< enable_if_t<(is_same_v<_Tp, _Up> && ...), _Tp>,	// 对于这种复杂的模板，拆分的时候由外向内
            1 + sizeof...(_Up)>;
   ```
-
   
+  解析：
+  
+  - 对于该模板推导指引后的结果来说，在成功的情况下（`is_same_v<>`展开后相与为`true`时），`array`的类型为`enable_if_t<>`
+  
+  - `(is_same_v<Type, Args> && ...)` 做 `enable_if` 的第一个模板实参，这里是一个一元右折叠，使用了 **`&&`** 运算符，也就是必须 `is_same_v` 全部为 `true`，才会是 `true`。简单的说就是要求类型形参包 `Args` 中的每一个类型全部都是一样的，不然就是替换失败。
+  
+  - 这样做有很多好处，老式写法存在很多问题：
+  
+    ```c++
+    template<class Ty, std::size_t size>
+    struct array {
+        Ty arr[size];
+    };
+    
+    template<typename T, typename ...Args>
+    array(T t, Args...) -> array<T, sizeof...(Args) + 1>;
+    
+    ::array arr{1.4, 2, 3, 4, 5};        // 被推导为 array<double,5>
+    ::array arr2{1, 2.3, 3.4, 4.5, 5.6}; // 被推导为 array<int,5>    有数据截断
+    ```
+  
+    如果不使用 SFINAE 约束，那么 array 的类型完全取决于第一个参数的类型，很容易导致其他问题。
+
+#### void_t
+
+[详情看这：std::void_t](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/10了解与利用SFINAE#std-void-t)
+
+- 使用场景：
+
+  1. 当传入的模板实参能使得`void_t`中所有的表达式都代换成功的话，`SFINAE`通过，允许模板实例化
+  2. 通常用于过滤满足`void_t<>`中所有表达式的要求的模板（更加强调模板实参的**行为**）
+
+- 实现：
+
+  > `void_t<>`是个恒为`void`的类型
+
+  ```c++
+  template< class... >
+  using void_t = void;
+  ```
+
+  如你所见，它的实现非常非常的简单，就是一个别名，接受任意个数的类型参数，但自身始终是 `void` 类型。
+
+  - 将任意类型的序列映射到类型 void 的工具元函数。
+  - 模板元编程中，用此元函数检测 SFINAE 语境中的非良构类型
+
+
+- 示例：
+
+  看不懂没关系，通过下面一个需求来理解：
+  
+  > *我要写一个函数模板 `add`，我要求传入的对象需要支持 `+` 以及它需要有别名 `type` ，成员 `value`、`f`*。
+  
+  ```c++
+  #include <iostream>
+  #include <type_traits>
+  
+  template<typename T,
+      typename SFINAE = std::void_t<
+      decltype(T{} + T{}), typename T::type, decltype(&T::value), decltype(&T::f) >>
+  auto add(const T& t1, const T& t2) {
+      std::puts("SFINAE + | typename T::type | T::value");
+      return t1 + t2;
+  }
+  
+  // 满足void_t<>中条件的类
+  struct Test {
+      int operator+(const Test& t)const {
+          return this->value + t.value;
+      }
+      void f()const{}
+      using type = void;
+      int value;
+  };
+  
+  int main() {
+      Test t{ 1 }, t2{ 2 };
+      add(t, t2);  // OK
+      //add(1, 2); // 未找到匹配的重载函数
+  }
+  ```
+  
+  解释：
+  
+  - 总而言之，这是为了使用 SFINAE。
+  
+    > 那么这里 `std::void_t` 的作用是？
+  
+    其实倒也没啥，无非就是给了个好的语境，让我们能这样写，最终 `typename SFINAE = std::void_t` 这里的 `SFINAE` 的类型就是 `void`；当然了，这不重要，重要的是创造这样写的语境，能够方便我们进行 **`SFINAE`**，我们可以把所有想要满足的条件都写进`void_t<>`中。
+  
+    仅此一个示例，我相信就足够展示 `std::void_t` 的使用了。
+  
+    > *那么如果在 C++17 标准之前，没有 std::void_t ，我该如何要求类型有某些成员呢？*
+  
+    其实形式和原理都是一样的。
+  
+    ```c++
+    template<typename T,typename SFINAE = decltype(&T::f)>
+    void f(T){}
+    
+    struct Test {
+        void f()const{}
+    };
+    
+    Test t;
+    f(t);  // OK
+    f(1);  // 未找到匹配的重载函数
+    ```
+  
+  - `&T::value`，`&T::f`的用法见这里：[成员指针](https://zh.cppreference.com/w/cpp/language/pointer#.E6.88.90.E5.91.98.E6.8C.87.E9.92.88)
+
+#### declval
+
+- 使用场景
+
+  1. 用于SFINAE
+  2. 只用于**不求值语境**，特别是在`decltype`表达值中，通过`decltype`不经过构造函数就能使用其成员函数（成员变量也行），甚至`T`可能就没有构造函数。
+
+- 实现
+
+  > `declval<_Ty>()`是个仅能用于不求值语境中的函数模板，返回值为_Ty&&（void除外）
+
+  ```c++
+  template <class _Ty, class = void>
+  struct _Add_reference { // add reference (non-referenceable type)
+      using _Lvalue = _Ty;
+      using _Rvalue = _Ty;
+  };
+  
+  template <class _Ty>
+  struct _Add_reference<_Ty, void_t<_Ty&>> { // (referenceable type)
+      using _Lvalue = _Ty&;
+      using _Rvalue = _Ty&&;
+  };
+  
+  // 之前学过的类型
+  template <class _Ty>
+  using add_rvalue_reference_t = typename _Add_reference<_Ty>::_Rvalue;
+  
+  // declval实现，函数返回值为_Ty的右值引用（_Ty = void时除外），该函数只能用在不求值语境中，否则报错
+  template <class _Ty>
+  add_rvalue_reference_t<_Ty> declval() noexcept {
+      static_assert(_Always_false<_Ty>, "Calling declval is ill-formed, see N4950 [declval]/2.");
+  }
+  ```
+
+- 作用
+
+  - 将任意类型 `_Ty` 转换成引用类型，使得在 `decltype` 说明符的操作数中不必经过构造函数就能使用成员函数。
+    - [std::declval](https://zh.cppreference.com/w/cpp/utility/declval) 只能用于 **[不求值语境](https://zh.cppreference.com/w/cpp/language/expressions#.E6.BD.9C.E5.9C.A8.E6.B1.82.E5.80.BC.E8.A1.A8.E8.BE.BE.E5.BC.8F)**，且不要求有定义。
+    - **它不能被实际调用，因此不会返回值，返回类型是 `T&&`（当`_Ty`为`void`时，返回`_Ty`）**。
+  
+  - 不求值语境：
+  
+    运算符 `typeid`、`sizeof`、`noexcept` 和 `decltype` (C++11 起) 的操作数是不求值表达式（除非运算符为 `typeid` 而操作数是多态泛左值），因为这些运算符**仅查询其操作数的编译期性质**。因此，`std::size_t n = sizeof(std::cout << 42);` 不进行控制台输出。
+  
+    |                                                           |         |
+    | ------------------------------------------------------------ | ---------- |
+    | 不求值的运算数被当做完整表达式，即便它们在语法上是某个更大的表达式的操作数也是如此（例如，这意味着 `sizeof(T())` 要求 `T::~T` 可访问 | (C++14 起) |
+    |`requires` 表达式也是不求值表达式。|(C++20 起)|
+
+- 示例
+
+  [看完下面例子后一定要看这里的例子：declval](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/10了解与利用SFINAE#std-declval)
+  
+  - 例一
+  
+    ```c++
+    template<typename T, typename SFINAE = void_t<decltype(T{} + T{})> >
+    auto add(const T& t1, const T& t2) {
+        std::puts("SFINAE +");
+        return t1 + t2;
+    }
+    
+    template<typename T, typename SFINAE = void_t<decltype(declval<T>() + declval<T>())> >
+    auto add1(const T& t1, const T& t2) {
+        std::puts("SFINAE + 1");
+        return t1 + t2;
+    }
+    
+    struct X{
+        int operator+(const X&)const{
+            return 0;
+        }
+    };
+    
+    struct X2 {
+        X2(int){}   // 有参构造，没有默认构造函数
+        int operator+(const X2&)const {
+            return 0;
+        }
+    };
+    
+    int main(){
+        X x1, x2;
+        add(x1, x2);          // OK
+    
+        X2 x3{ 0 }, x4{ 0 };
+        add(x3,x4);           // 未找到匹配的重载函数
+        add1(x3, x4);		 // OK
+    }
+    ```
+  
+    解释：
+  
+    - `add1()` 中把 `T{}` 改成了 `std::declval<T>()`，`decltype` 是不求值语境，没有问题。
+  
+  - 例二
+  
+    其实`declval`还能访问成员变量，我们再通过一个例子加深印象
+  
+    ```c++
+    template<typename T, typename SFINAE =
+        void_t< decltype(declval<T>().value), decltype(declval<T>().test()), decltype(declval<T>().test2(1))>
+        >
+    void f(int) {
+        std::puts("f value");
+    }
+    
+    struct X {
+        int value;
+        void test(){}
+        void test2(int i){}
+    };
+    
+    int main() {
+        f<X>(1); // f value
+    }
+    
+    ```
+
+### 偏特化中的SFINAE
+
+偏特化中不仅可以要求类型，还能要求类型中的行为，成员等
+
+
+
+学完模板编程后，针对云会议项目中的消息队列，完成以下需求：
+
