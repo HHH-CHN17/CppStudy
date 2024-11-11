@@ -1537,7 +1537,7 @@ void f(T, D) {}
 
 如果推导失败的话（例如，两个函数参数共同推导一个模板参数，但推导出来的结果不一样）那么放弃这个声明，去看别的声明。如果推导成立，那么这个函数成为了“候选函数”。
 
-**重载决议**
+**重载决议**（在此阶段发生传说中的"SFINAE"）
 
 如果我们最后有若干个候选函数，那么需要决定到底该选谁。对于函数模板的调用`f<>(2, 3.5);`的意思是只对重载集合中的函数模板进行重载决议，而`f(2, 3.5);`则允许[非模板函数](https://zhida.zhihu.com/search?content_id=134672291&content_type=Answer&match_order=1&q=非模板函数&zhida_source=entity)参与重载决议。
 
@@ -2238,7 +2238,7 @@ C++ 的模板，很多时候就像拼图一样，我们带入进去想，很多�
 - 使用场景
 
   1. 用于SFINAE
-  2. 只用于**不求值语境**，特别是在`decltype`表达值中，通过`decltype`不经过构造函数就能使用其成员函数（成员变量也行），甚至`T`可能就没有构造函数。
+  2. 只用于**不求值语境**，**特别是与`decltype`配合时**，通过`decltype`不经过构造函数就能使用其成员函数（成员变量也行），甚至`T`可能就没有构造函数。
 
 - 实现
 
@@ -2334,17 +2334,19 @@ C++ 的模板，很多时候就像拼图一样，我们带入进去想，很多�
     其实`declval`还能访问成员变量，我们再通过一个例子加深印象
   
     ```c++
+    // 我们可以通过这里例子看到通过void_t<>来要求类型中的类型别名，成员变量，成员函数
     template<typename T, typename SFINAE =
-        void_t< decltype(declval<T>().value), decltype(declval<T>().test()), decltype(declval<T>().test2(1))>
-        >
+    	void_t< typename T::type, decltype(declval<T>().value), decltype(declval<T>().test()), decltype(declval<T>().test2(1))>
+    >
     void f(int) {
-        std::puts("f value");
+    	std::puts("f value");
     }
     
     struct X {
-        int value;
-        void test(){}
-        void test2(int i){}
+    	int value;
+    	void test() {}
+    	void test2(int i) {}
+    	using type = int;
     };
     
     int main() {
@@ -2355,7 +2357,161 @@ C++ 的模板，很多时候就像拼图一样，我们带入进去想，很多�
 
 ### 偏特化中的SFINAE
 
-偏特化中不仅可以要求类型，还能要求类型中的行为，成员等
+> - **函数模板无法进行偏特化，只有类模板，变量模板可以**
+> - 偏特化中不仅可以要求类型，还能要求类型中的类型别名，成员变量，成员函数（也就是SFINAE）等
+
+- 定义：
+
+  在确定一个类或变量 (C++14 起)模板的特化是由部分特化还是主模板生成的时候也会出现推导与替换。在这种确定期间，**部分特化的替换失败不会被当作硬错误，而是像函数模板一样\*代换失败不是错误\*，只是忽略这个部分特化**。
+
+- 示例：
+
+  ```c++
+  template<typename T, typename SFINAE = void>	// 主模板
+  struct test
+  {
+  	void test1(){ cout << "主模板" << endl; }
+  };
+  
+  template<typename T>		// 偏特化版本1
+  struct test<T, void_t<typename T::type, decltype(declval<T>().aaa)>>
+  {
+  	void test1() { cout << "偏特化：void_t" << endl; }
+  };
+  
+  template<typename T>		// 偏特化版本2
+  struct test<T, enable_if_t<is_same_v<T, int>,T>>
+  {
+  	void test1() { cout << "偏特化：enable_if_t" << endl; }
+  };
+  
+  struct A
+  {
+  	using type = int;
+  	int aaa;
+  };
+  
+  int main() {
+  	test<A> a;
+  	a.test1();			// 偏特化：void_t
+  
+  	test<int> a1;
+  	a1.test1();			// 主模板
+  }
+  ```
+
+  注意：
+
+  1. 函数模板无法进行偏特化，只有类模板，变量模板能偏特化
+
+  2. `declval<>()`通常与`decltype()`搭配，用于不求值语境中，访问成员函数，成员变量。
+
+  3. 你一定很好奇为什么`a1.test1();`输出的是“主模板”，以下为分析：
+
+     - 首先在***模板实参推导***阶段，推导结果是`[T=int, SFINAE=void]`；
+
+     - 其次在***重载决议***阶段，显然匹配上了唯一的主模板。
+
+       - 但在匹配偏特化版本时，偏特化版本1中显然发生了代换失败，所以偏特化版本1从重载集中剔除
+       - 偏特化版本2乍一看好像能满足`enable_if_t<>`，但是注意`enable_if_t<>`作为一个类型，最终表示的是`T`，即偏特化版本2在当前实参的情况下，匹配的应该是`test<int,int>`而非`test<int,void>`，所以也从重载集中剔除
+
+     - 修改方法：
+
+       1. 使用`void_t`使得第二个参数恒为`void`（最为推荐）
+
+          ```c++
+          template<typename T>		// 偏特化版本2
+          struct test<T, void_t<enable_if_t<is_same_v<T, int>,T>>>{
+              ...
+          }
+          ```
+
+       2. 实例化时指定第二个参数与第一个参数相同
+
+          ```c++
+          test<int, int> a1;
+          ```
+
+       3. 指定`enable_if_t<>`为默认或者`void`
+
+          ```c++
+          template<typename T>		// 偏特化版本2
+          struct test<T, enable_if_t<is_same_v<T, int>>>
+          ```
+
+### SFINAE总结
+
+SFINAE，即代换失败不是错误，指的是在编译时的重载决议时期，编译器会将那些代换进去无法通过重载决议的重载函数从重载集中丢弃（注意SFINAE与硬错误的区别，硬错误指的是代换时有实例化且实例化失败的重载函数会发生硬错误），当然为了更了解SFINAE，应当对模板编译的过程做一个基本了解。在我眼里，模板编译过程应该是……
+
+## 概念与约束
+
+类模板，函数模板，以及非模板函数（通常是类模板的成员），可以与一项约束（constraint）相关联，它指定了对模板实参的一些要求，这些要求可以被用于选择最恰当的函数重载和模板特化。
+
+这种要求的具名集合被称为概念（concept）。每个概念都是一个谓词，它在编译时求值，并在将之用作约束时成为模板接口的一部分。
+
+### 约束与概念的定义与使用
+
+- 定义：
+
+  ```c++
+  template < 模板形参列表 >
+  concept 概念名 属性 (可选) = 约束表达式;
+  ```
+
+  定义概念所需要的 *约束表达式*，只需要是可以在编译期产生 `bool` 值的表达式即可。
+
+- 示例：
+
+  ***我需要写一个函数模板 `add`，想要要求传入的对象必须是支持 `operator+` 的，应该怎么写？***
+
+  此需求就是 `SFINAE` 中提到的，我们使用*概念*（concept）来完成。
+
+  ```c++
+  template<typename T>
+  concept Add = requires(T a, size_t n) {	// 非类型模板形参也能用
+  	a + a; // "需要表达式 a+a 是可以通过编译的有效表达式"
+  	a + n; // "需要表达式 a+n 是可以通过编译的有效表达式"
+  };
+  
+  template<Add T>		// 在这里，概念Add的目的，就是用于约束模板形参T
+  auto add(const T& t1, const T& t2) {
+  	std::puts("concept +");
+  	return t1 + t2;
+  }
+  
+  struct A{ };
+  
+  int main() {
+  	add(1, 2);		// OK
+  	add(A{}, A{});	// 未找到匹配的重载函数
+  }
+  ```
+
+  解释：
+
+  - 语法上就是把原本的 `typename` 、`class` 换成了我们定义的 `Add` *概念*（concept），语义和作用也非常的明确：
+
+    - **就是让这个概念约束模板类型形参 `T`，即要求 `T` 必须满足*约束表达式*的*要求序列* `T a` `a + a`**。如果不满足，则不会选择这个模板。
+
+    > "满足"：要求带入后必须是合法表达式；
+
+    最开始的概念已经说了：
+
+    > *概念*（concept）可以与一项约束（constraint）相关联，它指定了对模板实参的一些要求，这些要求可以被用于选择最恰当的函数重载和模板特化。
+
+    另外最开始的概念中还说过：
+
+    > 每个概念都是一个**谓词**（即返回值为`bool`的函数/函数对象），它在**编译时求值**，并在将之用作约束时成为模板接口的一部分。
+
+    也就是说我们其实可以这样：
+
+    ```c++
+    std::cout << std::boolalpha << Add<int> << '\n';        // true
+    std::cout << std::boolalpha << Add<char[10]> << '\n';   // false
+    constexpr bool r = Add<int>;                            // true
+    ```
+
+    我相信这非常的好理解，这些语法形式，合理且简单。
 
 
 
