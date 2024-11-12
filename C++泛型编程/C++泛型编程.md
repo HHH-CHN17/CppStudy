@@ -2515,5 +2515,110 @@ SFINAE，即代换失败不是错误，指的是在编译时的重载决议时�
 
 
 
+### 简写函数模板与标准概念库？？？
+
+*记得我们在第一章节[函数模板](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/01函数模板)中提到的：“C++20 简写函数模板”吗？*
+
+```c++
+decltype(auto) max(const auto& a, const auto& b)  { // const T&
+    return a > b ? a : b;
+}
+```
+
+这段代码来自函数模板那一章节。
+
+> **我想要约束：传入的对象 a b 必须都是整数类型，应该怎么写？**。
+
+```c++
+#include <concepts> // C++20 概念库标头
+
+decltype(auto) max(const std::integral auto& a, const std::integral auto& b) {
+    return a > b ? a : b;
+}
+
+max(1, 2);     // OK
+max('1', '2'); // OK
+max(1u, 2u);   // OK
+max(1l, 2l);   // OK
+max(1.0, 2);   // Error! 未满足关联约束
+```
+
+如你所见，我们没有自己定义 *概念*（concept），而是使用了标准库的 [`std::integral`](https://zh.cppreference.com/w/cpp/concepts/integral)，它的实现非常简单：
+
+**具体`integral`的实现，看msvc中源码并和g++中的源码进行对比，分析两者优劣与不同并尝试运用进云会议项目中？？？**
+
+```c++
+template< class T >
+concept integral = std::is_integral_v<T>;
+
+// 而上一节中，我们的概念定义如下：
+template<typename T>
+concept Add = requires(T a) {
+    a + a; // "需要表达式 a+a 是可以通过编译的有效表达式"
+};
+```
+
+这也告诉各位我们一件事情：**定义*概念*（concept）** 时声明的约束表达式，只要***函数返回值***或者***表达式本身***是***编译期的`bool`常量***（也就是说`type_traits`中的大多数`is_xx_v<>`都可以用）即可。
+
+> 我相信你这里一定有疑问：“那么我们之前写的 requires 表达式呢？它会返回 `bool` 值吗？” 对，简单的说，把模板参数带入到 `requires` 表达式中，是否符合语法，符合就返回 `true`，不符合就返回 `false`。在 [`requires` 表达式](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/11约束与概念#requires-表达式) 一节中会详细讲解。
+
+它的实现是直接使用了标准库的 `std::is_integral_v<T>`，非常简单。
+
+再谈*概念*（concept）在简写函数模板中的写法 `const std::integral auto& a`，*概念*（concept）只需要写在 `auto` 之前即可，表示此概念约束 `auto` 推导的类型必须为整数类型，语义十分明确，像是 cv 限定、引用等，不需要在乎，或许我们可以先写的简单一点先去掉那些：
+
+```c++
+decltype(auto) max(std::integral auto a, std::integral auto b) {
+    return a > b ? a : b;
+}
+```
+
+且概念不单单是可以用作简写函数模板中的 `auto`，还有几乎一切语境，比如：
+
+```c++
+int f() { return 0; }
+
+std::integral auto result = f();	// 限定函数返回值的类型
+std::integral auto a = 1;		    // 限定a的类型
+```
+
+还是那句话，语义很明确：
+
+- ***概念*（concept）约束了 `auto` ，它必须被推导为整数类型；如果函数 `f()` 返回类型是 `double` `auto` 无法推导为整数类型，那么编译器会报错：“*未满足关联约束*”**。
+
+------
+
+类模板同理，如：
+
+```c++
+template<typename T>
+concept add = requires(T t){  // 定义概念，通常推荐首字母小写
+    t + t;
+};
+
+template<add T>
+struct X{
+    T t;
+};
+```
+
+变量模板也同理
+
+```c++
+template<typename T>
+concept add = requires(T t){
+    t + t;
+};
+
+template<add T>
+T t;
+
+t<int>;     // OK
+t<char[1]>; // “t”未满足关联约束
+```
+
+将模板中的 `typename` 、`class` 换成 *概念*（concept）即可，表示约束此模板类型形参 `T`。
+
+
+
 学完模板编程后，针对云会议项目中的消息队列，完成以下需求：
 
