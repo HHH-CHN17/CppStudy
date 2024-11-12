@@ -1120,6 +1120,9 @@ int main() {
 
 ## 显式实例化解决分文件问题
 
+> - 模板全特化和显式实例化都能解决该问题，具体原因无需多言
+> - 注意对类模板使用全特化解决分文件问题时，**应该全特化类的成员函数**，而不是类，因为类的完整定义不包括成员函数定义，理论上只要数据成员定义都有就行了。
+
 ### 函数模板显式实例化
 
 [建议先看看这里：模板显式实例化解决模板分文件问题](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/06模板显式实例化解决模板分文件问题#函数模板显式实例化)
@@ -2883,6 +2886,163 @@ concept Integral = is_integral_v<T> ; // 等号后面的 is_integral_v<T> 就是
   - 其实说来说去也很简单，你就直接**带入**，把*概念*（concept）的模板实参（比如 Test）直接带入进去 `requires` 表达式，想想它是不是合法的表达式就可以了。
 
 ### 复合要求
+
+> - 对某一行为设置类型要求（可以理解成简单要求与类型要求的组合）
+> - 析构函数比较特殊，不需要我们显式声明它为 `noexcept` 的，它默认就是 `noexcept` 的。
+
+- 语法，定义：
+
+  ```c++
+  { 表达式 } noexcept(可选) 返回类型要求 (可选) ;
+  ```
+
+  > 返回类型要求：-> 类型约束（*概念* concept）
+
+  并断言所指名表达式的属性。替换和语义约束检查按以下顺序进行：
+
+  1. 模板实参 (若存在) 被替换到 表达式 中；
+  2. 如果使用了`noexcept`，表达式 一定不能潜在抛出；
+  3. 如果*返回类型要求*存在，则：
+     - 模板实参被替换到*返回类型要求* 中；
+     - `decltype((表达式))` 必须满足*类型约束* 蕴含的约束。否则，被包含的 requires 表达式是 **`false`**。
+
+- 示例：
+
+  ```c++
+  template<typename T>
+  concept C2 = requires(T x){
+      // 表达式 *x 必须合法
+      // 并且 类型 T::inner 必须存在
+      // 并且 *x 的结果必须可以转换为 T::inner
+      {*x} -> std::convertible_to<typename T::inner>;
+  
+      // 表达式 x + 1 必须合法
+      // 并且 std::same_as<decltype((x + 1)), int> 必须满足
+      // 即, (x + 1) 必须为 int 类型的纯右值
+      {x + 1} -> std::same_as<int>;
+  
+      // 表达式 x * 1 必须合法
+      // 并且 它的结果必须可以转换为 T
+      {x * 1} -> std::convertible_to<T>;
+  
+      // 复合："x.~T()" 是不会抛出异常的合法表达式
+      { x.~T() } noexcept;
+  };
+  ```
+
+  我们可以写一个满足*概念*（concept）`C2` 的类型：
+
+  ```c++
+  struct X{
+      int operator*()const { return 0; }
+      int operator+(int)const { return 0; }
+      X operator*(int)const { return *this; }
+      using inner = int;
+  };
+  ```
+
+  ```c++
+  std::cout << std::boolalpha << C2<X> << '\n'; // true
+  ```
+
+  [测试](https://godbolt.org/z/vWhcPjbe7)。
+
+  **析构函数比较特殊，不需要我们显式声明它为 `noexcept` 的，它默认就是 `noexcept` 的。**
+
+  不管编译器为我们生成的 `X` 析构函数，还是我们用户显式定义的 `X` 析构函数，默认都是有 `noexcept` 的[[1\]](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/11约束与概念#fn1)。只有我们用户定义析构函数的时候把它声明为了 `noexcept(false)` 这个析构函数才不是 `noexcept` 的，才会不满足 *概念*（concept）`C2` 的要求。
+
+### 嵌套要求
+
+> - 嵌套要求表示在`requires表达式`中，可以加入`requires子句`（`requires子句`中也能用`requires表达式`，正好对上了）
+> - 注意`requires表达式`中不可以直接嵌入`requires表达式`，必须先加个`requires子句`
+
+- 语法，定义：
+
+  嵌套要求具有如下形式
+
+  ```c++
+  requires 约束表达式 ;
+  ```
+
+  它可用于根据本地形参指定其他约束。*约束表达式* 必须由被替换的模板实参（若存在）满足。将模板实参替换到嵌套要求中会导致替换到 *约束表达式* 中，但仅限于确定是否满足 *约束表达式* 所需的程度。
+
+- 示例：
+
+  ```c++
+  template<typename T>
+  concept C3 = requires(T a, std::size_t n) {        // 这个n不用赋值，因为表达式中都是不求值语境（编译期求值），所以n有没有值都一样，当然你也可以给他设定一个默认参数
+      requires std::is_same_v<T*, decltype(&a)>;     // 要求 is_same_v          求值为 true
+      requires std::same_as<T*, decltype(new T[n])>; // 要求 same_as            求值为 true
+      requires requires{ a + a; };                   // 要求 requires{ a + a; } 求值为 true
+      requires sizeof(a) > 4;                        // 要求 sizeof(a) > 4      求值为 true
+  };
+  ```
+
+  > 嵌套要求的 *约束表达式*，只要能编译期产生 `bool` 值的表达式即可，*概念*（concept）、[类型特征](https://zh.cppreference.com/w/cpp/meta#.E7.B1.BB.E5.9E.8B.E7.89.B9.E5.BE.81)的库、`requires` 表达式，等都一样。
+
+  这里用 `std::is_same_v` 和 `std::same_as` 其实毫无区别，因为它们都是编译时求值，返回 `bool` 值的表达式。
+
+  在上面示例中 `requires requires{ a + a; }` 其实是更加麻烦的写法，目的只是为了展示 `requires` 表达式是编译期产生 `bool` 值的表达式，所以有可能会有**两个 `requires`连用的情况**；我们完全可以直接改成 `a + a`，效果完全一样。
+
+### 部分（偏）特化中使用*概念*
+
+我们在讲 SFINAE 的时候[提到](https://github.com/Mq-b/Modern-Cpp-templates-tutorial/blob/main/md/第一部分-基础知识/10了解与利用SFINAE.md#部分偏特化中的-sfinae)了，它可以用作模板偏特化，帮助我们选择特化版本；本节的约束与概念当然也可以做到，并且写法**更加简单直观优美**：
+
+```c++
+#include <iostream>
+
+template<typename T>							// 概念定义！！！
+concept have_type = requires{
+    typename T::type;
+};
+
+template<typename T>
+struct X {
+    static void f() { std::puts("主模板"); }
+};
+
+template<have_type T>							// 概念使用！！！
+struct X<T> {
+    using type = typename T::type;
+    static void f() { std::puts("偏特化 T::type"); }
+};
+
+struct Test { using type = int; };
+struct Test2 { };
+
+int main() {
+    X<Test>::f();       // 偏特化 T::type
+    X<Test2>::f();      // 主模板
+}
+```
+
+### 总结
+
+我们先讲述了 *概念*（concept）的定义和使用，其中使用到了 `requires` 表达式，但是我们留到了后面详细讲述。
+
+其实本章内容可以划分为两个部分
+
+- 约束与概念
+- `requires` 表达式
+
+如果你耐心看完，我相信也能意识到它们是互相掺杂，一起使用的。语法上虽然感觉有些多，但是也都很合理，我们只需要 ***带入***，按照基本的常识判断这是不是符合语法，基本上就可以了。
+
+`requires` 关键字的用法很多，但是划分的话其实就两类
+
+- `requires` 子句
+- `requires` 表达式
+
+`requires` 子句和 `requires` 表达式可以连用，组成 `requires requires` 的形式。我们在 [`requires` 子句](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/11约束与概念#requires-子句)讲过。
+
+还有在 `requires` 表达式中的嵌套要求，也会有 `requires requires` 的形式。
+
+如果看懂了，这些看似奇怪的 `requires` 关键字复用，其实也都很合理，只需要记住最重要的一句话：
+
+> 可以连用 `requires requires` 的情况，都是因为第一个 `requires` 期待一个可以编译期产生 `bool` 值的表达式；而 **`requires` 表达式就是产生描述约束的 bool 类型的纯右值表达式**。
+
+------
+
+
 
 学完模板编程后，针对云会议项目中的消息队列，完成以下需求：
 
