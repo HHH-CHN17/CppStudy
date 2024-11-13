@@ -136,9 +136,7 @@ int a = 10;            // 不重要
 
 #### 万能引用
 
-万能引用（universal reference），用在模板中，表现形式通常为`T&&`。表示**接受左值表达式那形参类型就推导为左值引用，接受右值表达式，形参类型就推导为右值引用**。
-
-注意只有模板参数全为`T&&`的形式时，才表示根据万能引用判断规则判断T的类型，否则只会用到引用折叠。
+万能引用（universal reference），用在模板中，表现形式通常为`T&&`（`T&`也可以，不过`T&`接收不了右值，所以称不上万能引用，但依然会有引用折叠，所以说引用折叠和万能引用还是有点区别的）。表示**接受左值表达式那形参类型就推导为左值引用，接受右值表达式，形参类型就推导为右值引用**。
 
 比如：
 
@@ -3040,9 +3038,94 @@ int main() {
 
 > 可以连用 `requires requires` 的情况，都是因为第一个 `requires` 期待一个可以编译期产生 `bool` 值的表达式；而 **`requires` 表达式就是产生描述约束的 bool 类型的纯右值表达式**。
 
-------
+## make_index_sequence与tuple？？？
 
+[tuple基础](https://blog.csdn.net/sevenjoin/article/details/88420885)
 
+[tuple进阶](https://zhuanlan.zhihu.com/p/71929922)
+
+[tuple应用](https://blog.csdn.net/Long_xu/article/details/135429561)
+
+该章节展示了访问tuple所有成员的一般方法
+
+- 定义：
+
+  - `make_index_sequence<N>()`
+
+    1. 非类型模板参数`N`必须为编译期常量
+    2. **函数功能：**在输入`N`后，获得`展开的形参包`（一串 0 -> N-1 的编译期的size_t变量），其中该串变量的长度是`N`
+    3. 通常用作模板实参，指明想要生成的下标队列
+
+  - `index_sequence<N...>`
+
+    1. `N...`的值来源于`make_index_sequence<N>()`的结果
+    2. **函数功能：**在输入 `展开的形参包` 后，获得`合并后的形参包`
+    3. 用作模板形参，接收`make_index_sequence<N>()`传过来的`展开的形参包`
+
+  - `tuple`
+
+    详情看开头链接
+
+- 示例：
+
+  ```c++
+  template<typename... Args>
+  void print(const tuple<Args...>& tup) {     // 这里无法使用万能引用，因为万能引用得是最直接的T&&形式，得是一个整体，整体可以被推导与折叠
+      auto print_single = [&]<size_t... N>(index_sequence<N...>) {
+          //cout << (...<<(get<N>(tup)<<' ')) << endl;     该方法由于展开后括号的存在，会导致 << 先算
+          (cout << ... << (get<N>(tup) << ' ')) << endl;  // 这种方式也会导致get<>的结果左移，修改方法见 折叠表达式
+          ((cout << get<N>(tup) << ' '), ...);	// OK
+      };
+      print_single(make_index_sequence<4>());
+  }
+  
+  int main() {
+      tuple<int, int, int, int> tup(1,2,3,4);
+      print(tup);
+      return 1;
+  }
+  ```
+
+  解释：
+
+  代码中写的很明白了，自己复制到IDE中看，如果用不了lambda模板，加个类就好了；如果用不了折叠表达式，参考链接中的写法
+
+## 使用模板包装C风格API进行调用？？？
+
+看完并发编程再来
+
+## C++17编译期if
+
+很简单的东西，部分情况下可以用来代替 模板特化
+
+```c++
+struct X {
+    void testx() {
+        cout << "testx" << endl;
+    }
+};
+
+struct Y {
+    void testy() {
+        cout << "testy" << endl;
+    }
+};
+
+template<typename T>
+void f(T t) {
+    if constexpr (is_same_v<T, X>) {	// 编译期if
+        t.testx();
+    }else {
+        t.testy();
+    }
+}
+```
+
+解释：
+
+- `constexpr`的作用
+
+  使得`if`成为编译期`if`，这样编译器在确定完该走的`if`分支后，剩下的分支语句直接舍弃不编译（**会进行语法分析，但不进行语义分析**）
 
 学完模板编程后，针对云会议项目中的消息队列，完成以下需求：
 
