@@ -3040,7 +3040,7 @@ int main() {
 
 > 可以连用 `requires requires` 的情况，都是因为第一个 `requires` 期待一个可以编译期产生 `bool` 值的表达式；而 **`requires` 表达式就是产生描述约束的 bool 类型的纯右值表达式**。
 
-------
+## make_index_sequence和tuple
 
 
 
