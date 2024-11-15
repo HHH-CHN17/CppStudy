@@ -3219,7 +3219,7 @@ void f(T t) {
   //	using TB = typename Dervied::TT; 编译失败
   	void addWater() {
   		// 注意在基类中，只能在 成员函数 中通过 转换后的指针 来访问子类的成员
-  		// 因为在基类实例化时，不知道子类定义，只有在调用成员函数时，基类定义才已知（是的，你可以把成员函数也当成一个模板？？？？？？？？，这样就好理解了）。
+  		// 因为在基类实例化时，不知道子类定义，只有在调用成员函数时，子类类定义才已知（成员函数也相当于一个模板，只有被调用，才会实例化）。
   		static_cast<Dervied*>(this)->impl();			// 调用子类成员函数
   		cout << static_cast<Dervied*>(this)->b << endl;	// 访问子类成员变量
   		using TB = typename Dervied::TT;		// 访问子类中定义的类型
