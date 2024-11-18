@@ -494,9 +494,60 @@ int main() {
 
 [看这里就好了，没什么难的](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/02使用线程.html#std-this-thread)
 
+### `std::thread`转移所有权
 
+> - 一个线程对象有且仅能拥有一个线程资源，一个线程资源能且仅能被一个线程对象持有
+> - 所有权的转移，可以通过 `移动构造`，`移动赋值`，`swap()` 进行
 
+传入可调用对象以及参数，构造 `std::thread` 对象，启动线程，而线程对象拥有了线程的所有权，线程是一种系统资源，所以可称作“*线程资源*”。
 
+std::thread 不可复制。两个 std::thread 对象不可表示一个线程，std::thread 对线程资源是独占所有权。而**移动**操作可以将一个 `std::thread` 对象的线程资源所有权转移给另一个 `std::thread` 对象。
+
+```c++
+void f() {}
+int main() {
+	thread t1(f);
+	thread t2(move(t1));	// 通过移动构造将t1持有的线程资源转移给t2
+	thread t3 = move(t2);	// 通过移动赋值将t2持有的线程资源转移给t3
+	thread t4 = thread(f);	// 临时对象也是右值表达式
+	swap(t3, t4);			// 通过swap交换t3，t4的线程资源
+}
+```
+
+函数返回 `std::thread` 对象：
+
+```c++
+std::thread f(){
+    std::thread t{ [] {} };
+    return t;
+}
+
+int main(){
+    std::thread rt = f();
+    rt.join();
+}
+```
+
+解释：
+
+- [#请耐心看完这里](../2-深入理解C++11/深入理解C++11.md#右值引用，移动语义，完美转发)
+- 在关闭rvo/nrvo的情况下，一共发生了三次构造（默认构造，移动构造，移动构造）
+
+所有权通过函数参数传递：
+
+> 根据函数栈帧相关理解，函数调用传参，实际上是初始化了（构造）形参的对象
+
+```c++
+void f(std::thread t){
+    t.join();
+}
+
+int main(){
+    std::thread t{ [] {} };
+    f(std::move(t));
+    f(std::thread{ [] {} });
+}
+```
 
 
 
