@@ -313,6 +313,192 @@ int main() {
 
 ### 传递参数
 
+> - 一般情况下，不论线程函数中的参数类型是否为引用，在参数传递时都是先该参数[退化后的纯右值副本](https://zh.cppreference.com/w/cpp/standard_library/decay-copy)传入子线程中，然后子线程再将该副本作为函数实参传入可调用对象，所以当函数参数类型为普通类型`T`和右值类型`T&&`时，可以按预期正常使用，类型为`T&`时，需要使用`ref()`才行（看不懂先看下面）
+>
+>   ```c++
+>   void f(int a, move_only&& mo, int& b) { }
+>   int main() {
+>       move_only mo;	// move_only是一个只能默认构造，移动构造的类。
+>       int m = 2;
+>       std::thread t { f, m, move(mo), ref(m) };
+>       t.join();
+>   }
+>   ```
+
+- 容易出现的问题
+
+  向可调用对象传递参数很简单，我们前面也都写了，只需要将这些参数作为 `std::thread` 的构造参数即可。需要注意的是，这些参数会复制到新线程的内存空间中，即使函数中的参数是引用，依然**实际是复制**。
+
+  ```c++
+  void f(int, const int& a) {
+      std::cout << &a << '\n'; 
+  }
+  
+  int main() {
+      int n = 1;
+      std::cout << &n << '\n';
+      std::thread t { f, 3, n };
+      t.join();
+  }
+  ```
+
+  问题：
+
+  - `&a`和`&n`两者值不同
+
+    说明在一般情况下，主线程向子线程传递参数时是**值传递**
+
+  - 如果去掉函数`f`中参数`a`的const修饰，则编译失败
+
+    这是因为 `std::thread` 内部会将保有的参数副本转换为**右值表达式进行传递**，这是为了那些**只支持移动的类型**，左值引用没办法引用右值表达式，所以产生编译错误。
+
+    ```c++
+    // 只支持默认构造和移动构造
+    struct move_only {
+        move_only() { std::puts("默认构造"); }
+        move_only(move_only&&)noexcept {
+            std::puts("移动构造");
+        }
+        
+        move_only(const move_only&) = delete;
+    };
+    
+    void f(move_only){}	// 线程函数
+    
+    int main(){
+        move_only obj;
+        std::thread t{ f,std::move(obj) };
+        t.join();
+    }
+    // 默认构造
+    // 移动构造
+    // 移动构造
+    ```
+
+    没有 `std::ref` 自然是会保有一个副本，所以有两次移动构造，第一次是在 `std::thread` 中通过移动构造函数移动构造了一个`move(obj)`的副本，第二次是调用函数 `f`。
+
+- 解决办法：
+
+  使用标准库的 [`std::ref`](https://zh.cppreference.com/w/cpp/utility/functional/ref) 、 `std::cref` 函数模板
+
+  ```c++
+  void f(int, int& a) {
+      std::cout << &a << '\n'; 
+  }
+  
+  int main() {
+      int n = 1;
+      std::cout << &n << '\n';
+      std::thread t { f, 3, std::ref(n) };	// 使用ref，此时&a，&n两者值相同
+      t.join();
+  }
+  ```
+
+  解释：
+
+  - `std::ref`(reference)函数模板返回一个包装类`std::reference_wrapper<T>`，该类是包装引用对象的类模板，将对象包装，可以隐式转换为被包装对象的引用（在本例中用来包装对象n，并可以隐式转换为n的引用）。
+  - `std::cref`(const reference)同理，返回`std::reference_wrapper<const T>`，不过它是转换为包装对象的const引用。
+
+- 在子线程中执行类的成员函数
+
+  [**成员函数指针**](https://zh.cppreference.com/w/cpp/language/pointer#.E6.88.90.E5.91.98.E5.87.BD.E6.95.B0.E6.8C.87.E9.92.88)也是[*可调用*](https://zh.cppreference.com/w/cpp/named_req/Callable)(*Callable*)的 ，可以传递给 `std::thread` 作为构造参数，让其关联的线程执行成员函数。
+
+  ```c++
+  struct X{
+      void task_run(int& n)const;
+  };
+  int main(){
+  	X x;
+  	int n = 0;
+  	std::thread t{ &X::task_run, &x, ref(n) };
+  	t.join();
+  }
+  
+  ```
+
+  解释：
+
+  - 类的成员函数前面要加限定符
+  - 成员函数第一个隐藏默认实参是该类的对象指针
+  - 和之前一样，引用传递要用`ref()`
+
+  当然还能用`bind()`
+
+  ```c++
+  struct X {
+      void task_run(int& a)const{
+          std::cout << &a << '\n';
+      }
+  };
+  int main(){
+  	X x;
+  	int n = 0;
+  	std::cout << &n << '\n';
+  	std::thread t{ std::bind(&X::task_run, &x, ref(n)) };
+  	t.join();
+  }
+  
+  ```
+
+  解释：
+
+  - bind()忘了看[#这里](../C++八股文/C++学习难点.md#非静态函数)
+  - `std::bind` 也是默认按值[**复制**](https://godbolt.org/z/c5bh8Easd)的，所以和我们之前的处理一样，引用需要使用`ref()`
+
+#### 传递参数中的bug悬空引用
+
+> - `std::thread` 构造仅代表“创建并使子线程进入就绪态”，而可调用对象由对应的，进入运行态的子线程进行调用。
+
+- 前置知识
+
+  **A的引用只能引用A，或者以任何形式转换到A**
+
+  ```c++
+  int main() {
+      double a = 1;
+      //int& p = a;   编译失败
+      const int& p = a;
+  }
+  ```
+
+  解释：
+
+  - a隐式转换到了int类型，转换后的结果是**纯右值表达式**，所以需要用`const int&`或者`int&&`来接收
+
+- 问题代码
+
+  ```c++
+  void f(const std::string&){}
+  void test(){
+      char buffer[1024]{};
+      //todo.. code
+      std::thread t{ f,buffer };
+      t.detach();
+  }
+  ```
+
+  解释：
+
+  - buffer 是一个数组对象，作为 `std::thread` 构造参数的传递的时候会[*`decay-copy`*](https://zh.cppreference.com/w/cpp/standard_library/decay-copy) （确保实参在按值传递时会退化） **隐式转换为了指向这个数组的指针**。
+
+  - 本例中线程创建，执行流程
+
+    `std::thread` 的构造函数中调用了创建线程的函数（windows 下可能为 [`_beginthreadex`](https://learn.microsoft.com/zh-cn/cpp/c-runtime-library/reference/beginthread-beginthreadex?view=msvc-170)），它将我们传入的参数，f、buffer ，传递给这个函数，在新线程中执行函数 `f`。也就是说，调用和执行 `f(buffer)` 并不是说要在 `std::thread` 的构造函数中，而是在创建的新线程中，具体什么时候执行，取决于操作系统的调度，所以完全有可能函数 `test` 先执行完，而新线程此时还没有进行 `f(buffer)` 的调用，转换为`std::string`，那么 buffer 指针就**悬空**了，会导致问题。
+
+  解决办法：
+
+  - 将 `detach()` 替换为 `join()`。
+  - `thread`构造时显式将 `buffer` 转换为 `std::string`。
+
+### std::this_thread
+
+[看这里就好了，没什么难的](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/02使用线程.html#std-this-thread)
+
+
+
+
+
+
 
 
 
