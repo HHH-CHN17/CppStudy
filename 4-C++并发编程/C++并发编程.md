@@ -313,7 +313,7 @@ int main() {
 
 ### 传递参数
 
-> - 一般情况下，不论线程函数中的参数类型是否为引用，在参数传递时都是先该参数[退化后的纯右值副本](https://zh.cppreference.com/w/cpp/standard_library/decay-copy)传入子线程中，然后子线程再将该副本作为函数实参传入可调用对象，所以当函数参数类型为普通类型`T`和右值类型`T&&`时，可以按预期正常使用，类型为`T&`时，需要使用`ref()`才行（看不懂先看下面）
+> - 一般情况下，不论线程函数中的参数类型是否为引用，在参数传递时都是先使用[`decay_t`](https://zh.cppreference.com/w/cpp/types/decay)确定退化后的参数类型，然后通过复制构造函数/移动构造函数构造出一个新的副本，存入`tuple`中，最后将该参数转换为[退化后的纯右值副本](https://zh.cppreference.com/w/cpp/standard_library/decay-copy)（也就是`decay_t`中获得的类型），存入`unique_ptr`，并传入子线程中，然后子线程再将该副本作为函数实参传入可调用对象，所以当函数参数类型为普通类型`T`和右值类型`T&&`时，可以按预期正常使用，类型为`T&`时，需要使用`ref()`才行（看不懂先看下面）
 >
 >   ```c++
 >   void f(int a, move_only&& mo, int& b) { }
@@ -549,7 +549,7 @@ int main(){
 }
 ```
 
-
+## std::thread构造-源码解析
 
 
 
