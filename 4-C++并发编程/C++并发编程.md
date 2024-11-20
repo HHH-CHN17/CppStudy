@@ -1,5 +1,7 @@
 [现代C++并发编程教程 | 现代C++并发编程教程](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/)
 
+# 基本概念
+
 ## 前言
 
 - 并发，并行，线程，进程
@@ -10,6 +12,8 @@
     并发是逻辑上的同时发生（simultaneous），而并行是物理上的同时发生。
 
     所以说对于进程来说，可以并发，也可以并行；对于线程来说，也一样都可以，从写代码的角度来说，并发和并行没啥区别，可以当成一个东西
+
+# 使用线程
 
 ## Hello World
 
@@ -564,6 +568,25 @@ int main(){
 ## C++20 std::jthread
 
 [看看这里，了解就好了](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/02使用线程.html#c-20-std-jthread)
+
+# 共享数据
+
+本章节主要内容：
+
+- 多线程共享数据的问题
+- 使用互斥量保护共享数据
+- 保护共享数据的其它方案
+- 有关线程安全的其它问题
+
+在上一章内容，我们对于线程的基本使用和管理，可以说已经比较了解了，甚至深入阅读了部分的 `std::thread` 源码。所以如果你好好学习了上一章，本章也完全不用担心。
+
+我们本章，就要开始聊共享数据的那些事
+
+## 条件竞争
+
+- 前置知识：
+
+  [线程安全（thread-safe）介绍-CSDN博客](https://blog.csdn.net/liitdar/article/details/81030176)
 
 ## 项目要求？？？
 
