@@ -679,7 +679,7 @@ int main(){
 
   1. 如果互斥量是锁定的，通常说某个特定的线程正持有这个锁。
   2. 如果没有线程持有这个互斥量，那么这个互斥量就处于解锁状态。
-  3. 一般而言，我们需要把`互斥锁`和`临界区`/`临界区资源`放在同一个作用域下，当线程函数想要访问`临界区`/`临界区资源`时，应该先尝试上锁，只有上锁成功才能访问临界区/临界资源
+  3. 一般而言，我们需要把`互斥锁`和`临界区`/`临界区资源`放在同一个作用域下。**使得不同的线程在访问临界区**/临界区资源时，也可以访问到互斥锁，且一把锁能且只能对应唯一的临界区/临界区资源，反之亦然**。当线程函数想要访问`临界区`/`临界区资源`时，应该先尝试上锁，只有上锁成功才能访问临界区/临界资源
 
 - 示例：
 
@@ -817,7 +817,7 @@ int main(){
 
   我们在后续管理多个互斥量，会详细了解这个类。
 
-  ### try_lock
+### try_lock
 
 > 不论是`try_lock()`还是`lock()`，都保证不了什么，他们只能保证**在同一时间，只有一个线程能访问被互斥锁包围起来的代码块**。也就是说，线程在执行被互斥锁包围住的代码块时，也可以被其他正在执行的线程打断，并不是说被互斥锁包围住的代码块一定会在一个时间片内执行完，如果不懂，请看下面的例子
 
@@ -922,17 +922,369 @@ void foo(){
 
 ## 死锁：问题与解决
 
-> - 从表现形式上来说，死锁是由多个线程（多个线程执行的可能是同一个函数，也可以是不同的函数）访问多个临界区数据前，尝试给该资源的互斥锁上锁的顺序不一致导致的。
+> - 从表现形式上来说，死锁是由**多个线程**（多个线程执行的可能是同一个函数，也可以是不同的函数）使用多个互斥锁时，尝试给该资源的互斥锁上锁的顺序，时间不一致导致的。
+> - 解决方法：让两个互斥量使用相同顺序上锁，或者使用`lock()`一次性锁住多个互斥量
 
-试想一下，有一个玩具，这个玩具有两个部分，必须同时拿到两部分才能玩。比如一个遥控汽车，需要遥控器和玩具车才能玩。有两个小孩，他们都想玩这个玩具。当其中一个小孩拿到了遥控器和玩具车时，就可以尽情玩耍。当另一个小孩也想玩，他就得等待另一个小孩玩完才行。再试想，遥控器和玩具车被放在两个不同的地方，并且两个小孩都想要玩，并且一个拿到了遥控器，另一个拿到了玩具车。问题就出现了，除非其中一个孩子决定让另一个先玩，他把自己的那个部分给另一个小孩。但如果他们都不愿意，那么这个遥控汽车就谁都没有办法玩。
+- 前言：
 
-我们当然不在乎小孩抢玩具，我们要聊的是线程对锁的竞争：*两个线程需要对它们所有的互斥量做一些操作，其中每个线程都有一个互斥量，且等待另一个线程的互斥量解锁。因为它们都在等待对方释放互斥量，没有线程工作。* 这种情况就是死锁。
+  试想一下，有一个玩具，这个玩具有两个部分，必须同时拿到两部分才能玩。比如一个遥控汽车，需要遥控器和玩具车才能玩。有两个小孩，他们都想玩这个玩具。当其中一个小孩拿到了遥控器和玩具车时，就可以尽情玩耍。当另一个小孩也想玩，他就得等待另一个小孩玩完才行。再试想，遥控器和玩具车被放在两个不同的地方，并且两个小孩都想要玩，并且一个拿到了遥控器，另一个拿到了玩具车。问题就出现了，除非其中一个孩子决定让另一个先玩，他把自己的那个部分给另一个小孩。但如果他们都不愿意，那么这个遥控汽车就谁都没有办法玩。
 
+  我们当然不在乎小孩抢玩具，我们要聊的是线程对锁的竞争：*两个线程需要对它们所有的互斥量做一些操作，其中每个线程都有一个互斥量，且等待另一个线程的互斥量解锁。因为它们都在等待对方释放互斥量，没有线程工作。* 这种情况就是死锁。
 
+- 问题代码一：
 
+  避免死锁的一般建议是让两个互斥量以相同的顺序上锁，总在互斥量 B 之前锁住互斥量 A，就通常不会死锁。反面示例：
 
+  ```c++
+  std::mutex m1,m2;
+  std::size_t n{};
+  
+  void f(){
+      std::lock_guard<std::mutex> lc1{ m1 };
+      this_thread::sleep_for(5ms);
+      std::lock_guard<std::mutex> lc2{ m2 };
+      ++n;
+  }
+  void f2() {
+      std::lock_guard<std::mutex> lc2{ m2 };
+      this_thread::sleep_for(5ms);
+      std::lock_guard<std::mutex> lc1{ m1 };
+      ++n;
+  }
+  ```
 
+  解释：
 
+  - `f` 与 `f2` 因为互斥量**上锁顺序不同**，就有死锁风险。函数 `f` 先锁定 `m1`，然后再尝试锁定 `m2`，而函数 `f2` 先锁定 `m2` 再锁定 `m1` 。如果两个线程同时运行，它们就可能会彼此等待对方释放其所需的锁，从而造成死锁。
+  - 更改其中一个函数中的lc1，lc2的顺序即可
+
+- 问题代码二：
+
+  但是有的时候即使固定锁顺序，依旧会产生问题。当有多个互斥量保护同一个类的对象时，对于相同类型的两个不同对象进行数据的交换操作，为了保证数据交换的正确性，就要避免其它线程修改，确保每个对象的互斥量都锁住自己要保护的区域。
+
+  ```c++
+  struct X{
+      X(const std::string& str) :object{ str } {}
+  
+      friend void swap(X& lhs, X& rhs);
+  private:
+      std::string object;
+      std::mutex m;
+  };
+  
+  void swap(X& lhs, X& rhs) {
+      if (&lhs == &rhs) return;
+      std::lock_guard<std::mutex> lock1{ lhs.m };
+      this_thread::sleep_for(5ms);
+      std::lock_guard<std::mutex> lock2{ rhs.m }; 
+      swap(lhs.object, rhs.object);
+  }
+  ```
+
+  考虑用户调用的时候将参数交换，就会产生死锁：
+
+  ```c++
+  X a{ "🤣" }, b{ "😅" };
+  std::thread t{ [&] {swap(a, b); } };  // 1
+  std::thread t2{ [&] {swap(b, a); } }; // 2
+  ```
+
+- 解决方法：
+
+  - `std::lock()`
+
+    - 简介：
+
+      它能循环尝试锁住传入的所有的互斥量，要么全部成功，要么全部失败，没有死锁风险
+
+    - 使用方法：
+
+      ```c++
+      void swap(X& lhs, X& rhs) {
+          if (&lhs == &rhs) return;
+          std::lock(lhs.m, rhs.m);    // 给两个互斥量上锁
+          swap(lhs.object, rhs.object);
+          lhs.m.unlock();
+          rhs.m.unlock();
+      }
+      ```
+
+    - 源码阅读（仅传入两个参数时）：
+
+      建议从下往上看，最好复制到IDE中看
+
+      ```c++
+      template <class _Lock>
+      struct _NODISCARD _Unlock_one_guard {
+          explicit _Unlock_one_guard(_Lock& _Lk) noexcept : _Lk_ptr(_STD addressof(_Lk)) {}
+      
+          ~_Unlock_one_guard() noexcept {
+              if (_Lk_ptr) {
+                  _Lk_ptr->unlock();
+              }
+          }
+      
+          _Unlock_one_guard(const _Unlock_one_guard&)            = delete;
+          _Unlock_one_guard& operator=(const _Unlock_one_guard&) = delete;
+      
+          _Lock* _Lk_ptr;
+      };
+      
+      template <class _Lock0, class _Lock1>
+      bool _Lock_attempt_small(_Lock0& _Lk0, _Lock1& _Lk1) {
+          // attempt to lock 2 locks, by first locking _Lk0, and then trying to lock _Lk1 returns whether to try again
+          _Lk0.lock();
+          {
+              _Unlock_one_guard<_Lock0> _Guard{_Lk0};
+              if (_Lk1.try_lock()) {
+                  _Guard._Lk_ptr = nullptr;
+                  return false;
+              }
+          }// 这个花括号是用于作用域保护，使得_Guard离开此作用域时自动释放
+      
+          _STD this_thread::yield();
+          return true;
+      }
+      
+      template <class _Lock0, class _Lock1>
+      void _Lock_nonmember1(_Lock0& _Lk0, _Lock1& _Lk1) {
+          // lock 2 locks, without deadlock, special case for better codegen and reduced metaprogramming for common case
+          while (_Lock_attempt_small(_Lk0, _Lk1) && _Lock_attempt_small(_Lk1, _Lk0)) { // keep trying
+          }
+      }
+      
+      _EXPORT_STD template <class _Lock0, class _Lock1, class... _LockN>
+      void lock(_Lock0& _Lk0, _Lock1& _Lk1, _LockN&... _LkN) { // lock multiple locks, without deadlock
+          _Lock_nonmember1(_Lk0, _Lk1, _LkN...);
+      }
+      ```
+
+  - `std::scoped_lock<>`（C++17起）
+
+    - 简介：
+
+      `std::lock()`的管理类，可以自动unlock所有传入的互斥锁
+
+    - 使用方法：
+
+      ```c++
+      void swap(X& lhs, X& rhs) {
+          if (&lhs == &rhs) return;
+          std::scoped_lock guard{ lhs.m, rhs.m };
+          swap(lhs.object, rhs.object);
+      }
+      ```
+
+    - 源码阅读（传入多个参数时）：
+
+      其实就是将`lock()`包装了一下，可以自动`unlock()`
+
+      ```c++
+      _EXPORT_STD template <class... _Mutexes>
+      class _NODISCARD_LOCK scoped_lock { // class with destructor that unlocks mutexes
+      public:
+          explicit scoped_lock(_Mutexes&... _Mtxes) : _MyMutexes(_Mtxes...) { // construct and lock
+              _STD lock(_Mtxes...);
+          }
+      
+          explicit scoped_lock(adopt_lock_t, _Mutexes&... _Mtxes) noexcept // strengthened
+              : _MyMutexes(_Mtxes...) {} // construct but don't lock
+      
+          ~scoped_lock() noexcept {
+              _STD apply([](_Mutexes&... _Mtxes) { (..., (void) _Mtxes.unlock()); }, _MyMutexes);
+          }
+      
+          scoped_lock(const scoped_lock&)            = delete;
+          scoped_lock& operator=(const scoped_lock&) = delete;
+      
+      private:
+          tuple<_Mutexes&...> _MyMutexes;
+      };
+      ```
+
+      解释：
+
+      - 析构函数中的`apply`
+
+        [std::apply - cppreference.com](https://zh.cppreference.com/w/cpp/utility/apply)
+
+- 杂谈：
+
+  死锁是多线程编程中令人相当头疼的问题，并且死锁经常是不可预见，甚至难以复现，因为在大部分时间里，程序都能正常完成工作。我们可以**通过一些简单的规则，约束开发者的行为，帮助写出“无死锁”的代码**。
+
+  - **避免嵌套锁**
+
+    线程获取一个锁时，就别再获取第二个锁。每个线程只持有一个锁，自然不会产生死锁。如果必须要获取多个锁，使用 `std::lock` 。
+
+  - **避免在持有锁时调用外部代码**
+
+    这个建议是很简单的：因为代码是外部提供的，所以没办法确定外部要做什么。外部程序可能做任何事情，包括获取锁。在持有锁的情况下，如果用外部代码要获取一个锁，就会违反第一个指导意见，并造成死锁（有时这是无法避免的）。当写通用代码时（比如[保护共享数据](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#保护共享数据)中的 `Date` 类）。这不是接口设计者可以处理的，只能寄希望于调用方传递的代码是能正常执行的。
+
+  - **使用固定顺序获取锁**
+
+    如同第一个示例那样，固定的顺序上锁就不存在问题。
+
+## std::unique_lock 灵活的锁
+
+- 简介：
+
+  [`std::unique_lock<>`](https://zh.cppreference.com/w/cpp/thread/unique_lock) 是 C++11 引入的一种通用互斥包装器，它相比于 `std::lock_guard` 更加的灵活。当然，它也更加的复杂，尤其它还可以与我们下一章要讲的[条件变量](https://zh.cppreference.com/w/cpp/thread#.E6.9D.A1.E4.BB.B6.E5.8F.98.E9.87.8F)一起使用。使用它可以将之前使用 `std::lock_guard` 的 `swap` 改写一下：
+
+  ```c++
+  void swap(X& lhs, X& rhs) {
+      if (&lhs == &rhs) return;
+      std::unique_lock<std::mutex> lock1{ lhs.m, std::defer_lock };
+      std::unique_lock<std::mutex> lock2{ rhs.m, std::defer_lock };
+      std::lock(lock1, lock2);
+      swap(lhs.object, rhs.object);
+  }
+  ```
+
+- 源码解析：
+
+  此处应该打开msvc STL的实现
+
+  **重点关注`_Validate()`以及变量`_Owns`的变化**
+
+  - ```c++
+    _EXPORT_STD _INLINE_VAR constexpr adopt_lock_t adopt_lock{};	// adopt：接收，采纳
+    _EXPORT_STD _INLINE_VAR constexpr defer_lock_t defer_lock{};	// defer：推迟
+    _EXPORT_STD _INLINE_VAR constexpr try_to_lock_t try_to_lock{};
+    ```
+
+    温馨提示：翻译要跟着锁的状态来理解
+
+  - 数据成员：
+
+    ```c++
+    private:
+        _Mutex* _Pmtx = nullptr;
+        bool _Owns    = false;
+    ```
+
+    解释：
+
+    - `_Owns`：表示成员`_Pmtx`是否已经被**当前线程**拥有（`_Owns`为`true`时，表示`_Pmtx`已经被上锁了，也可以理解成已经有线程持有`_Pmtx`；`_Owns`为`false`时，表示`_Pmtx`还没有被当前线程所拥有。
+
+  - 构造函数：
+
+    - 一元构造函数
+
+      ```c++
+      explicit unique_lock(_Mutex& _Mtx)
+          : _Pmtx(_STD addressof(_Mtx)), _Owns(false) { // construct and lock
+          _Pmtx->lock();
+          _Owns = true;
+      }
+      ```
+
+      解释：
+
+      - 只有一元构造函数在构造的时候给互斥锁上锁，其他的都需要手动上锁
+
+    - 二元构造函数（重载一）
+
+      ```c++
+      unique_lock(_Mutex& _Mtx, adopt_lock_t) noexcept // strengthened
+          : _Pmtx(_STD addressof(_Mtx)), _Owns(true) {} // construct and assume already locked
+      ```
+
+      解释：
+
+      - 第二个参数中的`adopt`表示接受，采纳。说明在`unique_lock`构造之前，互斥量就已经上锁了
+
+    - 二元构造函数（重载二）
+
+      ```c++
+      unique_lock(_Mutex& _Mtx, defer_lock_t) noexcept
+          : _Pmtx(_STD addressof(_Mtx)), _Owns(false) {} // construct but don't lock
+      ```
+
+      解释：
+
+      - 第二个参数中的`defer`表示推迟。互斥量需要在`unique_ptr`构造完成之后上锁
+
+    - 二元构造函数（重载三）
+
+      ```c++
+      unique_lock(_Mutex& _Mtx, try_to_lock_t)
+          : _Pmtx(_STD addressof(_Mtx)), _Owns(_Pmtx->try_lock()) {} // construct and try to lock
+      ```
+
+      解释：
+
+      - 注意`_Owns`的变化
+
+    - 其他的构造函数自己看
+
+  - `_Validate()`
+
+    ```c++
+    void _Validate() const { // check if the mutex can be locked
+        if (!_Pmtx) {
+            _Throw_system_error(errc::operation_not_permitted);
+        }
+    
+        if (_Owns) {
+            _Throw_system_error(errc::resource_deadlock_would_occur);
+        }
+    }
+    ```
+
+    不懂没关系，慢慢往后看
+
+  - `lock()`
+
+    ```c++
+    void lock() { // lock the mutex
+        _Validate();
+        _Pmtx->lock();
+        _Owns = true;
+    }
+    ```
+
+    解释：
+
+    - 显然，当互斥锁为空且当前线程已拥有该互斥锁时，不允许`lock()`，且在`lock()`后，立马设置当前线程已拥有该互斥锁
+
+  - 析构函数：
+
+    ```c++
+    ~unique_lock() noexcept {
+        if (_Owns) {
+            _Pmtx->unlock();
+        }
+    }
+    ```
+
+    解释：
+
+    - 没啥好说的，显然，已拥有的情况下才能`unlock`。
+
+- 示例：
+
+  ```c++
+  mutex mtx1, mtx2, mtx3;
+  void test()
+  {
+      // 使用 defer_lock
+      unique_lock<mutex> unqlc1(mtx1, std::defer_lock);
+  	unqlc1.lock();
+      
+      // 使用 adopt_lock
+      mtx2.lock();
+  	unique_lock<mutex> unqlc2(mtx2, std::adopt_lock);
+  
+      // 使用一元有参构造
+  	unique_lock<mutex> unqlc3(mtx3);
+  }
+  ```
+
+  以上是三种正确用法，显然很好理解
+
+## 总结
+
+我们现在已经学习了`std::mutex::lock()`，`std::mutex::try_lock()`，`std::mutex::unlock()`，`std::lock<>()`，`std::lock_guard<>`，`std::scoped_lock<>`,`std::unique_lock<>`这几个mutex库中的功能，总结如下：
 
 
 
