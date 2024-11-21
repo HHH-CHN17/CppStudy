@@ -587,8 +587,362 @@ int main(){
 - 前置知识：
 
   [线程安全（thread-safe）介绍-CSDN博客](https://blog.csdn.net/liitdar/article/details/81030176)
+  
+  - 定义：
+  
+    “线程安全”和“线程不安全”的相关内容，都是在涉及**多线程编程**时才会用到，在单线程的场景下无需考虑。至于为何需要多线程编程，请参考此文。
+  
+    在操作系统中，线程是由进程创建的，线程本身几乎不占有系统资源，线程用到的系统资源是属于进程的。**一个进程可以创建多个线程，这些线程共享着进程中的资源。**所以，当这些线程并发运行时，如果同时对一个数据（该数据属于进程，被该进程下的多个线程共享使用）进行修改，那么就可能造成该数据表现出不符合我们预期的变化，这就是所谓的**线程不安全**。
+  
+    与线程不安全对应，在拥有共享数据的多个线程并行执行的程序中，**线程安全**的代码会通过（自身实现的）同步机制保证各个线程都可以正常且正确的执行，不会出现**数据污染**等意外情况。
+  
+    从代码角度来说，假设进程中有多个线程在同时运行，而这些线程可能会同时运行一段代码，如果这段代码在多线程并发情况下的运行结果与单线程运行时是一样的，并且其他变量的值也和预期一样，那么这段代码就是线程安全的。
+  
+    从接口的角度来说，如果一个类（或者程序）提供的接口，对于（调用该接口的）线程来说是**原子的**，或者多个线程之间的切换不会导致该接口的执行结果存在二义性，这样在调用该接口时就无需额外考虑线程同步问题，那么该接口就是线程安全的。
+  
+    线程安全问题都是由**全局变量**或**静态变量**引起的。如果每个线程中对全局变量或静态变量只有读操作，而无写操作，那么这个全局变量或静态变量是线程安全的；如果有多个线程同时对全局变量或静态变量执行写操作，则一般都需要考虑**线程同步**，否则就可能影响线程安全。
+  
+  - 类的线程安全
+  
+    线程安全的类，首先必须在单线程环境中有**正确行为**：如果一个类的实现正确（即符合规格说明），那么对这个类的对象的任何操作序列（读或写公共字段以及调用公共方法），都不会让该对象处于无效状态，或者违反类的任何不可变量、前置条件或者后置条件的情况。
+  
+    此外，一个类要成为线程安全的，在被多个线程同时访问时，不管这些线程是怎样的时序安排或者交错，该类必须仍然具备上述的**正确行为**，并且调用代码不需要进行任何额外的**线程同步操作**。其效果是，在所有线程看来，对于（线程安全）对象的操作是以固定的、全局一致的顺序发生的。
+  
+- 良心的条件竞争
 
-## 项目要求？？？
+  > 没有对共享数据进行读写，或者使用线程安全的函数对共享数据读写，或者对是原子变量的共享数据进行读写的线程，即使在多线程的情况下发生了条件竞争，都是**良性的条件竞争**，**良性的条件竞争是线程安全的**
+
+  在多线程的情况下，每个线程都抢着完成自己的任务。在大多数情况下，即使会改变执行顺序，也是良性竞争，这是无所谓的。比如两个线程都要往标准输出输出一段字符，谁先谁后并不会有什么太大影响。
+
+  ```c++
+  void f() { std::cout << "❤️\n"; }
+  void f2() { std::cout << "😢\n"; }
+  
+  int main(){
+      std::thread t{ f };
+      std::thread t2{ f2 };
+      t.join();
+      t2.join();
+  }
+  ```
+
+  > [`std::cout`](https://zh.cppreference.com/w/cpp/io/cout) 的 operator<< 调用是线程安全的，不会被打断。即：*同步的 C++ 流保证是线程安全的（从多个线程输出的单独字符可能交错，但无数据竞争）*
+
+- 恶性的条件竞争
+
+  > 只有在涉及多线程读写相同共享数据的时候，才会导致“*恶性的条件竞争*”。
+
+  ```c++
+  std::vector<int>v;
+  
+  void f() { v.emplace_back(1); }
+  void f2() { v.erase(v.begin()); }
+  
+  int main() {
+      std::thread t{ f };
+      std::thread t2{ f2 };
+      t.join();
+      t2.join();
+      std::cout << v.size() << '\n';
+  }
+  ```
+
+  比如这段代码就是典型的恶性条件竞争，两个线程共享一个 `vector`，并对它进行修改。可能导致许多问题，比如 `f2` 先执行，此时 `vector` 还没有元素，导致抛出异常。又或者 `f` 执行了一半，调用了 `f2()`，等等。
+
+  当然了，也有可能先执行 f，然后执行 f2，最后打印了 0，程序老老实实执行完毕。
+
+  但是我们显然不能寄希望于这种操作系统的调度。
+
+  而且即使不是一个添加元素，一个删除元素，全是 `emplace_back` 添加元素，也一样会有问题，由于 std::vector 不是线程安全的容器，因此当多个线程同时访问并修改 v 时，可能会发生[*未定义的行为*](https://zh.cppreference.com/w/cpp/language/memory_model#.E7.BA.BF.E7.A8.8B.E4.B8.8E.E6.95.B0.E6.8D.AE.E7.AB.9E.E4.BA.89)。具体来说，当两个线程同时尝试向 v 中添加元素时，但是 `emplace_back` 函数却是可以被打断的，执行了一半，又去执行另一个线程。可能会导致数据竞争，从而引发*未定义*的结果。
+
+  > 当某个表达式的求值写入某个内存位置，而另一求值读或修改同一内存位置时，称这些**表达式冲突**。**拥有两个冲突的求值的程序就有数据竞争**，除非
+  >
+  > - 两个求值都在同一线程上，或者在同一信号处理函数中执行，或
+  > - 两个冲突的求值都是原子操作（见 std::atomic），或
+  > - 一个冲突的求值发生早于 另一个（见 std::memory_order）
+  >
+  > **如果出现数据竞争，那么程序的行为未定义。**
+
+  标量类型等都同理，有*数据竞争*，[*未定义行为*](https://zh.cppreference.com/w/cpp/language/memory_model#.E7.BA.BF.E7.A8.8B.E4.B8.8E.E6.95.B0.E6.8D.AE.E7.AB.9E.E4.BA.89)：
+
+  ```c++
+  int cnt = 0;
+  auto f = [&]{cnt++;};
+  std::thread t1{f}, t2{f}, t3{f}; // 未定义行为
+  ```
+
+## 使用互斥量
+
+- 定义：
+
+  互斥量（Mutex），又常被称为互斥锁、互斥体（或者直接被称作“锁”），是一种用来保护**临界区**[[1\]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#footnote1)的特殊对象，其相当于实现了一个公共的“**标志位**”。它可以处于锁定（locked）状态，也可以处于解锁（unlocked）状态：
+
+  1. 如果互斥量是锁定的，通常说某个特定的线程正持有这个锁。
+  2. 如果没有线程持有这个互斥量，那么这个互斥量就处于解锁状态。
+  3. 一般而言，我们需要把`互斥锁`和`临界区`/`临界区资源`放在同一个作用域下，当线程函数想要访问`临界区`/`临界区资源`时，应该先尝试上锁，只有上锁成功才能访问临界区/临界资源
+
+- 示例：
+
+  ```c++
+  #include <mutex> // 必要标头
+  std::mutex m;	 // 互斥锁变量应当视情况放在临界区/临界区资源的当前作用域（临界区资源为成员变量时）/父作用域（临界区在普通函数中时），其作用是为了让不同的线程在访问临界区/临界区资源时，可以访问到互斥锁，且一把锁能且只能对应唯一的临界区/临界区资源，反之亦然，详情见 死锁 章节
+  
+  void f() {
+      m.lock();	// 上锁
+      std::cout << std::this_thread::get_id() << '\n';
+      m.unlock();	// 解锁
+  }
+  
+  int main() {
+      std::vector<std::thread>threads;
+      for (std::size_t i = 0; i < 10; ++i)
+          threads.emplace_back(f);
+  
+      for (auto& thread : threads)
+          thread.join();
+  }
+  ```
+
+  解释：
+
+  - 当多个线程执行函数 `f` 的时候，只有一个线程能成功调用 `lock()` 给互斥量上锁，其他所有的线程 `lock()` 的调用将阻塞执行，直至获得锁。第一个调用 `lock()` 的线程得以继续往下执行，执行我们的 `std::cout` 输出语句，不会有任何其他的线程打断这个操作。直到线程执行 `unlock()`，就解锁了互斥量。**此举保证了`get_id()`和`'\n'`的输出在同一个时间片内**
+  - 被 `lock()` 和 `unlock()` 包含在其中的代码是线程安全的，同一时间只有一个线程执行，不会被其它线程的执行所打断。
+
+### std::lock_guard
+
+> - 使用 RAII 思想的锁的管理类
+
+不过一般不推荐这样显式的 `lock()` 与 `unlock()`，我们可以使用 C++11 标准库引入的“管理类”[`std::lock_guard`](https://zh.cppreference.com/w/cpp/thread/lock_guard)：
+
+- 使用示例：
+
+  ```c++
+  void f() {
+      std::lock_guard<std::mutex> lc{ m };
+      std::cout << std::this_thread::get_id() << '\n';
+  }
+  ```
+
+- 原理：
+
+  ```c++
+  template <class _Mutex>
+  class lock_guard { // class with destructor that unlocks a mutex
+  public:
+      using mutex_type = _Mutex;
+  
+      explicit lock_guard(_Mutex& _Mtx) : _MyMutex(_Mtx) { // construct and lock
+          _MyMutex.lock();
+      }
+  
+      lock_guard(_Mutex& _Mtx, adopt_lock_t) noexcept // strengthened
+          : _MyMutex(_Mtx) {} // construct but don't lock
+  
+      ~lock_guard() noexcept {
+          _MyMutex.unlock();
+      }
+  
+      lock_guard(const lock_guard&)            = delete;
+      lock_guard& operator=(const lock_guard&) = delete;
+  
+  private:
+      _Mutex& _MyMutex;
+  };
+  ```
+
+  解释：
+
+  - 只保有一个私有数据成员，一个引用，用来引用互斥量。
+  - 构造函数中初始化这个引用，同时上锁，析构函数中解锁，这是一个非常典型的 `RAII` 式的管理。
+  - 同时它还提供一个有额外[`std::adopt_lock_t`](https://zh.cppreference.com/w/cpp/thread/lock_tag_t)参数的构造函数 ，如果使用这个构造函数，则构造函数不会上锁。
+  - 管理类，自然不可移动不可复制，所以定义复制构造与复制赋值为[弃置函数](https://zh.cppreference.com/w/cpp/language/function#.E5.BC.83.E7.BD.AE.E5.87.BD.E6.95.B0)，同时[阻止](https://zh.cppreference.com/w/cpp/language/rule_of_three#.E4.BA.94.E4.B9.8B.E6.B3.95.E5.88.99)了移动等函数的隐式定义。
+
+- 示例：
+
+  ```c++
+  void f(){
+      //code..
+      {
+          std::lock_guard<std::mutex> lc{ m };
+          // 涉及共享资源的修改的代码...
+      }
+      //code..
+  }
+  ```
+
+  解释：
+
+  使用 `{}` 创建了一个块作用域，限制了对象 `lc` 的生存期，进入作用域构造 `lock_guard` 的时候上锁（lock），离开作用域析构的时候解锁（unlock）。
+
+  - 我们要尽可能的让互斥量上锁的**粒度**小，只用来确保必须的共享资源的线程安全。
+
+  > **“粒度”通常用于描述锁定的范围大小，较小的粒度意味着锁定的范围更小，因此有更好的性能和更少的竞争。**
+
+- 更加复杂的示例：
+
+  ```c++
+  std::mutex m;
+  
+  void add_to_list(int n, std::list<int>& list) {
+      std::vector<int> numbers(n + 1);
+      std::iota(numbers.begin(), numbers.end(), 0);
+      int sum = std::accumulate(numbers.begin(), numbers.end(), 0);
+  
+      {	// 通过作用域控制lock_guard只给必要的代码上锁
+          std::lock_guard<std::mutex> lc{ m };
+          list.push_back(sum);
+      }
+  }
+  void print_list(const std::list<int>& list){
+      std::lock_guard<std::mutex> lc{ m };
+      for(const auto& i : list){
+          std::cout << i << ' ';
+      }
+      std::cout << '\n';
+  }
+  ```
+
+  解释：
+
+  [看这里](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#std-lock-guard)
+
+- 补充知识：
+
+  C++17 还引入了一个新的“管理类”：[`std::scoped_lock`](https://zh.cppreference.com/w/cpp/thread/scoped_lock)，它相较于 `lock_guard`的区别在于，**它可以管理多个互斥量**。不过对于处理一个互斥量的情况，它和 `lock_guard` 几乎完全相同。
+
+  ```c++
+  std::mutex m;
+  std::scoped_lock lc{ m }; // std::scoped_lock<std::mutex>
+  ```
+
+  我们在后续管理多个互斥量，会详细了解这个类。
+
+  ### try_lock
+
+> 不论是`try_lock()`还是`lock()`，都保证不了什么，他们只能保证**在同一时间，只有一个线程能访问被互斥锁包围起来的代码块**。也就是说，线程在执行被互斥锁包围住的代码块时，也可以被其他正在执行的线程打断，并不是说被互斥锁包围住的代码块一定会在一个时间片内执行完，如果不懂，请看下面的例子
+
+- 定义：
+
+  `try_lock` 是互斥量中的一种尝试上锁的方式。与常规的 `lock` 不同，`try_lock` 会尝试上锁，但如果锁已经被其他线程占用，则**不会阻塞当前线程，而是立即返回**。
+
+  它的返回类型是 `bool` ，如果上锁成功就返回 `true`，失败就返回 `false`。
+
+- 示例：
+
+  这种方法在多线程编程中很有用，特别是在需要保护临界区的同时，又不想线程因为等待锁而阻塞的情况下。
+
+  ```c++
+  std::mutex mtx;
+  
+  void thread_function(int id) {
+      // 尝试加锁
+      if (mtx.try_lock()) {
+          std::cout << "thread: " << id << " get lock" << std::endl;
+          // 临界区代码
+          std::this_thread::sleep_for(std::chrono::milliseconds(100)); // 模拟临界区操作
+          mtx.unlock(); // 解锁
+          std::cout << "thread: " << id << " release lock" << std::endl;
+      } else {
+          std::cout << "thread_fail: " << id << " get lock failed, handling......" << std::endl;
+      }
+  }
+  ```
+
+  如果有两个线程运行这段代码，必然有一个线程无法成功上锁，要走 else 的分支。
+
+  ```c++
+  std::thread t1(thread_function, 1);
+  std::thread t2(thread_function, 2);
+  
+  t1.join();
+  t2.join();
+  ```
+
+  输出结果：
+
+  ```text
+  thread: thread_fail: 1 get lock
+  2thread:  get lock failed, handling......1
+   release lock
+  ```
+
+  解释：
+
+  - 注意第一行：被互斥锁包围的代码块在输出完"thread: "后时间片结束，转到了另一个线程，说明被互斥锁包围的代码块，并不能保证全在一个时间片内执行完毕，只能保证在同一时间只有一个线程能访问被互斥锁包围的代码块。
+  - 想改也很简单，把这些`cout`语句合并成一个就好了
+
+## 保护共享数据
+
+互斥量主要也就是为了保护共享数据，上一节的*使用互斥量*也已经为各位展示了一些。
+
+然而使用互斥量来保护共享数据也并不是在函数中加上一个 `std::lock_guard` 就万事大吉了。有的时候只需要一个指针或者引用，就能让这种保护**形同虚设**。
+
+```c++
+class Data{
+    int a{};
+    std::string b{};
+public:
+    void do_something(){
+        // 修改数据成员等...
+    }
+};
+
+class Data_wrapper{
+    Data data;
+    std::mutex m;
+public:
+    template<class Func>
+    void process_data(Func func){
+        std::lock_guard<std::mutex> lc{m};
+        func(data);  // 受保护数据传递给函数
+    }
+};
+
+Data* p = nullptr;
+
+void malicious_function(Data& protected_data){
+    p = &protected_data; // 受保护的数据被传递到外部
+}
+
+Data_wrapper d;
+
+void foo(){
+    d.process_data(malicious_function);  // 传递了一个恶意的函数
+    p->do_something();                   // 在无保护的情况下访问保护数据
+}
+```
+
+成员函数模板 `process_data` 看起来一点问题也没有，使用 `std::lock_guard` 对数据做了保护，但是调用方传递了 `malicious_function` 这样一个恶意的函数，使受保护数据传递给外部，可以在没有被互斥量保护的情况下调用 `do_something()`。
+
+我们传递的函数就不该是涉及外部副作用的，就应该是单纯的在受互斥量保护的情况下老老实实调用 `do_something()` 操作受保护的数据。
+
+- *简而言之：**切勿将受保护数据的指针或引用传递到互斥量作用域之外**，不然保护将**形同虚设**。*
+
+> `process_data` 的确算是没问题，用户非要做这些事情也是防不住的，我们只是告诉各位可能的情况。
+
+## 死锁：问题与解决
+
+> - 从表现形式上来说，死锁是由多个线程（多个线程执行的可能是同一个函数，也可以是不同的函数）访问多个临界区数据前，尝试给该资源的互斥锁上锁的顺序不一致导致的。
+
+试想一下，有一个玩具，这个玩具有两个部分，必须同时拿到两部分才能玩。比如一个遥控汽车，需要遥控器和玩具车才能玩。有两个小孩，他们都想玩这个玩具。当其中一个小孩拿到了遥控器和玩具车时，就可以尽情玩耍。当另一个小孩也想玩，他就得等待另一个小孩玩完才行。再试想，遥控器和玩具车被放在两个不同的地方，并且两个小孩都想要玩，并且一个拿到了遥控器，另一个拿到了玩具车。问题就出现了，除非其中一个孩子决定让另一个先玩，他把自己的那个部分给另一个小孩。但如果他们都不愿意，那么这个遥控汽车就谁都没有办法玩。
+
+我们当然不在乎小孩抢玩具，我们要聊的是线程对锁的竞争：*两个线程需要对它们所有的互斥量做一些操作，其中每个线程都有一个互斥量，且等待另一个线程的互斥量解锁。因为它们都在等待对方释放互斥量，没有线程工作。* 这种情况就是死锁。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 项目要求？？？
 
 学完模板编程后，针对云会议项目中的消息队列，完成以下需求：
 
