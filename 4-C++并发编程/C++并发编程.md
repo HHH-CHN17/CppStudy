@@ -679,7 +679,7 @@ int main(){
 
   1. 如果互斥量是锁定的，通常说某个特定的线程正持有这个锁。
   2. 如果没有线程持有这个互斥量，那么这个互斥量就处于解锁状态。
-  3. 一般而言，我们需要把`互斥锁`和`临界区`/`临界区资源`放在同一个作用域下。**使得不同的线程在访问临界区**/临界区资源时，也可以访问到互斥锁，且一把锁能且只能对应唯一的临界区/临界区资源，反之亦然**。当线程函数想要访问`临界区`/`临界区资源`时，应该先尝试上锁，只有上锁成功才能访问临界区/临界资源
+  3. 一般而言，我们需要把`互斥锁`和`临界区`/`临界区资源`放在同一个作用域下。**使得不同的线程在访问临界区/临界区资源时，也可以访问到互斥锁，且一把锁能且只能对应唯一的临界区/临界区资源，反之亦然**。当线程函数想要访问`临界区`/`临界区资源`时，应该先尝试上锁，只有上锁成功才能访问临界区/临界资源
 
 - 示例：
 
@@ -819,7 +819,7 @@ int main(){
 
 ### try_lock
 
-> 不论是`try_lock()`还是`lock()`，都保证不了什么，他们只能保证**在同一时间，只有一个线程能访问被互斥锁包围起来的代码块**。也就是说，线程在执行被互斥锁包围住的代码块时，也可以被其他正在执行的线程打断，并不是说被互斥锁包围住的代码块一定会在一个时间片内执行完，如果不懂，请看下面的例子
+> 不论是`try_lock()`还是`lock()`，都保证不了什么，他们只能保证**在同一时间，只有一个线程能访问被互斥锁包围起来的代码块**。也就是说，线程在执行被互斥锁包围住的代码块时，也可以被其他正在执行的线程打断，并不是说被互斥锁包围住的代码块一定会在一个时间片内执行完；只是说线程在执行被互斥锁包围住的代码块时，其他线程无法执行该代码块。如果不懂，请看下面的例子
 
 - 定义：
 
@@ -991,7 +991,7 @@ void foo(){
 
 - 解决方法：
 
-  - `std::lock()`
+  - `std::lock<>()`
 
     - 简介：
 
@@ -1063,7 +1063,7 @@ void foo(){
 
     - 简介：
 
-      `std::lock()`的管理类，可以自动unlock所有传入的互斥锁
+      `std::lock<>()`的管理类，可以自动unlock所有传入的互斥锁
 
     - 使用方法：
 
@@ -1280,11 +1280,244 @@ void foo(){
   }
   ```
 
-  以上是三种正确用法，显然很好理解
+  以上是三种正确用法，其他用法都是错误的，显然很好理解
+  
+- 我们前面提到了 `std::unique_lock` 更加灵活，那么灵活在哪？很简单，它拥有 `lock()` 和 `unlock()` 成员函数，所以我们能写出如下代码：
+
+  ```c++
+  void f() {
+      //code..
+      
+      std::unique_lock<std::mutex> lock{ m };
+  
+      // 涉及共享资源的修改的代码...
+  
+      lock.unlock(); // 解锁并释放所有权，析构函数不会再 unlock()
+  
+      //code..
+  }
+  ```
+
+  而不是像之前 `std::lock_guard` 一样使用 `{}`。
+
+  另外再聊一聊开销吧，其实倒也还好，多了一个 `bool` ，内存对齐，x64 环境也就是 `16` 字节。这都不是最重要的，主要是复杂性和需求，通常建议优先 `std::lock_guard`，当它无法满足你的需求或者显得代码非常繁琐，那么可以考虑使用 `std::unique_lock`。
 
 ## 总结
 
-我们现在已经学习了`std::mutex::lock()`，`std::mutex::try_lock()`，`std::mutex::unlock()`，`std::lock<>()`，`std::lock_guard<>`，`std::scoped_lock<>`,`std::unique_lock<>`这几个mutex库中的功能，总结如下：
+在“共享数据”章节中，我们现在已经学习了`std::mutex::lock()`，`std::mutex::try_lock()`，`std::mutex::unlock()`，`std::lock_guard<>`，`std::unique_lock<>`，`std::lock<>()`，`std::scoped_lock<>`这几个mutex库中的功能，总结如下：
+
+- `std::mutex::lock()`，`std::mutex::unlock()`
+
+  ```c++
+  #include <mutex> // 必要标头
+  std::mutex m;
+  
+  void f() {
+      m.lock();	// 上锁
+      // do_something()
+      m.unlock();	// 解锁
+  }
+  ```
+
+- `std::mutex::try_lock()`，`std::mutex::unlock()`
+
+  ```c++
+  std::mutex mtx;
+  
+  void thread_function(int id) {
+      if (mtx.try_lock()) {		// 尝试加锁
+          // do_something....
+          mtx.unlock(); 			// 解锁
+      } else {
+          // do_something....
+      }
+  }
+  ```
+
+- `std::lock_guard<>`
+
+  使用 RAII 思想的锁的管理类，仅能通过构造函数传递锁，自动`unlock()`。
+
+  ```c++
+  template <class _Mutex>
+  class lock_guard { // class with destructor that unlocks a mutex
+  public:
+      using mutex_type = _Mutex;
+  
+      explicit lock_guard(_Mutex& _Mtx) : _MyMutex(_Mtx) { // construct and lock
+          _MyMutex.lock();
+      }
+  
+      lock_guard(_Mutex& _Mtx, adopt_lock_t) noexcept // strengthened
+          : _MyMutex(_Mtx) {} // construct but don't lock
+  
+      ~lock_guard() noexcept {
+          _MyMutex.unlock();
+      }
+  
+      lock_guard(const lock_guard&)            = delete;
+      lock_guard& operator=(const lock_guard&) = delete;
+  
+  private:
+      _Mutex& _MyMutex;
+  };
+  ```
+
+- `std::unique_lock<>`
+
+  `std::lock_guard<>`的加强版，更加灵活，可以手动`lock()`，`unlock()`，也可以像`std::lock_guard<>`一样使用RAII自动`lock()`，`unlock()`
+
+- `std::lock<>()`
+
+  函数模板，用于解决死锁问题。可以一次性传递多个锁，传入的锁要么都上锁，要么都不上锁
+
+- `std::scoped_lock<>`（C++17起）
+
+  和`std::lock_guard<>`很像，`std::scoped_lock<>`是使用 RAII 思想的`std::lock<>()`的管理类。其构造函数可以接收多个锁，并能将这些锁全都自动上锁/解锁。
+
+  ```c++
+  template <class... _Mutexes>
+  class scoped_lock { // class with destructor that unlocks mutexes
+  public:
+      explicit scoped_lock(_Mutexes&... _Mtxes) : _MyMutexes(_Mtxes...) { // construct and lock
+          _STD lock(_Mtxes...);
+      }
+  
+      explicit scoped_lock(adopt_lock_t, _Mutexes&... _Mtxes) noexcept // strengthened
+          : _MyMutexes(_Mtxes...) {} // construct but don't lock
+  
+      ~scoped_lock() noexcept {
+          _STD apply([](_Mutexes&... _Mtxes) { (..., (void) _Mtxes.unlock()); }, _MyMutexes);
+      }
+  
+      scoped_lock(const scoped_lock&)            = delete;
+      scoped_lock& operator=(const scoped_lock&) = delete;
+  
+  private:
+      tuple<_Mutexes&...> _MyMutexes;
+  };
+  ```
+
+## 在不同作用域传递互斥量
+
+> - 互斥量本身**不可移动，不可复制**，只能通过移动指针达到传递互斥量的效果
+> - 移动指针时要注意互斥量的生存期
+
+- 基本概念：
+
+  首先我们要明白，互斥量满足互斥体 (Mutex)的要求，**不可复制不可移动**。所以显然，mutex对象只能放在一个固定的位置，像下面代码中，`mtx`被创建之后，就只能放在main的作用域内，它的本体无法移动/复制到其他地方
+
+  ```c++
+  int main() {
+      mutex mtx;
+      //mutex mtx2(mtx);		// 编译错误
+      //mutex mtx3(move(mtx));	 // 编译错误
+      //mutex mtx4 = mtx;		// 编译错误
+  }
+  ```
+
+  所以我们所谓在不同作用域内传递互斥量，传递的只是**指针**/**引用**而已，也就是说传递的只是它的浅层数据，mutex的本体依然被存放在原来的位置。且我们需要注意，**传递浅层数据时，我们也只能移动不能复制**。
+
+- 传递mutex指针的类
+
+  可以利用各种类来进行传递指针/引用，比如前面提到的 `std::unique_lock`。**它存储的是mutex指针，是只能移动不可复制的类，它移动即代表着对应的mutex指针和对指针的所有权转移给了另一个对象。**
+
+  `std::unique_lock` 可以获取互斥量的所有权，而互斥量的所有权可以通过移动操作转移给其他的 `std::unique_lock` 对象。有些时候，这种转移（*就是调用移动构造*）是自动发生的，比如当[函数返回](https://zh.cppreference.com/w/cpp/language/return#.E8.87.AA.E5.8A.A8.E4.BB.8E.E5.B1.80.E9.83.A8.E5.8F.98.E9.87.8F.E5.92.8C.E5.BD.A2.E5.8F.82.E7.A7.BB.E5.8A.A8) `std::unique_lock` 对象。另一种情况就是得显式使用 [`std::move`](https://zh.cppreference.com/w/cpp/utility/move)，以下为`unique_lock`移动构造源码：
+
+  ```c++
+  unique_lock(unique_lock&& _Other) noexcept : _Pmtx(_Other._Pmtx), _Owns(_Other._Owns) {
+      _Other._Pmtx = nullptr;
+      _Other._Owns = false;
+  }
+  ```
+
+- 使用`unique_ptr`进行传递的方法
+
+  一种可能的使用是允许函数去锁住一个互斥量，并将互斥量的所有权转移到调用者上，所以调用者可以在这个锁保护的范围内执行代码。
+
+  ```c++
+  std::unique_lock<std::mutex> get_lock(){
+      extern std::mutex some_mutex;
+      std::unique_lock<std::mutex> lk{ some_mutex };
+      return lk;
+  }
+  void process_data(){
+      std::unique_lock<std::mutex> lk{ get_lock() };
+      // 执行一些任务...
+  }
+  ```
+
+  解释：
+
+  - 在不同作用域之间传递`mutex`指针/引用时，**要特别注意互斥量的[生存期](https://zh.cppreference.com/w/cpp/language/lifetime)**。
+
+    > extern 说明符只能搭配变量声明和函数声明（除了类成员或函数形参）。*它指定外部链接，而且技术上不影响存储期，但它不能用来定义自动存储期的对象，故所有 extern 对象都具有**静态或线程[存储期](https://zh.cppreference.com/w/cpp/language/storage_duration)。***
+
+    如果你简单写一个 `std::mutex some_mutex` 那么函数 `process_data` 中的 `lk` 会持有一个悬垂指针。
+
+    > 举一个使用 `extern std::mutex` 的完整[运行示例](https://godbolt.org/z/z47x1Es5z)。当然，其实理论上你 `new std::mutex` 也是完全可行...... 🤣🤣
+
+  - 对于`unique_lock`而言，关闭rvo/nrvo的情况下，一共经历了三次构造（一元有参，移动，移动）
+  - 在本例中，锁保护的范围从`std::unique_lock<std::mutex> lk{ some_mutex };`开始，到`process_data()`结束时结束。
+  - `std::unique_lock` 是灵活的，同样允许在对象销毁之前就解锁互斥量，调用 `unlock()` 成员函数即可，不再强调。
+
+## 保护共享数据的初始化过程
+
+> - 一般讨论的比较多的是懒汉式的单例模式在多线程下的初始化过程。使用双检锁的形式线程不安全，因为new/reset并非原子操作，可以被其他线程中断。在C++11之后，应该使用call_once/静态局部变量保证绝对的线程安全
+
+- 前言：
+
+  保护共享数据并非必须使用互斥量，互斥量只是其中一种常见的方式而已，对于一些特殊的场景，也有专门的保护方式，比如**对于共享数据的初始化过程的保护**。我们通常就不会用互斥量，**这会造成很多的额外开销**。
+
+  我们不想为各位介绍其它乱七八糟的各种保护初始化的方式，我们只介绍三种：**双检锁（错误）**、**使用 `std::call_once`**、**静态局部变量初始化从 C++11 开始是线程安全**。
+
+- **双检锁（错误）线程不安全**
+
+  [C++11 使用智能指针改进单例模式_c++单例模式 智能指针-CSDN博客](https://blog.csdn.net/hellokandy/article/details/112614333)
+
+  [C++ 智能指针最佳实践&源码分析-腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1922161)
+
+  [#单例模式](../C++八股文/C++学习难点.md#单例模式的线程安全问题)
+
+  [C++实现单例模式（包括采用C++11中的智能指针） - 代码先锋网](https://www.codeleading.com/article/54143530291/)
+
+  [C++ 智能指针最佳实践&源码分析-腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1922161)
+
+  当然上面的例子中，单例对象是个指针，但实际上我们一般用智能指针改进单例模式
+
+  ```c++
+  class Singleton {
+  private:
+      static Singleton* m_pstcSingle;
+      static mutex m_mtx;
+  public:
+      static Singleton* GetInstance() {
+          if (m_pstcSingle == nullptr) {
+              m_mtx.lock();
+              if (m_pstcSingle == nullptr) {
+                  m_pstcSingle = new Singleton;
+              }
+              m_mtx.unlock();
+          }
+          return m_pstcSingle;
+      }
+  };
+  
+  ```
+
+  使用双检锁时，不论是使用new初始化，或者智能指针中的reset初始化，都不是线程安全的，因为new/reset并非原子操作，分析如下：
+
+  在单例还未被创建时，线程A和线程B同时调用GetInstance()，假设线程A先获得时间片，时间片在执行到reset中，刚好为单例指针分配好内存空间，但是没调用构造函数初始化时，刚好结束，轮到线程B执行，对于此时的线程B而言，单例指针非空，所以直接返回指针。明显地，线程B中的单例指针初始化并不完全，所以线程不安全
+
+- call_once配合once_flag
+
+- 静态局部变量初始化在 C++11 是线程安全
+
+  [单例--Meyers' Singleton-CSDN博客](https://blog.csdn.net/weixin_44048823/article/details/104080864)
+
+  [C++静态局部变量的妙用：Meyer’s Singleton单例模式_单例模式 meyer-CSDN博客](https://blog.csdn.net/qq_44886707/article/details/135315310)
+
+  [全局变量、静态变量、局部变量的生存周期与作用域_静态局部变量的作用域和生存期-CSDN博客](https://blog.csdn.net/Nine_CC/article/details/105472698)
 
 
 
