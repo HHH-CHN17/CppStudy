@@ -1463,72 +1463,69 @@ void foo(){
 
 ## 保护共享数据的初始化过程
 
+[共享数据 | 现代C++并发编程教程](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#保护共享数据的初始化过程)
+
 > - 一般讨论的比较多的是懒汉式的单例模式在多线程下的初始化过程。使用双检锁的形式线程不安全，因为new/reset并非原子操作，可以被其他线程中断。在C++11之后，应该使用call_once/静态局部变量保证绝对的线程安全
 
-- 前言：
+### 前言
 
-  保护共享数据并非必须使用互斥量，互斥量只是其中一种常见的方式而已，对于一些特殊的场景，也有专门的保护方式，比如**对于共享数据的初始化过程的保护**。我们通常就不会用互斥量，**这会造成很多的额外开销**。
+保护共享数据并非必须使用互斥量，互斥量只是其中一种常见的方式而已，对于一些特殊的场景，也有专门的保护方式，比如**对于共享数据的初始化过程的保护**。我们通常就不会用互斥量，**这会造成很多的额外开销**。
 
-  我们不想为各位介绍其它乱七八糟的各种保护初始化的方式，我们只介绍三种：**双检锁（错误）**、**使用 `std::call_once`**、**静态局部变量初始化从 C++11 开始是线程安全**。
+我们不想为各位介绍其它乱七八糟的各种保护初始化的方式，我们只介绍三种：**双检锁（错误）**、**使用 `std::call_once`**、**静态局部变量初始化从 C++11 开始是线程安全**。
 
-- **双检锁（错误）线程不安全**
+### 双检锁（错误）线程不安全
 
-  [C++11 使用智能指针改进单例模式_c++单例模式 智能指针-CSDN博客](https://blog.csdn.net/hellokandy/article/details/112614333)
+[C++ 智能指针最佳实践&源码分析-腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1922161)
 
-  [C++ 智能指针最佳实践&源码分析-腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1922161)
+[#单例模式](../C++八股文/C++学习难点.md#单例模式的线程安全问题)
 
-  [#单例模式](../C++八股文/C++学习难点.md#单例模式的线程安全问题)
+[由std::once_call 引发的单例模式的再次总结，基于C++11 - 烟波--钓徒 - 博客园](https://www.cnblogs.com/xuhuajie/p/11647164.html)
 
-  [C++实现单例模式（包括采用C++11中的智能指针） - 代码先锋网](https://www.codeleading.com/article/54143530291/)
+当然上面的例子中，单例对象是个指针，但实际上我们一般用智能指针改进单例模式
 
-  [由std::once_call 引发的单例模式的再次总结，基于C++11 - 烟波--钓徒 - 博客园](https://www.cnblogs.com/xuhuajie/p/11647164.html)
+```c++
+// 不重要
+class Singleton {
+private:
+    static shared_ptr<Singleton> m_spSingle;
+    static mutex m_mtx;
+public:
+    //GetInstance
+    static shared_ptr<Singleton> GetInstance() {
+        if (m_spSingle == nullptr) {
+            m_mtx.lock();
+            if (m_spSingle == nullptr) {
+                m_spSingle = make_shared<Singleton>();
+            }
+            m_mtx.unlock();
+        }
+        return m_spSingle;
+    }
+};
+shared_ptr<Singleton> Singleton::m_spSingle = nullptr;
+mutex Singleton::m_mtx;
+```
 
-  [智能指针shared_ptr 的 reset使用_shared ptr reset-CSDN博客](https://blog.csdn.net/tianyexing2008/article/details/128919341)
+使用双检锁时，不论是使用new初始化，或者智能指针中的reset初始化，都不是线程安全的，因为new/reset并非原子操作，分析如下：
 
-  当然上面的例子中，单例对象是个指针，但实际上我们一般用智能指针改进单例模式
+在单例还未被创建时，线程A和线程B同时调用GetInstance()，假设线程A先获得时间片，时间片在执行到reset中，刚好为单例指针分配好内存空间，但是没调用构造函数初始化时，刚好结束，轮到线程B执行，对于此时的线程B而言，单例指针非空，所以直接返回指针。明显地，线程B中的单例指针初始化并不完全，所以线程不安全
+
+shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时GetInstance的返回值改为Singleton&。这样做的好处是会少占用一部分空间
+
+### call_once配合once_flag
+
+- 示例：
 
   ```c++
+  // 重要
   class Singleton {
   private:
       static shared_ptr<Singleton> m_spSingle;
-      static mutex m_mtx;
-  public:
-      //GetInstance
-      static shared_ptr<Singleton> GetInstance() {
-          if (m_spSingle == nullptr) {
-              m_mtx.lock();
-              if (m_spSingle == nullptr) {
-                  m_spSingle = make_shared<Singleton>();
-              }
-              m_mtx.unlock();
-          }
-          return m_spSingle;
-      }
-  private:
-  	SingletonT() = default;	
-  	SingletonT(const SingletonT&) = delete;
-  	SingletonT& operator=(const SingletonT&) = delete;
-  	~SingletonT() = default;
-  };
-  shared_ptr<Singleton> Singleton::m_spSingle = nullptr;
-  mutex Singleton::m_mtx;
-  ```
-
-  使用双检锁时，不论是使用new初始化，或者智能指针中的reset初始化，都不是线程安全的，因为new/reset并非原子操作，分析如下：
-
-  在单例还未被创建时，线程A和线程B同时调用GetInstance()，假设线程A先获得时间片，时间片在执行到reset中，刚好为单例指针分配好内存空间，但是没调用构造函数初始化时，刚好结束，轮到线程B执行，对于此时的线程B而言，单例指针非空，所以直接返回指针。明显地，线程B中的单例指针初始化并不完全，所以线程不安全
-
-  shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时GetInstance的返回值改为Singleton&。这样做的好处是会少占用一部分kong'jian
-
-- call_once配合once_flag
-
-  ```c++
-  class Singleton {
-  private:
-      static shared_ptr<Singleton> m_spSingle;
+      // once_flag 用于防止多次初始化
       static once_flag oneflg;
   public:
       static shared_ptr<Singleton> GetInstance() {
+          // call_once只接收两个参数，第一个为once_flag，第二个为可调用对象
           call_once(oneflg, []() {
               m_spSingle = make_shared<Singleton>();
               cout << "call once" << endl;
@@ -1538,13 +1535,195 @@ void foo(){
   };
   ```
 
-- 静态局部变量初始化在 C++11 是线程安全
+  解释：
 
-  [单例--Meyers' Singleton-CSDN博客](https://blog.csdn.net/weixin_44048823/article/details/104080864)
+  - once_flag可以是类的静态/普通成员，也可以是全局变量，或者是静态局部变量，用于搭配call_once使用
 
-  [C++静态局部变量的妙用：Meyer’s Singleton单例模式_单例模式 meyer-CSDN博客](https://blog.csdn.net/qq_44886707/article/details/135315310)
+  - call_once在第一次调用完后，便会给oneflg上标记，保证**只进行一次线程安全的初始化**。
 
-  [全局变量、静态变量、局部变量的生存周期与作用域_静态局部变量的作用域和生存期-CSDN博客](https://blog.csdn.net/Nine_CC/article/details/105472698)
+- 注意事项：
+
+  “**初始化**”，那自然是只有**一次**。但是 `std::call_once` 也有一些例外情况（比如异常）会让传入的可调用对象被多次调用，即“**多次**”初始化：
+
+  ```c++
+  // 建议自己拿去ide跑一下
+  std::once_flag flag;
+  int n = 0;
+  
+  void f(){
+      std::call_once(flag, [] {
+          ++n;
+          std::cout << "第" << n << "次调用\n";
+          throw std::runtime_error("异常");
+      });
+  }
+  
+  int main(){
+      try{
+          f();
+      }
+      catch (std::exception&){}
+      
+      try{
+          f();
+      }
+      catch (std::exception&){}
+  }
+  ```
+
+  解释：
+
+  - 会调用两次call_once，很好理解，因为异常代表操作失败，需要进行回溯和重置状态，所以在call_once会多次调用可调用对象
+
+### 静态局部变量
+
+[必看：局部静态变量](https://blog.csdn.net/weixin_44470443/article/details/104503759)
+
+[单例--Meyers' Singleton-CSDN博客](https://blog.csdn.net/weixin_44048823/article/details/104080864)
+
+> - 静态局部变量初始化在 C++11 是线程安全
+> - 静态局部变量存放在内存的**全局数据区**。
+> - 静态局部变量在**编译期**赋初值，且**只赋值一次**。如果变量在初始化时，并发线程同时进入到static声明语句，并发线程会阻塞等待初始化结束，所以**静态局部变量具有线程安全性**。
+> - 函数结束时，静态局部变量不会消失，每次该函数调用时，也不会为其重新分配空间。它始终驻留在全局数据区，直到程序运行结束。静态局部变量的初始化与全局变量类似．
+
+- 静态局部变量示例：
+
+  ```c++
+  // 建议放在IDE里跑一跑
+  class A {
+  public:
+      A(int _c) : c(_c){cout << "construct : " << c << endl;}
+      static A& instance(int tmp) {
+          static A a(tmp);
+          return a;
+      }
+      int c;
+  };
+  
+  int main() {
+      int i = 1;
+      A::instance(++i);
+      A::instance(i++);
+      A::instance(i);
+      cout <<  A::instance(i).c << endl;
+  }
+  ```
+
+  解释：
+
+  - 明显的，只有在14行的代码里会进行初始化。
+
+- 在单例模式中的应用：
+
+  ```c++
+  class A {
+  public:
+      static A& instance() {
+          static A a;
+          return a;
+      }
+      int c;
+  };
+  ```
+
+### 线程安全的单例模式
+
+- 饿汉式
+
+- 懒汉式
+
+  ```c++
+  // 简单版本，建议拿到IDE上看
+  class Singleton {
+  private:
+      static unique_ptr<Singleton, void(*)(Singleton*)> up;
+  public:
+      static Singleton& GetInstance() {
+          static once_flag of;
+          call_once(of, []() {
+              up.reset(new Singleton);
+              cout << "111" << endl;
+          });
+          return *up;
+      }
+  
+      static void Destory(Singleton* p_sgl) {
+          //p_sgl->~Singleton();  别犯蠢，指针的释放要使用delete才能释放干净。
+          delete p_sgl;
+          cout << "Destory" << endl;
+      }
+  
+      void f(){ cout << "f" << endl;}
+  private:
+      Singleton() = default;
+      Singleton(const Singleton&) = delete;
+      Singleton(Singleton&&) = delete;
+      Singleton& operator=(const Singleton&) = delete;
+      ~Singleton(){ cout << "~Singleton" << endl;}
+  };
+  unique_ptr<Singleton, void(*)(Singleton*)> Singleton::up(nullptr, Singleton::Destory);
+  ```
+
+  解释：
+
+  - 注意看16行的注释
+
+  ```c++
+  // CRTP的运用，好好看，好好学
+  template<typename T>  //T 是子类
+  class Singleton {
+  private:
+      static unique_ptr<T, void(*)(T*)> up;
+  public:
+      static T& GetInstance() {
+          static once_flag of;
+          call_once(of, []() {
+              up.reset(new T);
+              cout << "111" << endl;
+          });
+          return *up;
+      }
+  
+      static void Destory(T* p_sgl) {
+          delete p_sgl;
+          cout << "Destory" << endl;
+      }
+  
+      void f(){ cout << "f" << endl;}
+  private:
+      研究一下为什么父类的构造必须为public
+      // Singleton() = default;
+      // Singleton(const Singleton&) = delete;
+      // Singleton(Singleton&&) = delete;
+      // Singleton& operator=(const Singleton&) = delete;
+      //~Singleton(){ cout << "~Singleton" << endl;}
+  };
+  template<typename T>
+  unique_ptr<T, void(*)(T*)> Singleton<T>::up(nullptr, T::Destory);
+  
+  class Single_CRTP : public Singleton <Single_CRTP>
+  {
+  public:
+      friend class Singleton <Single_CRTP>;
+      void test(){
+          std::cout << "hello word" << std::endl;
+      }
+      static void Destory(Single_CRTP* p_sgl) {
+          delete p_sgl;
+          cout << "Destory" << endl;
+      }
+  private:
+      Single_CRTP() = default;
+      Single_CRTP(const Single_CRTP&) = delete;
+      Single_CRTP(Single_CRTP&&) = delete;
+      Single_CRTP& operator=(const Single_CRTP&) = delete;
+      ~Single_CRTP() = default;
+  };
+  ```
+
+  研究一下为什么父类的构造必须为public
+
+  [C++11 使用智能指针改进单例模式_c++单例模式 智能指针-CSDN博客](https://blog.csdn.net/hellokandy/article/details/112614333)
 
 
 
