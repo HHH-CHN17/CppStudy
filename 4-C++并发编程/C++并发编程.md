@@ -1481,35 +1481,62 @@ void foo(){
 
   [C++实现单例模式（包括采用C++11中的智能指针） - 代码先锋网](https://www.codeleading.com/article/54143530291/)
 
-  [C++ 智能指针最佳实践&源码分析-腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1922161)
+  [由std::once_call 引发的单例模式的再次总结，基于C++11 - 烟波--钓徒 - 博客园](https://www.cnblogs.com/xuhuajie/p/11647164.html)
+
+  [智能指针shared_ptr 的 reset使用_shared ptr reset-CSDN博客](https://blog.csdn.net/tianyexing2008/article/details/128919341)
 
   当然上面的例子中，单例对象是个指针，但实际上我们一般用智能指针改进单例模式
 
   ```c++
   class Singleton {
   private:
-      static Singleton* m_pstcSingle;
+      static shared_ptr<Singleton> m_spSingle;
       static mutex m_mtx;
   public:
-      static Singleton* GetInstance() {
-          if (m_pstcSingle == nullptr) {
+      //GetInstance
+      static shared_ptr<Singleton> GetInstance() {
+          if (m_spSingle == nullptr) {
               m_mtx.lock();
-              if (m_pstcSingle == nullptr) {
-                  m_pstcSingle = new Singleton;
+              if (m_spSingle == nullptr) {
+                  m_spSingle = make_shared<Singleton>();
               }
               m_mtx.unlock();
           }
-          return m_pstcSingle;
+          return m_spSingle;
       }
+  private:
+  	SingletonT() = default;	
+  	SingletonT(const SingletonT&) = delete;
+  	SingletonT& operator=(const SingletonT&) = delete;
+  	~SingletonT() = default;
   };
-  
+  shared_ptr<Singleton> Singleton::m_spSingle = nullptr;
+  mutex Singleton::m_mtx;
   ```
 
   使用双检锁时，不论是使用new初始化，或者智能指针中的reset初始化，都不是线程安全的，因为new/reset并非原子操作，分析如下：
 
   在单例还未被创建时，线程A和线程B同时调用GetInstance()，假设线程A先获得时间片，时间片在执行到reset中，刚好为单例指针分配好内存空间，但是没调用构造函数初始化时，刚好结束，轮到线程B执行，对于此时的线程B而言，单例指针非空，所以直接返回指针。明显地，线程B中的单例指针初始化并不完全，所以线程不安全
 
+  shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时GetInstance的返回值改为Singleton&。这样做的好处是会少占用一部分kong'jian
+
 - call_once配合once_flag
+
+  ```c++
+  class Singleton {
+  private:
+      static shared_ptr<Singleton> m_spSingle;
+      static once_flag oneflg;
+  public:
+      static shared_ptr<Singleton> GetInstance() {
+          call_once(oneflg, []() {
+              m_spSingle = make_shared<Singleton>();
+              cout << "call once" << endl;
+          });
+          return m_spSingle;
+      }
+  };
+  ```
 
 - 静态局部变量初始化在 C++11 是线程安全
 
