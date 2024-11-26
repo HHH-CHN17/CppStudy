@@ -1473,9 +1473,9 @@ void foo(){
 
 我们不想为各位介绍其它乱七八糟的各种保护初始化的方式，我们只介绍三种：**双检锁（错误）**、**使用 `std::call_once`**、**静态局部变量初始化从 C++11 开始是线程安全**。
 
-### 双检锁（错误）线程不安全
+### 双检锁（错误）线程不安全？？？
 
-[C++ 智能指针最佳实践&源码分析-腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1922161)
+[C++ 智能指针最佳实践&源码分析-腾讯云开发者社区-腾讯云？？？](https://cloud.tencent.com/developer/article/1922161)
 
 [#单例模式](../C++八股文/C++学习难点.md#单例模式的线程安全问题)
 
@@ -1630,6 +1630,31 @@ shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时G
 
 - 饿汉式
 
+  程序开始时就要。
+
+  ```c++
+  class Singleton_Hungry
+  {
+  public:
+      static Singleton_Hungry& Instance(){
+          static Singleton_Hungry _instance;	//对象在全局静态数据区
+          //static Singleton_Hungry* p_instance = new Singleton_Hungry; 对象也在全局静态数据区，两者都可以
+          return _instance;
+      }
+  private:
+      Singleton_Hungry() = default;
+      Singleton_Hungry(const Singleton_Hungry&) = delete;
+      Singleton_Hungry(Singleton_Hungry&&) = delete;
+      Singleton_Hungry& operator=(const Singleton_Hungry&) = delete;
+      ~Singleton_Hungry() = default;
+  };
+  ```
+
+  解释：
+
+  - 静态局部变量会在第一次使用时初始化，多次调用被会编译器忽略，生命周期是程序的运行区间，并且是多线程安全的。
+  - 静态局部变量是分配在全局静态数据区（不是堆或者栈），内存一直都在（默认全部填0，但不占程序大小`bss`段）。
+
 - 懒汉式
 
   ```c++
@@ -1669,61 +1694,288 @@ shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时G
   - 注意看16行的注释
 
   ```c++
-  // CRTP的运用，好好看，好好学
-  template<typename T>  //T 是子类
-  class Singleton {
+  // 复杂版本，建议放到IDE中看
+  class Single_CRTP;      // 前置申明
+  
+  // 懒汉式单例的基类
+  template<typename T>    //T 是子类
+  class Singleton_Lazy_Base {
+      friend class Single_CRTP;
   private:
       static unique_ptr<T, void(*)(T*)> up;
-  public:
-      static T& GetInstance() {
-          static once_flag of;
-          call_once(of, []() {
-              up.reset(new T);
-              cout << "111" << endl;
-          });
-          return *up;
+      static once_flag of;
+  
+      // 初始化函数也要写成static！！！
+      template<typename ...Args>
+      static void init(Args... args) {
+          up.reset(new T(forward<Args>(args)...));
+          cout << "init_multiArgs" << endl;
       }
   
       static void Destory(T* p_sgl) {
           delete p_sgl;
-          cout << "Destory" << endl;
+      }
+  public:
+      template<typename ...Args>
+      static T& GetInstance(Args&&... args) {
+          // lambda无法使用万能引用（C++20前），故此处使用模板函数完成完美转发
+          call_once(of, Singleton_Lazy_Base<T>::init<Args...>, forward<Args>(args)...);
+          return *up;
       }
   
-      void f(){ cout << "f" << endl;}
+      static T& GetInstance() {
+          call_once(of, []() {
+              up.reset(new T);
+              cout << "init" << endl;
+          });
+          return *up;
+      }
+  
   private:
-      研究一下为什么父类的构造必须为public
-      // Singleton() = default;
-      // Singleton(const Singleton&) = delete;
-      // Singleton(Singleton&&) = delete;
-      // Singleton& operator=(const Singleton&) = delete;
-      //~Singleton(){ cout << "~Singleton" << endl;}
+       Singleton_Lazy_Base() = default;
+       Singleton_Lazy_Base(const Singleton_Lazy_Base&) = delete;
+       Singleton_Lazy_Base(Singleton_Lazy_Base&&) = delete;
+       Singleton_Lazy_Base& operator=(const Singleton_Lazy_Base&) = delete;
+      ~Singleton_Lazy_Base(){ cout << "~Singleton" << endl;}
   };
   template<typename T>
-  unique_ptr<T, void(*)(T*)> Singleton<T>::up(nullptr, T::Destory);
+  unique_ptr<T, void(*)(T*)> Singleton_Lazy_Base<T>::up(nullptr, T::Destory);
+  template<typename T>
+  once_flag Singleton_Lazy_Base<T>::of;
   
-  class Single_CRTP : public Singleton <Single_CRTP>
+  // 具体的子类，一定要注意在CRTP中，不同子类继承的父类是不同的父类，所以static变量也是互不相通的，不同子类之间不会因为这些变量造成死锁
+  class Single_CRTP : public Singleton_Lazy_Base<Single_CRTP>
   {
-  public:
-      friend class Singleton <Single_CRTP>;
-      void test(){
-          std::cout << "hello word" << std::endl;
-      }
+      friend class Singleton_Lazy_Base<Single_CRTP>;
+  private:
       static void Destory(Single_CRTP* p_sgl) {
           delete p_sgl;
-          cout << "Destory" << endl;
+      }
+  public:
+      void test(){
+          std::cout << "hello word" << std::endl;
       }
   private:
       Single_CRTP() = default;
       Single_CRTP(const Single_CRTP&) = delete;
       Single_CRTP(Single_CRTP&&) = delete;
       Single_CRTP& operator=(const Single_CRTP&) = delete;
-      ~Single_CRTP() = default;
+      ~Single_CRTP(){ cout << "~Single_CRTP" << endl; };
+  };
+  ```
+  
+  解释：
+  
+  - `Singleton_Lazy_Base`顾名思义，懒汉式单例的基类，是个模板类；`Single_CRTP`是子类，继承于基类，注意继承时传给基类的模板实参，说明此处用了CRTP技术。
+  - 为了防止用户直接使用子类/基类创建对象，此处应将子类和基类的构造/析构函数都设为`private`，并将子类和基类互相设为对方的友元类
+  - 由于析构函数也为私有，所以`unique_ptr`在释放的时候无法直接访问，需要自定义一个静态的删除函数，并在构造`unique_ptr`的时候显式指明删除器
+  - 如果想通过`GetInstance`来调用CRTP类的多参数构造函数，则需要重载`GetInstance`并配合完美转发和`call_once`一起使用。不过lambda函数不支持万能引用（C++20前），所以需要额外实现一个新的静态的init函数。
+
+## 保护不常更新的数据结构
+
+> - 解决方式是使用读写锁，读写锁有两种形式：`std::shared_timed_mutex`（C++14），`std::shared_mutex`（C++17），两者几乎没区别。
+>
+> - 当需要读数据时，应该使用读写锁中的`lock_shared()`和`unlock_shared()`，或者使用读锁的RAII管理类模板`shared_lock<>`来封装读写锁对象。
+>
+>   当需要写数据时，和mutex一样，使用`lock()`和`unlock()`，或者使用写锁的RAII管理类模板`lock_guard<>`、`unique_lock<>`来封装读写锁对象。
+
+- mutable，const，volatile的区别
+
+  [C++深入理解mutable和volatile关键字 - 傍风无意 - 博客园](https://www.cnblogs.com/depend-wind/articles/12159971.html)
+
+- 前言：
+
+  试想一下，你有一个数据结构存储了用户的设置信息，每次用户打开程序的时候，都要进行读取，且运行时很多地方都依赖这个数据结构需要读取，所以为了效率，我们使用了多线程读写。这个数据结构很少进行改变，而我们知道，多线程读取，是没有数据竞争的，是安全的，但是有些时候又不可避免的有修改和读取都要工作的时候，所以依然必须得使用互斥量进行保护。
+
+  然而使用 `std::mutex` 的开销是过大的，它不管有没有发生数据竞争（也就是就算全是读的情况）也必须是老老实实上锁解锁，只有一个线程可以运行。如果你学过其它语言或者操作系统，相信这个时候就已经想到了：“[***读写锁***](https://zh.wikipedia.org/wiki/读写锁)”。
+
+- 读写锁介绍
+
+  C++ 标准库自然为我们提供了： [`std::shared_timed_mutex`](https://zh.cppreference.com/w/cpp/thread/shared_timed_mutex)（C++14）、 [`std::shared_mutex`](https://zh.cppreference.com/w/cpp/thread/shared_mutex)（C++17）。它们的区别简单来说，前者支持更多的操作方式，后者有更高的性能优势。
+
+  `std::shared_mutex` 同样支持 `std::lock_guard`、`std::unique_lock`。和 `std::mutex` 做的一样，保证*写线程*的独占访问。**而那些无需修改数据结构的\*读线程\*，可以使用 [`std::shared_lock`](https://zh.cppreference.com/w/cpp/thread/shared_lock) 获取访问权**，多个线程可以一起读取。
+
+  ```c++
+  class Settings {
+  private:
+      std::map<std::string, std::string> data_;
+      //mutex_ 通常不算做类状态（只读/可读可写）的一部分，所以通常需要加上mutable
+      mutable std::shared_mutex mutex_; // “M&M 规则”：mutable 与 mutex 一起出现
+  
+  public:
+      void set(const std::string& key, const std::string& value) {
+          std::lock_guard<std::shared_mutex> lock{ mutex_ };
+          data_[key] = value;
+      }
+  
+      std::string get(const std::string& key) const {	// mutex_ 只读函数中也可修改
+          // 不用shared_lock，用mutex.lock_shared()和mutex_.unlock_shared()都可以
+          std::shared_lock<std::shared_mutex> lock(mutex_);
+          auto it = data_.find(key);
+          return (it != data_.end()) ? it->second : ""; // 如果没有找到键返回空字符串
+      }
   };
   ```
 
-  研究一下为什么父类的构造必须为public
+  `std::shared_timed_mutex` 具有 `std::shared_mutex` 的所有功能，并且额外支持超时功能。所以以上代码可以随意更换这两个互斥量。
 
-  [C++11 使用智能指针改进单例模式_c++单例模式 智能指针-CSDN博客](https://blog.csdn.net/hellokandy/article/details/112614333)
+## std::recursive_mutex
+
+> - recursive：递归的
+> - 对于`std::mutex`而言，在同一个线程多次调用同一个互斥量的`lock()`函数时，是未定义行为；只允许在不同线程中对同一个互斥量的锁定。
+> - 对于`std::recursive_mutex`而言，允许在同一个线程多次调用同一个互斥量的`lock()`函数，当**解锁与锁定次数相匹配时，互斥量才会真正释放**；但同时不影响不同线程对同一个互斥量进行锁定的情况。
+> - 可以用于递归函数中
+
+- 定义：
+
+  `std::recursive_mutex` 是 C++ 标准库提供的一种互斥量类型，它允许同一线程多次锁定同一个互斥量，而不会造成死锁。当同一线程多次对同一个 `std::recursive_mutex` 进行锁定时，**只有在解锁与锁定次数相匹配时，互斥量才会真正释放**。但它并不影响不同线程对同一个互斥量进行锁定的情况。不同线程对同一个互斥量进行锁定时，会按照互斥量的规则**进行阻塞**
+
+  ```c++
+  // 建议拿到IDE上自己跑一下
+  std::recursive_mutex mtx;
+  
+  void recursive_function(int count) {
+      // 递归函数，每次递归都会锁定互斥量
+      mtx.lock();
+      std::cout << "Locked by thread: " << std::this_thread::get_id() << ", count: " << count << std::endl;
+      if (count > 0) {
+          recursive_function(count - 1); // 递归调用
+      }
+      mtx.unlock(); // 解锁互斥量
+  }
+  int main() {
+      std::thread t1(recursive_function, 3);
+      std::thread t2(recursive_function, 2);
+  
+      t1.join();
+      t2.join();
+  }
+  ```
+
+  解释：
+
+  - 根据规则，如果t1线程先执行，则t2线程会阻塞；如果t2线程先执行，则t1线程会阻塞。
+  -  `unlock` 必须和 `lock` 的调用次数一样，才会真正解锁互斥量。
+
+- 更加易读的做法：
+
+  同样的，我们也可以使用 `std::lock_guard`、`std::unique_lock` 帮我们管理 `std::recursive_mutex`，而非显式调用 `lock` 与 `unlock`：
+
+  ```c++
+  void recursive_function(int count) {
+      std::lock_guard<std::recursive_mutex> lc{ mtx };
+      std::cout << "Locked by thread: " << std::this_thread::get_id() << ", count: " << count << std::endl;
+      if (count > 0) {
+          recursive_function(count - 1);
+      }
+  }
+  ```
+
+## new，delete的线程安全性？？？
+
+[C++ 中 new 操作符内幕：new operator、operator new、placement new - slgkaifa - 博客园？？？](https://www.cnblogs.com/slgkaifa/p/6887887.html)
+
+> - 只有C++11以上的库函数版本的new，delete等分配/释放内存相关的库函数是线程安全的
+>
+> - 但是在我们调用new/delete时，涉及到的不仅仅只有调用库函数这一个步骤，所以是否线程安全应该考虑以下几个方面：
+>
+>   1. `new` 表达式线程安全要考虑三方面：`operator new`、构造函数、修改指针。
+>
+>   2. `delete` 表达式线程安全考虑两方面：`operator delete`、析构函数。
+>
+>   3. C++ 只保证了 `operator new`、`operator delete` 这两个方面的线程安全（不包括用户定义的），其它方面就得自己保证了。前面的内容也都提到了。
+>
+> - 综上，**是否线程安全不能仅仅只看是否使用new/delete，还得看有没有涉及到数据竞争，共享变量**，要根据这些情况进行综合判定
+
+- 前言：
+
+  如果你的标准达到 **C++11**，要求下列**函数**是线程安全的：
+
+  - [`new` 运算符](https://zh.cppreference.com/w/cpp/memory/new/operator_new)和 [`delete` 运算符](https://zh.cppreference.com/w/cpp/memory/new/operator_delete)的**库**版本
+  - 全局 `new` 运算符和 `delete` 运算符的用户替换版本
+  - [`std::calloc`](https://zh.cppreference.com/w/cpp/memory/c/calloc)、[`std::malloc`](https://zh.cppreference.com/w/cpp/memory/c/malloc)、[`std::realloc`](https://zh.cppreference.com/w/cpp/memory/c/realloc)、[`std::aligned_alloc`](https://zh.cppreference.com/w/cpp/memory/c/aligned_alloc) (C++17 起)、[`std::free`](https://zh.cppreference.com/w/cpp/memory/c/free)
+
+- 对局部变量使用new/delete：
+
+  ```c++
+  void f(){
+      T* p = new T{};
+      delete p;
+  }
+  ```
+
+  解释：
+
+  - 该代码在多线程执行`f()`时如果构造和析构不涉及共享资源，则显然线程安全
+  - `::operator new`和`::operator delete`显然线程安全；局部对象 `p` 对于每个线程来说是独立的，也就是说每个线程都有其自己的 `p` 对象实例，它们不会共享同一个对象，没有数据竞争；如果构造和析构不涉及共享资源，则明显线程安全
+
+- 对全局变量使用new/delete：
+
+  如果 `p` 是全局对象（或者外部的，只要可被多个线程读写），多个线程同时对其进行访问和修改时，就可能会导致数据竞争和未定义行为。因此，确保全局对象的线程安全访问通常需要额外的同步措施，比如互斥量或原子操作。
+
+  ```c++
+  T* p = nullptr;
+  void f(){
+      p = new T{}; // 存在数据竞争
+      delete p;
+  }
+  ```
+
+  解释：
+
+  - 显然线程不安全，new操作符结束之后，给p赋值时，涉及到数据竞争，线程不安全
+
+- new/delete时涉及到的构造/析构函数有读写共享数据
+
+  即使 `p` 是局部对象，如果构造函数（析构同理）涉及读写共享资源，那么一样存在数据竞争，需要进行额外的同步措施进行保护。
+
+  ```c++
+  int n = 1;
+  
+  struct X{
+      X(int v){
+          ::n += v;
+      }
+  };
+  
+  void f(){
+      X* p = new X{ 1 }; // 存在数据竞争
+      delete p;
+  }
+  ```
+
+  解释：
+
+  - 这是第一种情况种的变体版本，在构造函数中读写共享变量，显然线程不安全
+
+- 自定义的operator new/operator delete
+
+  值得注意的是，如果是自己重载 `operator new`、`operator delete` 替换了库的**全局**版本，那么它的线程安全就要我们来保证。
+
+  ```c++
+  // 全局的 new 运算符，替换了库的版本
+  void* operator new  (std::size_t count){
+      return ::operator new(count); 
+  }
+  ```
+
+  以上代码是线程安全的，因为 C++11 保证了 new 运算符的库版本，即 `::operator new` 是线程安全的，我们直接调用它自然不成问题。如果你需要更多的操作，就得使用互斥量之类的方式保护了。
+
+- 总结：
+
+  总而言之，`new` 表达式线程安全要考虑三方面：`operator new`、构造函数、修改指针。
+
+  `delete` 表达式线程安全考虑两方面：`operator delete`、析构函数。
+
+  C++ 只保证了 `operator new`、`operator delete` 这两个方面的线程安全（不包括用户定义的），其它方面就得自己保证了。前面的内容也都提到了。
+
+
+
+
+
+
+
+
 
 
 
@@ -1738,3 +1990,4 @@ shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时G
 学完模板编程后，针对云会议项目中的消息队列，完成以下需求：
 
 1. 将原有的线程创建方式改为：《C++并发编程实战》p27的形式，[#joining_thread](#实现joining_thread)
+1. 找一个能更新为单例的类，单例实现看[#这里](#线程安全的单例模式)
