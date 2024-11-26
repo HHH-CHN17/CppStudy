@@ -1695,12 +1695,10 @@ shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时G
 
   ```c++
   // 复杂版本，建议放到IDE中看
-  class Single_CRTP;      // 前置申明
   
   // 懒汉式单例的基类
   template<typename T>    //T 是子类
   class Singleton_Lazy_Base {
-      friend class Single_CRTP;
   private:
       static unique_ptr<T, void(*)(T*)> up;
       static once_flag of;
@@ -1731,7 +1729,7 @@ shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时G
           return *up;
       }
   
-  private:
+  protected:
        Singleton_Lazy_Base() = default;
        Singleton_Lazy_Base(const Singleton_Lazy_Base&) = delete;
        Singleton_Lazy_Base(Singleton_Lazy_Base&&) = delete;
@@ -1767,7 +1765,7 @@ shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时G
   解释：
   
   - `Singleton_Lazy_Base`顾名思义，懒汉式单例的基类，是个模板类；`Single_CRTP`是子类，继承于基类，注意继承时传给基类的模板实参，说明此处用了CRTP技术。
-  - 为了防止用户直接使用子类/基类创建对象，此处应将子类和基类的构造/析构函数都设为`private`，并将子类和基类互相设为对方的友元类
+  - 为了防止用户直接使用子类/基类创建对象，此处应将子类的构造/析构函数都设为`private`，基类的构造/析构函数设为`protected`，并将基类设为子类的友元类
   - 由于析构函数也为私有，所以`unique_ptr`在释放的时候无法直接访问，需要自定义一个静态的删除函数，并在构造`unique_ptr`的时候显式指明删除器
   - 如果想通过`GetInstance`来调用CRTP类的多参数构造函数，则需要重载`GetInstance`并配合完美转发和`call_once`一起使用。不过lambda函数不支持万能引用（C++20前），所以需要额外实现一个新的静态的init函数。
 
@@ -1969,11 +1967,137 @@ shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时G
 
   C++ 只保证了 `operator new`、`operator delete` 这两个方面的线程安全（不包括用户定义的），其它方面就得自己保证了。前面的内容也都提到了。
 
+## 线程存储期？？？
 
+[必看：C++11中thread_local的使用](https://blog.csdn.net/fengbingchun/article/details/108691986)
 
+> - 其实可以把线程存储期的变量和全局存储期的变量进行对比，会发现其实两者都差不多，只有在存储期上有差别。
 
+- 定义：
 
+  **线程本地存储 (TLS)**是 C++ 11 中引入的一项功能，允许多线程程序中的每个线程拥有自己单独的变量实例。简而言之，我们可以说每个线程都可以有自己独立的变量实例。每个线程都可以访问和修改自己的变量副本，而不会干扰其他线程。
 
+- 线程本地存储 (TLS) 的属性
+
+  - **生命周期：** TLS 变量的生命周期从初始化时开始，到线程终止时结束。
+  - **可见性：** TLS 变量在线程级别具有可见性。
+  - **使用范围：**
+    1. 命名空间(全局)变量；
+    2. 文件**静态**变量；
+    3. 函数**静态**变量（和静态局部变量类似，只进行一次初始化，不过线程局部变量具有线程存储期）；
+    4. **静态**成员变量（`thread_local`作为类成员变量时必须是static的）。
+
+- 实际效果
+
+  - 对于全局中定义的`thread_local`变量而言，就是将全局变量在各个线程都copy一份，互不干扰独立使用。
+  - 对于类中定义的`thread_local`成员变量而言，必须用`static`修饰，且同一个线程内的该类的多个对象都会共享一个变量实例，并且只会在第一次执行这个成员函数时初始化这个变量实例，这一点是跟类的静态成员变量类似的，**不过静态成员变量具有全局存储期，`thread_local`静态成员变量具有线程存储期**
+  - 对于类的成员函数中定义的`thread_local`变量而言，默认是静态的，且同一个线程内的该类的多个对象都会共享一个变量实例，并且只会在第一次执行这个成员函数时初始化这个变量实例，这一点是跟局部静态成员变量类似的，**不过局部静态变量具有全局存储期，`thread_local`局部静态变量具有线程存储期**
+
+- 代码演示：
+
+  ```c++
+  class A {
+  public:
+  static thread_local int tmp1;
+      void operator()() {
+          static thread_local int tmp2 = (puts("init1"),0);
+          cout << this_thread::get_id() << " tmp1: " << tmp1++ << endl;
+          cout << "  tmp2: " << tmp2++ << endl;
+      }
+  };
+  thread_local int A::tmp1 = (puts("init"),0);
+  
+  // a, b是全局变量，对于线程来说，也就是共享数据，以此观测thread_local变量在不同线程，以及同一个线程不同对象中的表现
+  A a;
+  A b;
+  void f() {	// 分别调用operator()
+      a();
+      b();
+  }
+  
+  int main() {
+      thread(f).join();
+      thread(f).join();
+      f();
+  }
+  ```
+
+  结果：
+
+  ```c++
+  init1
+  2 tmp1: init
+  0
+    tmp2: 0
+  2 tmp1: 1
+    tmp2: 1
+  init1
+  3 tmp1: init
+  0
+    tmp2: 0
+  3 tmp1: 1
+    tmp2: 1
+  init1
+  1 tmp1: init
+  0
+    tmp2: 0
+  1 tmp1: 1
+    tmp2: 1
+  ```
+
+  ？？？至于`thread_local`修饰的变量在何时初始化，看[#这里](#局部，全局，线程，CPU 变量对比与使用)
+
+- 应用场景：
+
+  1. **线程特定数据**：有时，你可能需要为每个线程存储一些特定的数据，例如线程的 ID、状态或其他上下文信息。你可以使用 TLS 来存储这些数据。
+
+  2. **避免全局变量**：全局变量在多线程环境中可能会引发数据竞争和同步问题。你可以使用 TLS 来替代全局变量，每个线程都有自己的变量副本，从而避免这些问题。
+
+  3. **性能优化**：在一些情况下，使用 TLS 可以提高性能。例如，如果一个函数需要一个大的缓冲区，而这个函数在多个线程中都被频繁调用，那么每次调用都分配和释放缓冲区可能会影响性能。你可以使用 TLS 来为每个线程分配一个缓冲区，然后在多次调用之间重用这个缓冲区。
+
+  4. **错误处理**：在一些编程环境中，例如 C，错误信息通常通过全局变量来传递。这在多线程环境中可能会引发问题，因为一个线程的错误可能会覆盖另一个线程的错误。你可以使用 TLS 来为每个线程存储错误信息，从而避免这个问题。
+
+## CPU变量
+
+CPU 变量的概念很好理解。就像线程变量为每个线程提供独立的对象实例，互不干扰一样，CPU 变量也是如此。在创建 CPU 变量时，系统上的每个 CPU [[2\]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#footnote2) 都会获得该变量的一个副本（比如4核心8线程的cpu，就会获得8个副本）。
+
+在 Linux 内核中，从 2.6[[3\]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#footnote3) 版本开始引入了 **Per-CPU** 变量（Per-CPU variables）功能。Per-CPU 变量是为每个处理器单独分配的变量副本，旨在减少多处理器访问共享数据时的同步开销，提升性能。每个处理器只访问自己的变量副本，不需要进行同步操作，避免了数据竞争，增强了并行处理能力。
+
+在 Windows 内核中，没有直接对应的 Per-CPU 变量机制。
+
+本节是偏向概念的认识，而非实际进行内核编程，C++ 语言层面也并未提供此抽象。理解 CPU 变量的概念对于系统编程和内核开发非常重要。这些概念在面试和技术讨论中常常出现，掌握这些知识不仅有助于应对面试问题，也能提升对多处理器系统性能优化的理解。
+
+## 局部，全局，线程，CPU 变量对比与使用？？？
+
+在并发编程中，不同的变量有不同的使用场景和特点。以下是局部变量、全局变量、线程变量、CPU变量的对比：
+
+- 局部变量（不考虑静态局部）
+
+  - 它拥有自动存储期，随作用域开始分配，结束时释放。每个线程、每次调用都有独立实例，完全独立，几乎无需同步。
+
+- 全局变量
+
+  - 拥有 ***静态（static）*** [存储期](https://zh.cppreference.com/w/cpp/language/storage_duration#.E5.AD.98.E5.82.A8.E6.9C.9F)，它的存储在**程序**开始时分配，并在程序结束时解分配；且它在主函数执行之前进行[初始化](https://zh.cppreference.com/w/cpp/language/initialization#.E9.9D.9E.E5.B1.80.E9.83.A8.E5.8F.98.E9.87.8F)。
+
+- 线程变量
+
+  - 拥有**线程（thread）**存储期。它的存储在线程开始时分配，并在线程结束时解分配。每个线程拥有它自身的对象实例。只有声明为 thread_local 的对象拥有此存储期（不考虑非标准用法）。它的初始化需要考虑局部与非局部两种情况：
+
+    - 非局部变量：所有具有线程局部存储期的非局部变量的初始化，会**作为线程启动的一部分进行**，并按顺序早于线程函数的执行开始。
+    - 静态局部变量[[4\]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#footnote4)（包括普通静态局部变量以及`thread_local`修饰的静态局部变量）：控制流首次**经过它的声明**时才会被初始化（除非它被[零初始化](https://zh.cppreference.com/w/cpp/language/zero_initialization)或[常量初始化](https://zh.cppreference.com/w/cpp/language/constant_initialization)）。在其后所有的调用中，声明都会被跳过。
+
+  - 示例：？？？（注意此处输出和线程存储期中的输出的区别）
+
+  - ![1732633586425](./assets/1732633586425.png)
+
+    ```c++
+    ```
+
+    
+
+- CPU 变量
+
+  - 它在标准 C++ 中无对应抽象实现，是操作系统内核功能。它主要依赖于当前系统内核来进行使用，也无法跨平台。基本概念与线程变量类似：CPU 变量是为每个处理器单独分配的变量副本。
 
 
 
