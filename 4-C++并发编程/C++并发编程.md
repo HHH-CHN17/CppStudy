@@ -1998,14 +1998,14 @@ shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时G
   ```c++
   class A {
   public:
-  static thread_local int tmp1;
+      static thread_local int tmp1;
       void operator()() {
-          static thread_local int tmp2 = (puts("init1"),0);
+          static thread_local int tmp2 = 0;
           cout << this_thread::get_id() << " tmp1: " << tmp1++ << endl;
           cout << "  tmp2: " << tmp2++ << endl;
       }
   };
-  thread_local int A::tmp1 = (puts("init"),0);
+  thread_local int A::tmp1 = 0;
   
   // a, b是全局变量，对于线程来说，也就是共享数据，以此观测thread_local变量在不同线程，以及同一个线程不同对象中的表现
   A a;
@@ -2025,27 +2025,76 @@ shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时G
   结果：
 
   ```c++
-  init1
-  2 tmp1: init
-  0
+  19220 tmp1: 0
     tmp2: 0
-  2 tmp1: 1
+  19220 tmp1: 1
     tmp2: 1
-  init1
-  3 tmp1: init
-  0
+  27608 tmp1: 0
     tmp2: 0
-  3 tmp1: 1
+  27608 tmp1: 1
     tmp2: 1
-  init1
-  1 tmp1: init
-  0
+  25908 tmp1: 0
     tmp2: 0
-  1 tmp1: 1
+  25908 tmp1: 1
     tmp2: 1
   ```
 
-  ？？？至于`thread_local`修饰的变量在何时初始化，看[#这里](#局部，全局，线程，CPU 变量对比与使用)
+  至于`thread_local`修饰的变量在何时初始化，看[#这里](#局部，全局，线程，CPU 变量对比与使用)：
+
+  ```c++
+  class A {
+  public:
+      static thread_local int tmp1;
+      void operator()() {
+          cout << "function" << endl;
+          static thread_local int tmp2 = (puts("init1"),0);
+      }
+  };
+  thread_local int A::tmp1 = (puts("init"),0);
+  
+  // a, b是全局变量，对于线程来说，也就是共享数据，以此观测thread_local变量在不同线程，以及同一个线程不同对象中的表现
+  A a;
+  A b;
+  void f() {	// 分别调用operator()
+      a();
+      b();
+  }
+  
+  int main() {
+      cout << "main" << endl;
+      f();
+  }
+  /************MSVC************/
+  // init
+  // main
+  // function
+  // init1
+  // function
+  /************g++************/
+  // main
+  // function
+  // init1
+  // function
+  ```
+
+  解释：
+
+  1. 对于类中的thread_local静态成员变量而言，与thread_local静态全局变量类似，会在线程函数执行前初始化（不论是否创建A的对象，都会如此，也很好理解），但g++有优化：**g++会在首次使用线程全局静态变量的地方按顺序初始化所有的线程全局静态变量，而普通的全局静态变量则和MSVC一样，在主线程函数执行前就初始化**。
+
+     ```c++
+     thread_local static int aaa = (puts("aaa"), 0);
+     thread_local static int bbb = (puts("bbb"), 1);
+     int main() {
+         cout << "main" << endl;
+         cout << "---: " << bbb << endl;
+     }
+     // main
+     // ---: aaa
+     // bbb
+     // 1
+     ```
+
+  2. 对于类中成员函数的thread_local静态局部变量而言，与thread_local静态局部变量类似，会在控制流首次经过声明时进行一次也是唯一一次的初始化。
 
 - 应用场景：
 
@@ -2088,16 +2137,258 @@ CPU 变量的概念很好理解。就像线程变量为每个线程提供独立�
 
   - 示例：？？？（注意此处输出和线程存储期中的输出的区别）
 
-  - ![1732633586425](./assets/1732633586425.png)
-
     ```c++
+    thread_local static int n = (puts("init n"), 0);
+    
+    void f() {
+        puts("thread f");
+    }
+    
+    void f2() {
+        cout << "f2" << endl;
+        thread_local static int n = (puts("init f2 n"), 0);
+    }
+    
+    int main() {
+        cout << "main" << endl;
+        thread{f}.join();
+        cout << endl;
+        f2();
+        f2();
+    }
     ```
 
-    
+    解释：
+
+    - 其中`f()`用于观测thread_local全局静态变量的初始化时期，`f2()`用于观测thread_local局部静态变量的初始化时期。
+
+    输出：
+
+    ```c++
+    init n
+    main
+    init n
+    thread f
+        
+    f2
+    init f2 n
+    f2
+    ```
+
+    解释：
+
+    - 对于thread_local全局静态变量而言：变量的初始化会**作为线程启动的一部分**，初始化时期早于线程函数运行时期
+    - 对于thread_local局部静态变量而言：控制流首次**经过它的声明**时才会被初始化
 
 - CPU 变量
 
   - 它在标准 C++ 中无对应抽象实现，是操作系统内核功能。它主要依赖于当前系统内核来进行使用，也无法跨平台。基本概念与线程变量类似：CPU 变量是为每个处理器单独分配的变量副本。
+
+- 总结
+
+  - 局部变量适合临时数据，作用域结束自动释放，几乎[[看这里]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#footnote5)无需同步。
+
+  - 全局变量适合整个程序的共享状态，但需要使用同步设施进行保护。
+
+  - 线程变量适合线程的独立状态，通常[[看这里]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#footnote6)无需同步。
+
+    ```c++
+    // 在这种情况下需要同步，不过基本没人这么做，所以说通常
+    thread_local static int aaa = 0;
+    int* paaa = &aaa;
+    void f() {
+        *paaa = 11;
+        cout << this_thread::get_id() << " " << *paaa << endl;
+    }
+    int main() {
+        thread{f}.join();
+        cout << this_thread::get_id() << " " << *paaa << endl;
+    }
+    // 2 11
+    // 1 11
+    ```
+
+  - CPU 变量的使用是少见的，主要用于内核开发和追求极致性能的高并发场景，减少 CPU 同步开销。
+
+  总而言之，结合实际使用即可，把这四种变量拿出来进行对比，增进理解，加深印象
+
+## 总结
+
+本章讨论了多线程的共享数据引发的恶性条件竞争会带来的问题。并说明了可以使用互斥量（`std::mutex`）保护共享数据，并且要注意互斥量上锁的“**粒度**”。C++标准库提供了很多工具，包括管理互斥量的管理类（`std::lock_guard`），但是互斥量只能解决它能解决的问题，并且它有自己的问题（**死锁**）。同时我们讲述了一些避免死锁的方法和技术。还讲了一下互斥量所有权转移。然后讨论了面对不同情况保护共享数据的不同方式，使用 `std::call_once()` 保护共享数据的初始化过程，使用读写锁（`std::shared_mutex`）保护不常更新的数据结构。以及特殊情况可能用到的互斥量 `recursive_mutex`，有些人可能喜欢称作：**递归锁**。然后聊了一下 `new`、`delete` 运算符的库函数实际是线程安全的。最后介绍了一下线程存储期、CPU 变量，和各种变量进行了一个对比。
+
+下一章，我们将开始讲述同步操作，会使用到 [**Futures**](https://zh.cppreference.com/w/cpp/thread#.E6.9C.AA.E6.9D.A5.E4.BD.93)、[**条件变量**](https://zh.cppreference.com/w/cpp/thread#.E6.9D.A1.E4.BB.B6.E5.8F.98.E9.87.8F)等设施。
+
+# 同步操作
+
+> - 互斥量用来防止多个线程同时读写同一个共享资源
+> - 信号量用来控制两个或多个线程的执行顺序。
+
+"同步操作"是指在计算机科学和信息技术中的一种操作方式，其中不同的任务或操作按顺序执行，一个操作完成后才能开始下一个操作。在多线程编程中，各个任务通常需要通过**同步设施**（即互斥量，以及条件变量）进行相互**协调和等待**，确保我们的操作是同步操作，从而确保数据的**一致性**和**正确性**。
+
+本章的主要内容有：
+
+- 条件变量
+- `std::future` 等待异步任务
+- 在规定时间内等待
+- Qt 实现异步任务的示例
+- 其它 C++20 同步设施：信号量、闩与屏障
+
+本章将讨论如何使用条件变量等待事件，介绍 future 等标准库设施用作同步操作，使用Qt+CMake 构建一个项目展示多线程的必要性，介绍 C++20 引入的新的同步设施。
+
+## 等待事件或条件
+
+- 情境引入
+
+  假设你正在一辆夜间运行的地铁上，那么你要如何在正确的站点下车呢？
+
+  1. 一直不休息，每一站都能知道，这样就不会错过你要下车的站点，但是这会很疲惫。
+
+     这个叫”[忙等待](https://zh.wikipedia.org/wiki/忙碌等待)（busy waiting）”也称“**自旋**“。
+
+     ```c++
+     bool flag = false;
+     std::mutex m;
+     
+     void wait_for_flag(){
+         std::unique_lock<std::mutex> lk{ m };
+         // 忙等待直到 flag 变为 true
+         while (!flag){
+             lk.unlock();
+             // 忙等待循环体通常为空或者执行非阻塞操作
+             lk.lock();
+         }
+     }
+     ```
+
+     注意：
+
+     - 一直忙等待会造成线程时刻处于判断`flag`，执行循环体中代码的状态，这会导致占用过多的cpu资源，导致资源的浪费，所以应该尽量避免一直处于忙等待。
+     - 之所以在`while`循环中要解锁，是因为`flag`是个共享变量，所以`m`其实和`flag`是“绑定”的，所以解锁操作其实是在期待有其他的线程可以将`flag`置为`true`。
+     - 至于后面又重新上锁，原因也很简单，为了防止其他线程随意纂改`flag`的值或者其他和`flag`在一起的共享变量
+
+  2. 可以看一下时间，估算一下地铁到达目的地的时间，然后设置一个稍早的闹钟，就休息。这个方法听起来还行，但是你可能被过早的叫醒，甚至估算错误导致坐过站，又或者闹钟没电了睡过站。
+
+     ```c++
+     void wait_for_flag(){
+         std::unique_lock<std::mutex> lk{ m };
+         while (!flag){
+             lk.unlock();    // 1 解锁互斥量
+             std::this_thread::sleep_for(50ms); // 2 休眠
+             lk.lock();      // 3 上锁互斥量
+         }
+     }
+     ```
+
+     - 解释：
+       - 这种方法会使得线程无意义的循环次数大幅减少，减少消耗的cpu资源，比第一种稍微好一点
+       - 注意，调用 `sleep_for()` 时，当前线程将进入休眠态，直到50ms时间过去。这个操作会导致线程释放cpu资源，给其他线程运行的机会，所以会减少消耗的cpu资源。
+
+  3. 事实上最简单的方式是，到站的时候有人或者其它东西能将你叫醒（比如手机的地图，到达设置的位置就提醒）。
+
+     这个就是信号量，请看下面。
+
+- 定义
+
+  条件变量（Condition Variable）是一种用于线程同步的机制，通常与互斥锁（`Mutex`）一起使用。条件变量提供了一种线程间的通信机制，允许一个线程等待另一个线程满足某个条件后再继续执行。
+
+  **注意**：在使用条件变量时，**必须确保与互斥锁一起使用，以避免竞态条件的发生**。
+
+  C++ 标准库对条件变量有两套实现：[`std::condition_variable`](https://zh.cppreference.com/w/cpp/thread/condition_variable) 和 [`std::condition_variable_any`](https://zh.cppreference.com/w/cpp/thread/condition_variable_any)，这两个实现都包含在 [`<condition_variable>`](https://zh.cppreference.com/w/cpp/header/condition_variable) 头文件中。
+
+  `condition_variable_any` 类是 `std::condition_variable` 的泛化。相对于只在 `std::unique_lock<std::mutex>` 上工作的 `std::condition_variable`，`condition_variable_any` 能在任何满足[`可基本锁定(BasicLockable)`](https://zh.cppreference.com/w/cpp/named_req/BasicLockable)要求的锁上工作，所以增加了 `_any` 后缀。显而易见，这种区分必然是 `any` 版**更加通用但是却有更多的性能开销**。所以通常**首选** `std::condition_variable`。有特殊需求，才会考虑 `std::condition_variable_any`。
+
+- 示例：
+
+  ```c++
+  // 以下三个变量必须放在一起，让不同线程都能访问。
+  std::mutex mtx; // 互斥量
+  std::condition_variable cv; // 条件变量，必须和互斥量放在一起使用
+  bool arrived = false;	// 状态，表示是否到达目的地
+  
+  // 此函数用于模拟“地铁上睡着的我”，“我”期待着地铁到站后能有人把我喊醒
+  void wait_for_arrival() {
+      std::unique_lock<std::mutex> lck(mtx);          // 上锁，且必须用unique_lock包装mtx
+      cv.wait(lck, [] { return arrived; });
+      std::cout << "到达目的地，可以下车了！" << std::endl;
+  }
+  
+  // 此函数用于模拟“手机上的地图”，地图在到站后会唤醒我，并通知我地铁已经到站。
+  void simulate_arrival() {
+      std::this_thread::sleep_for(5ms); // 模拟地铁到站，假设5秒后到达目的地
+      {
+          std::lock_guard<std::mutex> lck(mtx);
+          arrived = true; // 设置条件变量为 true，表示到达目的地
+      }
+      cv.notify_one(); // 通知等待的线程
+  }
+  int main(){
+      thread t1(wait_for_arrival);
+      thread t2(simulate_arrival);
+      t1.join();
+      t2.join();
+  }
+  ```
+
+  解释：
+
+  - 显然，我们有条件变量`cv`，状态位`flag`两个共享变量，所以需要也必须要添加一个互斥量。
+
+  - 条件变量用于决定线程执行的先后顺序，对于本例而言，先执行的线程是t2，后执行的线程是t1。
+
+  - 在t2的`simulate_arrival()`中：
+
+    - 为了通知我地铁已经到站，需要做好以下两件事：
+      1. 将共享的标志位`arrived`设为`true`（需要用`mtx`进行保护）
+      2. 使用共享的条件变量`cv`唤醒我
+
+  - 在t1的`wait_for_arrival()`中：
+
+    - 为了能在地铁到站时我能被正常唤醒，输出到站信息，需要做好以下两件事：
+      1. 将共享的互斥锁`mtx`用`unique_lock`封装起来（封装后`mtx`为`lock`状态）
+      2. 调用`cv.wait()`，进入阻塞态，直至满足两个条件：**1.被t2唤醒（包括虚假唤醒） 2.谓词返回true**
+
+  - `cv.wait(lck, [] { return arrived; });`
+
+    - 前置知识：
+      - 返回bool类型的`仿函数`称为**谓词**
+      - 如果operator()接受一个参数，那么叫做`一元谓词`
+      - 如果operator()接受两个参数，那么叫做`二元谓词`
+      - 显然一元/二元谓词通过`bind()`可以转换为谓词
+
+    - 源码实现：
+
+      ```c++
+      void wait(unique_lock<mutex>& _Lck) noexcept {
+          _Cnd_wait(_Mycnd(), _Lck.mutex()->_Mymtx());
+      }
+      
+      template <class _Predicate>
+      void wait(unique_lock<mutex>& _Lck, _Predicate _Pred) {
+          while (!_Pred()) {
+              wait(_Lck);
+          }
+      }
+      ```
+
+      显然我们调用的是第二个`wait()`，他接收两个参数：`unique_lock`的对象和谓词
+
+      第二个版本只是对第一个版本的**包装**，等待并判断谓词，会调用第一个版本的重载。这可以避免“[虚假唤醒（spurious wakeup）](https://en.wikipedia.org/wiki/Spurious_wakeup)”。
+
+      > 条件变量虚假唤醒是指在使用条件变量进行线程同步时，有时候线程可能会在没有收到通知的情况下被唤醒。问题取决于程序和系统的具体实现。解决方法很简单，在循环中等待并判断条件可一并解决。使用 C++ 标准库则没有这个烦恼了。
+
+    - **`wait()`函数功能解析：**
+
+      1. 谓词返回`true`时，啥也不做，直接返回
+
+      2. 谓词返回`false`时，解锁`lck`，方便其他线程修改共享状态`arrived`，并进入阻塞态；此时可以通过虚假唤醒，或者`cv.notify_one();`来唤醒该线程；唤醒该线程之后，会先上锁，然后检查谓词是否返回`true`，如果谓词依然返回`false`，则会再次解锁`lck`，并进入阻塞态，如此循环直至谓词为`true`。此时会退出while循环，执行后续代码。
+
+         （当然这个只是我根据源码和实际行为猜的流程，因为谓词的检查肯定需要保证线程安全，所以在第一次，以及后续的判断中`lck`必须处于上锁状态。而如果想要其他线程能够修改标志位，那么在进入阻塞之前必须将`lck`解锁，因此推断第一个`wait()`版本一定有一个 解锁->阻塞->唤醒->上锁 的过程。
+
+      3. 显然传给`wait`的谓词中必须要有一个全局变量（标志位），因为其他线程只能通过修改全局变量来修改谓词返回的值
+
+## 线程安全的队列
+
+
 
 
 
