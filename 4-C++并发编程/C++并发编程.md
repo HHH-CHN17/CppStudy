@@ -2388,9 +2388,50 @@ CPU 变量的概念很好理解。就像线程变量为每个线程提供独立�
 
 ## 线程安全的队列
 
+```c++
+// 建议复制到IDE中查看
+template<typename T>
+class threadsafe_queue {
+    mutable std::mutex mtx;              // M&M原则，互斥量，用于保护队列操作的独占访问
+    std::condition_variable data_cond; // 条件变量，用于在队列为空时等待
+    std::queue<T> data_queue;          // 实际存储数据的队列
+public:
+    threadsafe_queue() = default;
+    // 不论什么情况，push，pop，empty这三个函数在同一时刻只有一个函数能执行
+    void push(T new_value) {
+        std::unique_lock<std::mutex> lk{mtx};
+        data_cond.wait(lk, [this]() {
+            return data_queue.size() < QUEUE_MAXSIZE;   // 注意这里必须是<，不能是<=
+        });
+        data_queue.push(new_value);
+        data_cond.notify_one();
+    }
+    // 从队列中弹出元素（阻塞直到队列不为空）
+     T pop() {
+        std::unique_lock<std::mutex> lk{ mtx };
+        data_cond.wait(lk, [this] {
+            return !data_queue.empty();
+        });
+        T value = data_queue.front();
+        data_queue.pop();
+        data_cond.notify_one();
+        return value;
+    }
+    bool empty()const {
+        std::lock_guard<std::mutex> lk (mtx);
+        return data_queue.empty();
+    }
+};
 
+```
 
+解释：
 
+- 队列满时，应该先`pop()`后`push()`；
+
+  队列空时，应该先`push()`后`pop()`。
+
+- 执行`push()`，`pop()`，`empty()`不能同时执行。
 
 
 
@@ -2406,3 +2447,4 @@ CPU 变量的概念很好理解。就像线程变量为每个线程提供独立�
 
 1. 将原有的线程创建方式改为：《C++并发编程实战》p27的形式，[#joining_thread](#实现joining_thread)
 1. 找一个能更新为单例的类，单例实现看[#这里](#线程安全的单例模式)
+1. 消息队列改为[#此形式](#线程安全的队列)；同时给模板上SFINAE，只允许特定类型们使用消息队列；并使用CRTP减少冗余代码；并将queue改为循环队列
