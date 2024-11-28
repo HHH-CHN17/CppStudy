@@ -2433,6 +2433,109 @@ public:
 
 - 执行`push()`，`pop()`，`empty()`不能同时执行。
 
+## 使用条件变量实现后台提示音播放
+
+[看这里就好：使用条件变量实现后台提示音播放](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/04同步操作.html#使用条件变量实现后台提示音播放)
+
+## 使用future？？？
+
+[（原创）用C++11的std::async代替线程的创建 - 南哥的天下 - 博客园？？？](https://www.cnblogs.com/leijiangtao/p/12076251.html)
+
+> - `std::async`用于执行有返回值的线程任务，与thread类似。
+
+### 创建异步任务获取返回值
+
+[C++中的std::async()详解 - 知乎](https://zhuanlan.zhihu.com/p/349193932)
+
+[c++ - std::async的使用总结 - 个人文章 - SegmentFault 思否](https://segmentfault.com/a/1190000039083151)
+
+[std::async - C++中文 - API参考文档](https://www.apiref.com/cpp-zh/cpp/thread/async.html)
+
+[（原创）用C++11的std::async代替线程的创建 - 南哥的天下 - 博客园](https://www.cnblogs.com/leijiangtao/p/12076251.html)
+
+[std::async - cppreference.com](https://zh.cppreference.com/w/cpp/thread/async)
+
+> - `std::future`：
+>
+>   - 是类模板，该类仅能移动，不可复制
+>
+>   - 用于访问`std::async`执行后的结果，`std::async`执行并不代表指定的函数会执行，指定的函数是否执行由执行策略和操作系统决定。
+>   - `std::future`中有一个共享状态，该共享状态存储了 待调用的函数以及参数（进行惰性求值时）和 函数返回的结果或者抛出的异常
+>
+> - 执行策略：
+>
+>   - `std::launch::deferred`
+>
+>     [*惰性求值，同步，在 `async` 所返回的 `std::future` 上首次调用非定时等待函数的线程中*]执行指定的函数
+>
+>     上面这行的意思就是说：**哪个线程调用了future对象的`wait()`/`get()`，那么共享状态中存储的函数就会在对应的线程中，在调用了`wait()`/`get()`的地方原地执行，不一定在最初调用 `std::async` 的线程中执行**。
+>
+>   - `std::launch::async`
+>
+>     - libstdc++
+>
+>       和`std::thread`一样，立刻创建线程，异步调用
+>
+>     - MSVC STL
+>
+>       微软ppl并行库有个线程池，先检查该线程池里有没有可用的线程，如果有，则用线程池里的线程，如果没有，则通过ppl（async并没有创建线程）来创建一个新线程执行
+>
+>   - `std::launch::async | std::launch::deferred`
+>
+>     - libstdc++
+>
+>       此策略表示由实现选择到底是否创建线程执行异步任务。典型情况是，如果系统资源充足，并且异步任务的执行不会导致性能问题，那么系统可能会选择在新线程中执行任务。但是，如果系统资源有限，或者延迟执行可以提高性能或节省资源，那么系统可能会选择延迟执行。
+>
+>     - MSVC STL
+>
+>       此策略与 `launch::async` 执行策略毫无区别，
+>
+> - `std::async`与`std::thread`的异同：
+>
+>   - 异：
+>
+>     1. `std::async`是函数模板，`std::thread`是类模板。
+>
+>     2. async既可以执行`返回值为void`的函数，也可以执行`返回值为非void`的函数（可用通过future类对象移动接收async的返回值，且future类对象中有一个共享状态，用于存储 待调用的函数（进行惰性求值时），函数返回的结果或者抛出的异常 ）
+>
+>        thread既可以执行`返回值为void`的函数，也可以执行`返回值为非void`的函数（但是无法接收该函数的返回值）
+>
+>     3. async既可以选择[*异步，在不同线程中*]执行指定的函数，也可以选择[*惰性求值，同步，在 `async` 所返回的 `std::future` 上首次调用非定时等待函数的线程（不必是最初调用 `std::async` 的线程）中*]执行指定的函数；
+>
+>        thread只能选择[*异步，在不同线程中*]执行指定的函数。
+>
+>   - 同：
+>
+>     1. 在传递函数/函数参数时，两者传递的都是参数退化后的右值副本，所以如果想传引用的话，必须使用`ref()`。
+
+- 前言：
+
+  假设需要执行一个耗时任务并获取其返回值，但是并不急切的需要它。那么就可以启动新线程计算，然而 `std::thread` 没提供直接从线程获取返回值的机制。所以我们可以使用 [`std::async`](https://zh.cppreference.com/w/cpp/thread/async) 函数模板。
+
+- 示例：
+
+  使用 `std::async` 启动一个异步任务，它会返回一个 `std::future` 对象，这个对象和任务关联，将持有最终计算出来的结果。当需要任务执行完的结果的时候，只需要调用 [`get()`](https://zh.cppreference.com/w/cpp/thread/future/get) 成员函数，就会阻塞直到 `future` 为就绪为止（即任务执行完毕），返回执行结果。[`valid()`](https://zh.cppreference.com/w/cpp/thread/future/valid) 成员函数检查 future 当前是否关联共享状态，即是否当前关联任务。还未关联，或者任务已经执行完（调用了 get()、set()），都会返回 **`false`**。
+
+  ```
+  #include <iostream>
+  ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
