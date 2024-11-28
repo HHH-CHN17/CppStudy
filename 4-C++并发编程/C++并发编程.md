@@ -2445,28 +2445,22 @@ public:
 
 ### 创建异步任务获取返回值
 
-[C++中的std::async()详解 - 知乎](https://zhuanlan.zhihu.com/p/349193932)
+[建议先看标准文档：std::async - cppreference.com](https://zh.cppreference.com/w/cpp/thread/async)
 
-[c++ - std::async的使用总结 - 个人文章 - SegmentFault 思否](https://segmentfault.com/a/1190000039083151)
-
-[std::async - C++中文 - API参考文档](https://www.apiref.com/cpp-zh/cpp/thread/async.html)
-
-[（原创）用C++11的std::async代替线程的创建 - 南哥的天下 - 博客园](https://www.cnblogs.com/leijiangtao/p/12076251.html)
-
-[std::async - cppreference.com](https://zh.cppreference.com/w/cpp/thread/async)
+[建议先看标准文档std::async - C++中文 - API参考文档](https://www.apiref.com/cpp-zh/cpp/thread/async.html)
 
 > - `std::future`：
 >
 >   - 是类模板，该类仅能移动，不可复制
 >
->   - 用于访问`std::async`执行后的结果，`std::async`执行并不代表指定的函数会执行，指定的函数是否执行由执行策略和操作系统决定。
->   - `std::future`中有一个共享状态，该共享状态存储了 待调用的函数以及参数（进行惰性求值时）和 函数返回的结果或者抛出的异常
+>   - 用于访问`std::async`执行后的结果，`std::async`执行并不代表指定的函数会执行，指定的函数是否执行由 执行策略 和 操作系统 决定。
+>   - **`std::future`中有一个共享状态，该共享状态存储了[待调用的函数 和 参数]（进行惰性求值时）以及 函数返回的结果或者抛出的异常**
 >
 > - 执行策略：
 >
 >   - `std::launch::deferred`
 >
->     [*惰性求值，同步，在 `async` 所返回的 `std::future` 上首次调用非定时等待函数的线程中*]执行指定的函数
+>     此标志表示：惰性求值，同步，在 `async` 所返回的 `std::future` 上首次调用非定时等待函数的线程中执行指定的函数
 >
 >     上面这行的意思就是说：**哪个线程调用了future对象的`wait()`/`get()`，那么共享状态中存储的函数就会在对应的线程中，在调用了`wait()`/`get()`的地方原地执行，不一定在最初调用 `std::async` 的线程中执行**。
 >
@@ -2512,19 +2506,173 @@ public:
 
   假设需要执行一个耗时任务并获取其返回值，但是并不急切的需要它。那么就可以启动新线程计算，然而 `std::thread` 没提供直接从线程获取返回值的机制。所以我们可以使用 [`std::async`](https://zh.cppreference.com/w/cpp/thread/async) 函数模板。
 
-- 示例：
+- `std::async`基本使用：
 
-  使用 `std::async` 启动一个异步任务，它会返回一个 `std::future` 对象，这个对象和任务关联，将持有最终计算出来的结果。当需要任务执行完的结果的时候，只需要调用 [`get()`](https://zh.cppreference.com/w/cpp/thread/future/get) 成员函数，就会阻塞直到 `future` 为就绪为止（即任务执行完毕），返回执行结果。[`valid()`](https://zh.cppreference.com/w/cpp/thread/future/valid) 成员函数检查 future 当前是否关联共享状态，即是否当前关联任务。还未关联，或者任务已经执行完（调用了 get()、set()），都会返回 **`false`**。
+  使用 `std::async` 启动一个异步任务，它会返回一个 `std::future` 对象，这个对象和任务关联，将持有最终计算出来的结果。当需要任务执行完的结果的时候，只需要调用 [`get()`](https://zh.cppreference.com/w/cpp/thread/future/get) 成员函数，就会阻塞直到 `future` 为就绪为止（即任务执行完毕），返回执行结果。**[`valid()`](https://zh.cppreference.com/w/cpp/thread/future/valid) 成员函数检查 future 当前是否关联共享状态，即是否当前关联任务。还未关联，或者任务已经执行完（调用了 get()、set()），都会返回 `false`。**
 
-  ```
+  ```c++
   #include <iostream>
+  #include <thread>
+  #include <future> // 引入 future 头文件
+  
+  int task(int n) {
+      std::cout << "异步任务 ID: " << std::this_thread::get_id() << '\n';
+      return n * n;
+  }
+  
+  int main() {
+      std::future<int> future = std::async(task, 10);
+      std::cout << "main: " << std::this_thread::get_id() << '\n';
+      std::cout << std::boolalpha << future.valid() << '\n'; // true。显然，如果指定async执行策略为`std::launch::deferred`，也依然会是true
+      std::cout << future.get() << '\n';
+      std::cout << std::boolalpha << future.valid() << '\n'; // false
+  }
+  ```
+  
+- `std::async`参数传递：
+
+  与 `std::thread` 一样，`std::async` 支持任意[可调用(Callable)](https://zh.cppreference.com/w/cpp/named_req/Callable)对象，以及传递调用参数。包括支持使用 `std::ref` ，以及**支持只能移动的类型**。详情见[thread源码解析](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/详细分析/01thread的构造与源码解析.html)，在参数传递上两者其实都差不多
+
+  ```c++
+  struct X{
+      int operator()(int n)const{
+          return n * n;
+      }
+  };
+  struct Y{
+      int f(int n)const{
+          return n * n;
+      }
+  };
+  void f(int& p) { std::cout << &p << '\n'; }
+  
+  int main(){
+      Y y;
+      int n = 0;
+      auto t1 = std::async(X{}, 10);
+      auto t2 = std::async(&Y::f,&y,10);
+      auto t3 = std::async([] {});         
+      auto t4 = std::async(f, std::ref(n));
+      std::cout << &n << '\n';
+  }
   ```
 
+- `std::async`执行策略：
 
+  - `std::launch::deferred`
 
+    此标志表示：惰性求值，同步，在 `async` 所返回的 `std::future` 上首次调用非定时等待函数的线程中执行指定的函数
 
+    上面这行的意思就是说：**哪个线程调用了future对象的`wait()`/`get()`，那么共享状态中存储的函数就会在对应的线程中，在调用了`wait()`/`get()`的地方原地执行，不一定在最初调用 `std::async` 的线程中执行**。
 
+  - `std::launch::async`
 
+    - libstdc++
+
+      和`std::thread`一样，立刻创建线程，异步调用
+
+    - MSVC STL
+
+      微软ppl并行库有个线程池，先检查该线程池里有没有可用的线程，如果有，则用线程池里的线程，如果没有，则通过ppl（async并没有创建线程）来创建一个新线程执行
+
+  - `std::launch::async | std::launch::deferred`
+
+    - libstdc++
+
+      此策略表示由实现选择到底是否创建线程执行异步任务。典型情况是，如果系统资源充足，并且异步任务的执行不会导致性能问题，那么系统可能会选择在新线程中执行任务。但是，如果系统资源有限，或者延迟执行可以提高性能或节省资源，那么系统可能会选择延迟执行。
+
+      ```c++
+      auto future = std::async(func);        // 使用默认发射模式执行func
+      ```
+
+      但是这个策略要慎用，因为：
+
+      [c++ - std::async的使用总结](https://segmentfault.com/a/1190000039083151)
+
+      1. 这种调度策略我们没有办法预知函数`func`是否会在哪个线程执行，甚至无法预知会不会被执行，因为`func`可能会被调度为推迟执行，即调用`get`或`wait`的时候执行，而`get`或`wait`是否会被执行或者在哪个线程执行都无法预知。
+
+      2. 同时这种调度策略的灵活性还会混淆使用`thread_local`变量，这意味着如果func写或读这种线程本地存储(Thread Local Storage，TLS)，预知取到哪个线程的本地变量是不可能的。
+
+      3. 它也影响了基于wait循环中的超时情况，因为调度策略可能为`deferred`的，调用`wait_for`或者`wait_until`会返回值`std::launch::deferred`。这意味着下面的循环，看起来最终会停止，但是，实际上可能会一直运行：
+
+         ```c++
+         void func()           // f睡眠1秒后返回
+         {
+             std::this_thread::sleep_for(1);
+         }
+         auto future = std::async(func);      // （概念上）异步执行f
+         while(fut.wait_for(100ms) !=         // 循环直到f执行结束
+               std::future_status::ready)     // 但这可能永远不会发生
+         {
+             ...
+         }
+         ```
+
+         为避免陷入死循环，我们必须检查future是否把任务推迟，然而future无法获知任务是否被推迟，一个好的技巧就是通过`wait_for(0)`来获取`future_status`是否是`deferred`：
+
+         ```c++
+             auto fut = std::async(func);      // （概念上）异步执行f
+             if (fut.wait_for(0s) == std::future_status::deferred){  // 如果任务被推迟
+                 // fut使用get或wait来同步调用f
+             } else {            // 任务没有被推迟
+                 while(fut.wait_for(100ms) != std::future_status::ready) { // 不可能无限循环
+                     // 任务没有被推迟(deferred)也没有就绪(ready)，所以做一些并发的事情直到任务就绪
+                   }
+                 cout << fut.get() << endl;        // 当func执行完毕且未被get()/wait()时，fut就绪
+             }
+         ```
+
+    - MSVC STL
+
+      此策略与 `launch::async` 执行策略毫无区别，因为源码如下：
+
+      ```c++
+      template <class _Ret, class _Fty>
+      _Associated_state<typename _P_arg_type<_Ret>::type>* _Get_associated_state(launch _Psync, _Fty&& _Fnarg) {
+           // construct associated asynchronous state object for the launch type
+           switch (_Psync) { // select launch type
+           case launch::deferred:
+                 return new _Deferred_async_state<_Ret>(_STD forward<_Fty>(_Fnarg));
+           case launch::async: // TRANSITION, fixed in vMajorNext, should create a new thread here
+           default:
+                 return new _Task_async_state<_Ret>(_STD forward<_Fty>(_Fnarg));
+           }
+      }
+      ```
+
+      显然，除了`std::launch::deferred`以外，其他策略都是立刻执行。
+
+      且 `_Task_async_state` 会通过 [`::Concurrency::create_task`](https://github.com/microsoft/STL/blob/f54203f/stl/inc/future#L663-L665)[[1\]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/04同步操作.html#footnote1) 从微软ppl并行库的线程池中获取线程并执行任务返回包装对象。
+
+      简而言之，使用 `std::async`，只要不是 `launch::deferred` 策略，那么 MSVC STL 实现中都是必然在线程中执行任务。因为是线程池，所以执行新任务是否创建新线程，任务执行完毕线程是否立即销毁，***不确定***。
+
+- `std::async`其他注意事项：
+
+  1. 如果从 `std::async` 获得的 [`std::future`](https://zh.cppreference.com/w/cpp/thread/future) 没有被移动或绑定到引用，那么在完整表达式结尾， `std::future` 的**[析构函数](https://zh.cppreference.com/w/cpp/thread/future/~future)将阻塞，直到到异步任务完成**。因为临时对象的生存期就在这一行，而对象生存期结束就会调用调用析构函数。
+
+     ```c++
+     std::async(std::launch::async, []{ f(); }); // 临时量的析构函数等待 f()
+     std::async(std::launch::async, []{ g(); }); // f() 完成前不开始
+     ```
+
+     解释：
+
+     - 第一个`std::async`，会返回一个临时的`future`对象，由于是临时对象，所以在在一行结束后会立刻调用析构函数释放，而`future`的析构函数中，会调用函数阻塞等待异步任务完成，所以这个其实就是同步。
+
+  2. 被移动的 `std::future` 没有所有权，失去共享状态，不能调用 `get`、`wait` 成员函数。
+
+     ```c++
+     auto t = std::async([] {});
+     std::future<void> fut{ std::move(t) };
+     t.wait();   // Error! 抛出异常
+     fut.wait()	// OK!
+     ```
+
+     如同没有线程资源所有权的 `std::thread` 对象调用 `join()` 一样错误，这是移动语义的基本语义逻辑。
+
+## `future` 与 `std::packaged_task`
+
+[（原创）用C++11的std::async代替线程的创建 - 南哥的天下 - 博客园](https://www.cnblogs.com/leijiangtao/p/12076251.html)
 
 
 
