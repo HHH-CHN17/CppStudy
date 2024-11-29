@@ -2670,11 +2670,74 @@ public:
 
      如同没有线程资源所有权的 `std::thread` 对象调用 `join()` 一样错误，这是移动语义的基本语义逻辑。
 
-## `future` 与 `std::packaged_task`
+## future 与 std::packaged_task？？？
 
 [（原创）用C++11的std::async代替线程的创建 - 南哥的天下 - 博客园](https://www.cnblogs.com/leijiangtao/p/12076251.html)
 
+- 定义：
 
+  类模板 [`std::packaged_task`](https://zh.cppreference.com/w/cpp/thread/packaged_task) 包装任何`可调用(Callable)`目标（函数、lambda 表达式、bind 表达式或其它函数对象），使得能**异步**调用它。其返回值或所抛异常被存储于能通过 `std::future` 对象访问的共享状态中。
+
+  **类模板；只能接收可调用对象和参数进行构造；该类模板的对象是函数对象；只能移动，不可复制。**
+
+- 作用：
+
+  **该类模板会将可调用对象和参数进行封装，方便异步调用**
+
+- 示例：
+
+  - 简单使用（无法获取返回值）：
+
+    ```c++
+    std::packaged_task<double(int, int)> task([](int a, int b){
+        return std::pow(a, b);
+    });
+    task(10, 2); // 执行传递的 lambda，但无法获取返回值
+    ```
+
+    它有 [`operator()`](https://zh.cppreference.com/w/cpp/thread/packaged_task/operator()) 的重载，它会执行我们传递的[*可调用(Callable)*](https://zh.cppreference.com/w/cpp/named_req/Callable)对象，不过这个重载的返回类型是 `void` **没办法获取返回值**。
+
+  - 和 `std::future` 配合使用（通过future获取返回值）：
+
+    ```c++
+    std::packaged_task<double(int, int)> task([](int a, int b){
+        return std::pow(a, b);
+    });
+    std::future<double>future = task.get_future();
+    task(10, 2); // 此处执行任务
+    std::cout << future.get() << '\n'; // 不阻塞，此处获取返回值
+    ```
+
+    ？？？问题：把`future.get()`放在`task(10, 2)`前面问什么不会像async那样执行呢，`future.get()`只会等待对应函数执行吗？
+
+  - 异步调用`packaged_task`类的函数对象
+
+    ```c++
+    std::packaged_task<double(int, int)> task([](int a, int b){
+        return std::pow(a, b);
+    });
+    std::future<double> future = task.get_future();
+    std::thread t{ std::move(task),10,2 }; // 任务在线程中执行，其中task只能移动
+    // todo.. 幻想还有许多耗时的代码
+    t.join();
+    
+    std::cout << future.get() << '\n'; // 并不阻塞，获取任务返回值罢了
+    ```
+
+    因为 `task` 本身是重载了 `operator()` 的，是可调用对象，自然可以传递给 `std::thread` 执行，以及传递调用参数。唯一需要注意的是我们使用了 `std::move` ，**这是因为 `std::packaged_task` 只能移动，不能复制。**
+
+- （小技巧）规定类模板只能使用函数初始化：
+
+  ![image-20241129110320070](assets/image-20241129110320070.png)
+
+  如果写这样的代码：
+
+  ```c++
+  packaged_task<int(int)> pt1;
+  pt1.get_future();
+  ```
+
+  则第一行能过编译，第二行显然会报错（运行时报错，不是编译时报错，很奇怪）。
 
 
 
