@@ -2682,7 +2682,7 @@ public:
 
 - 作用：
 
-  **该类模板会将可调用对象和参数进行封装，方便异步调用**
+  **该类模板会将可调用对象和参数进行封装，方便异步调用，在调用完成后，会将函数返回结果和抛出的异常存储在能通过 `std::future` 对象访问的共享状态中。**
 
 - 示例：
 
@@ -2703,9 +2703,10 @@ public:
     std::packaged_task<double(int, int)> task([](int a, int b){
         return std::pow(a, b);
     });
-    std::future<double>future = task.get_future();
+    // 将task中的共享状态与fut进行绑定，当然也可以先执行task(10,2)再绑定
+    std::future<double>fut = task.get_future();	
     task(10, 2); // 此处执行任务
-    std::cout << future.get() << '\n'; // 不阻塞，此处获取返回值
+    std::cout << fut.get() << '\n'; // 不阻塞，此处获取返回值
     ```
 
     ？？？问题：把`future.get()`放在`task(10, 2)`前面问什么不会像async那样执行呢，`future.get()`只会等待对应函数执行吗？
