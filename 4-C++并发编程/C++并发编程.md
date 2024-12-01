@@ -2443,7 +2443,7 @@ public:
 
 > - `std::async`用于执行有返回值的线程任务，与thread类似。
 
-### 创建异步任务获取返回值
+### 使用async创建异步任务获取返回值
 
 [建议先看标准文档：std::async - cppreference.com](https://zh.cppreference.com/w/cpp/thread/async)
 
@@ -2670,7 +2670,7 @@ public:
 
      如同没有线程资源所有权的 `std::thread` 对象调用 `join()` 一样错误，这是移动语义的基本语义逻辑。
 
-## future 与 std::packaged_task？？？
+### 使用std::packaged_task？？？
 
 [（原创）用C++11的std::async代替线程的创建 - 南哥的天下 - 博客园](https://www.cnblogs.com/leijiangtao/p/12076251.html)
 
@@ -2709,7 +2709,7 @@ public:
     std::cout << fut.get() << '\n'; // 不阻塞，此处获取返回值
     ```
 
-    ？？？问题：把`future.get()`放在`task(10, 2)`前面问什么不会像async那样执行呢，`future.get()`只会等待对应函数执行吗？
+    ？？？问题：把`future.get()`放在`task(10, 2)`前面为什么不会像async那样执行呢，`future.get()`只会等待对应函数执行吗？
 
   - 异步调用`packaged_task`类的函数对象
 
@@ -2740,7 +2740,160 @@ public:
 
   则第一行能过编译，第二行显然会报错（运行时报错，不是编译时报错，很奇怪）。
 
+### 使用std::promise
 
+- 概念：
+
+  类模板 [`std::promise`](https://zh.cppreference.com/w/cpp/thread/promise) 用于存储一个值或一个异常，之后通过 `std::promise` 对象所创建的 [std::future](https://zh.cppreference.com/w/cpp/thread/future) 对象异步获得。
+
+- 示例：
+
+  - `set_value()`的使用
+
+    ```c++
+    // 计算函数，接受一个整数并返回它的平方
+    void calculate_square(std::promise<int> promiseObj, int num) {
+        // 模拟一些计算
+        std::this_thread::sleep_for(1s);
+    
+        // 计算平方并设置值到 promise 中
+        promiseObj.set_value(num * num);
+        
+        // 模拟后续的一些计算
+        std::this_thread::sleep_for(2s);
+    }
+    
+    // 创建一个 promise 对象，用于存储计算结果
+    std::promise<int> promise;
+    
+    // 从 promise 获取 future 对象进行关联
+    std::future<int> future = promise.get_future();
+    
+    // 启动一个线程进行计算
+    int num = 5;
+    std::thread t(calculate_square, std::move(promise), num);
+    
+    // 阻塞，直到结果可用
+    int result = future.get();
+    std::cout << num << " 的平方是：" << result << std::endl;
+    
+    t.join();
+    ```
+
+    解释：
+
+    - `promiseObj.set_value()`用于给共享状态设置值。
+
+    - `std::promise` **只能移动**，不可复制，所以使用 `std::move` 进行传递。
+    - 注意用词：`future.get()`会阻塞，直到结果可用。也就是说，在`promiseObj.set_value(num * num);`结束后，`future.get()`的阻塞就会立刻结束，并返回结果，不会等到`this_thread::sleep_for(2s);`执行完才结束阻塞。
+    - 该函数内部**通过条件变量实现阻塞**的，建议看看源码。
+
+  - `set_exception()`的使用
+
+    ```c++
+    void throw_function(std::promise<int> prom) {
+        try {
+            throw std::runtime_error("一个异常");
+        }
+        catch (...) {
+            // 给promise设置了一个异常
+            prom.set_exception(std::current_exception());
+        }
+    }
+    
+    int main() {
+        std::promise<int> prom;
+        std::future<int> fut = prom.get_future();
+    
+        std::thread t(throw_function, std::move(prom));
+    
+        try {
+            std::cout << "等待线程执行，抛出异常并设置\n";
+            // future通过get()收到了该异常，并继续抛出。
+            fut.get();
+        }
+        catch (std::exception& e) {
+            std::cerr << "来自线程的异常: " << e.what() << '\n';
+        }
+        t.join();
+    }
+    ```
+
+    解释：
+
+    - `prom.set_exception()` 用于给共享状态设置异常。
+    - 该函数接受一个 [`std::exception_ptr`](https://zh.cppreference.com/w/cpp/error/exception_ptr) 类型的参数，这个参数通常通过 [`std::current_exception()`](https://zh.cppreference.com/w/cpp/error/current_exception) 获取，用于指示当前线程中抛出的异常。然后，`std::future` 对象通过 `get()` 函数获取这个异常，如果 `promise` 所在的函数有异常被抛出，则 `std::future` 对象会重新抛出这个异常，从而允许主线程捕获并处理它。
+    - 注意`set_exception()`和`set_value()`不能同时使用，也就是说**共享状态中要么存储函数返回值，要么存储抛出的异常**，这很符合常理，毕竟函数执行之后要么抛出异常，要么返回结果。
+
+
+
+
+
+
+
+
+
+
+
+### future，packaged_task，promise总结
+
+`future`（`_State_manager<>`的子类），`packaged_task`，`promise`只能通过他们自己的类成员（`_Promise`对象）访问共享状态，且他们均只能移动，不可复制。其中：
+
+- `_Associated_state<>`是一个类，这个类就叫共享状态。
+
+- `_State_manager<>`类直接持有共享状态，可以直接读，写共享状态。
+
+- `_Promise<>`类使用`_State_manager<>`对象作为类成员，间接持有共享状态。该类：**①无法修改共享状态，②只能对`_State_manager<>`进行读操作。**
+
+  ```c++
+  // _Promise<>中的某个成员函数，其他成员函数也与这个类似
+  _State_manager<_Ty>& _Get_state_for_set() {
+          if (!this._State.valid()) {
+              _Throw_future_error2(future_errc::no_state);
+          }
+  
+          return this._State;	//_State_manager<>类对象
+      }
+  ```
+
+- `future<>`类是`_State_manager<>`的子类，直接持有共享状态。该类：**①无法修改共享状态；②只能对共享状态中存储的函数返回值/抛出的异常进行读操作。**
+
+  ```c++
+  _Ty get() {
+      // block until ready then return the stored result or throw the stored exception
+      future _Local{_STD move(*this)};
+      return _STD move(_Local._Get_value());
+  }
+  ```
+
+- `promise<>`类使用`_Promise<>`类对象作为类成员，间接持有共享状态。该类：**①可以使用`future<>`类对象与间接持有的共享状态进行绑定，②可以对间接持有的共享状态进行写操作。**
+
+  ```c++
+  // 返回一个 future<> 对象，通过 _MyPromise 对 _State_manager<> 进行读操作
+  future<_Ty> get_future() {
+  	return future<_Ty>(_From_raw_state_tag{}, _MyPromise._Get_state_for_future());
+  }
+  
+  // 通过 _MyPromise 对 _State_manager<> 进行写操作
+  void set_value(const _Ty& _Val) {
+      _MyPromise._Get_state_for_set()._Set_value(_Val, false);
+  }
+  ```
+
+- `packaged_task<>`类使用`_Promise`对象作为类成员，间接持有共享状态。该类：**①可以使用`future<>`类对象与间接持有的共享状态进行绑定，②可以执行指定的函数，并将函数的返回值/抛出的异常存储于共享状态中。**
+
+  ```c++
+  future<_Ret> get_future() {
+      return future<_Ret>(_From_raw_state_tag{}, _MyPromise._Get_state_for_future());
+  }
+  
+  void operator()(_ArgTypes... _Args) {
+      _State_manager<_Ptype>& _State = _MyPromise._Get_state_for_set();
+      _MyStateType* _Ptr          = static_cast<_MyStateType*>(_State._Ptr());
+      // 这里就是通过_Ptr执行了指定的函数，并将执行结果存储于共享状态中。
+      _Ptr->_Call_immediate(_STD forward<_ArgTypes>(_Args)...);
+  }
+  ```
 
 
 

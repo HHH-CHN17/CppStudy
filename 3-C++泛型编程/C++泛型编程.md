@@ -278,6 +278,8 @@ test("1");      // 匹配到模板
 
 ### 可变参数模板
 
+> - 形参包展开是需要在特定的语境下进行的，如果不想麻烦的话最好还是用[#折叠表达式](#折叠表达式（C++17新特性）)（C++17起）
+
 ```c++
 void f(const char*, int, double) { puts("值"); }
 void f(const char**, int*, double*) { puts("&"); }
