@@ -2895,7 +2895,59 @@ public:
   }
   ```
 
+### future的状态变化
 
+- 前言：
+
+  需要注意的是，**future 是一次性的**，所以你需要注意移动。并且，调用 `get` 函数后，future 对象也会**失去共享状态**。
+
+  - **移动语义**：这一点很好理解并且常见，因为**移动操作标志着所有权的转移**，意味着 `future` 不再拥有共享状态（如之前所提到）。`get` 和 `wait` 函数要求 `future` 对象拥有共享状态，否则会抛出异常。
+  - **共享状态失效**：调用 `get` 成员函数时，`future` 对象必须拥有共享状态，但调用完成后，它就会**失去共享状态**，不能再次调用 `get`。这是我们在本节需要特别讨论的内容。
+
+- 示例：
+
+  ```c++
+  std::future<void>future = std::async([] {});
+  std::cout << std::boolalpha << future.valid() << '\n'; // true
+  future.get();
+  std::cout << std::boolalpha << future.valid() << '\n'; // false
+  try {
+      future.get(); // 抛出 future_errc::no_state 异常
+  }
+  catch (std::exception& e) {
+      std::cerr << e.what() << '\n';
+  }
+  ```
+
+- `get()`源码
+
+  ```c++
+  // std::future<void>
+  void get() {
+      // block until ready then return or throw the stored exception
+      future _Local{_STD move(*this)};
+      _Local._Get_value();
+  }
+  // std::future<T>
+  _Ty get() {
+      // block until ready then return the stored result or throw the stored exception
+      future _Local{_STD move(*this)};
+      return _STD move(_Local._Get_value());
+  }
+  // std::future<T&>
+  _Ty& get() {
+      // block until ready then return the stored result or throw the stored exception
+      future _Local{_STD move(*this)};
+      return *_Local._Get_value();
+  }
+  ```
+
+  解释：
+
+  - `future _Local{_STD move(*this)};` 将当前对象的共享状态转移给了这个局部对象，而局部对象在函数结束时析构。这意味着**`get()`结束后当前对象失去共享状态，并且状态被完全销毁**。
+  - `std::future<_Ty>` 这个特化，它 `return std::move` 是为了**支持只能移动的类型**能够使用 `get` 返回值，参见前文的 `move_only` 类型。
+
+### 多个线程的等待`std::shared_future`
 
 
 
