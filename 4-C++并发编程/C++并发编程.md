@@ -3344,7 +3344,123 @@ public:
 
 ## C++20信号量
 
+[！！！看完本节后看这里：C++20信号量](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/04同步操作.html#c-20-信号量)
 
+> - 信号量和条件变量差不多，都可以控制线程的执行顺序
+
+- 定义：
+
+  信号量是一个非常**轻量简单**的同步设施，它维护一个计数，这个计数不能小于 `0`。信号量提供两种基本操作：**释放**（增加计数）和**等待**（减少计数）。如果当前信号量的计数值为 `0`，那么执行“***等待***”操作的线程将会**一直阻塞**，直到计数大于 `0`，也就是其它线程执行了“***释放***”操作。
+
+  C++ 提供了两个信号量类型：`std::counting_semaphore` 与 `std::binary_semaphore`，定义在 [``](https://zh.cppreference.com/w/cpp/header/semaphore) 中。
+
+  `binary_semaphore`[[3\]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/04同步操作.html#footnote3) 只是 `counting_semaphore` 的一个特化别名：
+
+  ```c++
+  using binary_semaphore = counting_semaphore<1>;
+  ```
+
+- 简单示例：
+
+  ```c++
+  binary_semaphore semaphore{0};
+  
+  void task() {
+      cout << "线程进入函数..." << endl;
+      semaphore.acquire(); // 减少计数，此时信号量计数为0，阻塞在此处
+      cout << "线程被唤醒，解除阻塞" << endl;
+  }
+  
+  int main() {
+      thread t{task};
+      this_thread::sleep_for(5s);
+      semaphore.release();
+      t.join();
+  }
+  ```
+
+## C++20闩与屏障
+
+闩 (latch) 与屏障 (barrier) 是线程协调机制，允许任何数量的线程阻塞**直至期待数量的线程到达**。闩不能重复使用，而屏障则可以。
+
+- **`std::latch`：单次使用的线程屏障**
+- **`std::barrier`：可复用的线程屏障**
+
+它们定义在标头 **`<latch>`** 与 **`<barrier>`**。
+
+与信号量类似，屏障也是一种古老而广泛应用的同步机制。许多系统 API 提供了对屏障机制的支持，例如 POSIX 和 Win32。此外，[OpenMP](https://learn.microsoft.com/zh-cn/cpp/parallel/openmp/2-directives?view=msvc-170#263-barrier-directive) 也提供了屏障机制来支持多线程编程。
+
+### `std::latch`
+
+- 定义：
+
+  “*闩*” ，中文语境一般说“*门闩*” 是指门背后用来关门的棍子。不过不用在意，在 C++ 中的意思就是先前说的：***单次使用的线程屏障***。
+
+  `latch` 类维护着一个 [`std::ptrdiff_t`](https://zh.cppreference.com/w/cpp/types/ptrdiff_t) 类型的计数[[5\]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/04同步操作.html#footnote5)，且只能**减少**计数，**无法增加计数**。在创建对象的时候初始化计数器的值。线程可以阻塞，直到 latch 对象的计数减少到零。由于无法增加计数，这使得 `latch` 成为一种**单次使用的屏障**。
+
+- 示例：
+
+  ```c++
+  std::latch work_start{ 3 };
+  
+  void work(){
+      std::cout << "等待其它线程执行\n";
+      work_start.wait(); // 等待计数为 0
+      std::cout << "任务开始执行\n";
+  }
+  
+  int main(){
+      std::jthread thread{ work };
+      std::this_thread::sleep_for(3s);
+      std::cout << "休眠结束\n";
+      work_start.count_down();  // 默认值是 1 减少计数 1
+      work_start.count_down(2); // 传递参数 2 减少计数 2
+  }
+  // 等待其它线程执行
+  // 休眠结束
+  // 任务开始执行
+  ```
+
+  解释：
+
+  - 在这个例子中，通过调用 `wait` 函数阻塞子线程，直到主线程调用 `count_down` 函数原子地将计数减至 `0`，从而解除阻塞。这个例子清楚地展示了 `latch` 的使用，其逻辑比信号量更简单。
+
+- 应用：
+
+  - 由于 `latch` 的计数不可增加，所以可以用来划分任务执行的工作区间。
+
+    ```c++
+    std::latch latch{ 10 };
+    
+    void f(int id) {
+        //todo.. 脑补任务
+        std::this_thread::sleep_for(1s);
+        std::cout << std::format("线程 {} 执行完任务，开始等待其它线程执行到此处\n", id);
+        latch.arrive_and_wait();
+        std::cout << std::format("线程 {} 彻底退出函数\n", id);
+    }
+    
+    int main() {
+        std::vector<std::jthread> threads;
+        for (int i = 0; i < 10; ++i) {
+            threads.emplace_back(f,i);
+        }
+    }
+    ```
+
+    解释：
+
+    - [`arrive_and_wait`](https://zh.cppreference.com/w/cpp/thread/latch/arrive_and_wait) 函数等价于：`count_down(n); wait();`。也就是减少计数 + 等待。这意味着
+
+      必须等待所有线程执行到 `latch.arrive_and_wait();` 将 latch 的计数减少至 `0` 才能继续往下执行。这个示例非常直观地展示了如何使用 `latch` 来划分任务执行的工作区间。
+
+    - 由于 `latch` 的功能受限，通常用于简单直接的需求，不少情况很多同步设施都能完成你的需求，在这个时候请考虑**使用尽可能功能最少的那一个**。
+
+### `std::barrier`
+
+[看看这里就好了](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/04同步操作.html#std-barrier)
+
+> `barrier`和`latch`很像，只是说，`barrier`在计数清0的时候，会将计数重置。
 
 
 
