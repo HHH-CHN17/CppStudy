@@ -2947,7 +2947,408 @@ public:
   - `future _Local{_STD move(*this)};` 将当前对象的共享状态转移给了这个局部对象，而局部对象在函数结束时析构。这意味着**`get()`结束后当前对象失去共享状态，并且状态被完全销毁**。
   - `std::future<_Ty>` 这个特化，它 `return std::move` 是为了**支持只能移动的类型**能够使用 `get` 返回值，参见前文的 `move_only` 类型。
 
-### 多个线程的等待`std::shared_future`
+### 多个线程的等待`std::shared_future`？？？
+
+> - `shared_future<>`可进行复制构造，但是所持有的共享状态都只有一份，因为共享状态以指针的形式存储的。
+> - 显然`std::future` 与 `std::shared_future` 的区别就如同 `std::unique_ptr`、`std::shared_ptr` 一样。
+
+- 前言：
+
+  之前的例子中我们一直使用 `std::future`，但 `std::future` 有一个局限：**future 是一次性的**，它的结果只能被一个线程获取。`get()` 成员函数只能调用一次，当结果被某个线程获取后，`std::future` 就无法再用于其他线程。
+
+- 示例：
+
+  ```c++
+  std::string fetch_data() {
+      std::this_thread::sleep_for(std::chrono::seconds(1)); // 模拟耗时操作
+      return "从网络获取的数据！";
+  }
+  
+  void thread_functio(std::future<int>& fut){
+      std::cout << "线程1：等待数据中..." << std::endl;
+      fut.wait();
+      std::cout << "线程1：收到数据：" << fut.get() << std::endl;
+  }
+  
+  int main() {
+      std::future<std::string> future_data = std::async(std::launch::async, fetch_data);
+  
+      // // 转移共享状态，原来的 future 被清空  valid() == false
+      std::shared_future<std::string> shared_future_data = future_data.share();
+  
+      // 第一个线程等待结果并访问数据
+      std::thread thread1(thread_functio, ref(shared_future_data));
+  
+      // 第二个线程等待结果并访问数据
+      std::thread thread2(thread_functio, ref(shared_future_data));
+  
+      thread1.join();
+      thread2.join();
+  }
+  ```
+
+  解释：
+
+  - 如果使用`future<>`，由于`future`是一次性的，只能被调用一次 `get()` 成员函数，以上在两个线程中，一定会调用两次，所以有问题。
+
+  - `std::future` 是只能移动的，其所有权可以在不同的对象中互相传递，但只有一个对象可以获得特定的同步结果。
+
+    `std::shared_future` 是可复制的，多个对象可以指代同一个共享状态。
+
+  - `std::future` 与 `std::shared_future` 的区别就如同 `std::unique_ptr`、`std::shared_ptr` 一样。
+
+  - 在多个线程中对**同一个 \**`std::shared_future` 对象进行操作时（如果没有进行同步保护）存在条件竞争。而从多个线程访问同一共享状态，若每个线程都是通过其自身的 `shared_future` 对象\**副本**进行访问，则是安全的。（具体解释看源码解析？？？）
+
+  - 由于此代码中，`shared_future<>`按引用传递，不同线程访问的是同一个`shared_future` 对象副本且没有进行同步保护，所以存在条件竞争，解决办法很简单，将引用传递改为值传递即可。
+
+- 补充：
+
+  `std::promise` 也同，它的 `get_future()` 成员函数一样可以用来构造 `std::shared_future`，虽然它的返回类型是 `std::future`，不过不影响，这是因为 `std::shared_future` 有一个 `std::future<T>&&` 参数的[构造函数](https://zh.cppreference.com/w/cpp/thread/shared_future/shared_future)，转移 `std::future` 的所有权。
+
+  ```c++
+  std::promise<std::string> p;
+  std::shared_future<std::string> sf{ p.get_future() }; // 隐式转移所有权
+  ```
+
+## 限时等待
+
+阻塞调用会将线程挂起一段（不确定的）时间，直到对应的事件发生。通常情况下，这样的方式很好，但是在一些情况下，需要限定线程等待的时间，因为无限期地等待事件发生可能会导致性能下降或资源浪费。一个常见的例子是在很多网络库中的 `connect` 函数，这个函数调用是阻塞的，但是也是限时的，一定时间内没有连接到服务器就不会继续阻塞了，会进行其它处理，比如抛出异常。
+
+介绍两种指定超时的方式，一种是“**时间段**”，另一种是“**时间点**”，其实就是先前讲的 [`std::this::thread::sleep_for`](https://zh.cppreference.com/w/cpp/thread/sleep_for) 与 [`std::this_thread::sleep_until`](https://zh.cppreference.com/w/cpp/thread/sleep_until) 的区别。前者是需要指定等待一段时间（比如 10 毫秒）。而后者是指定等待到一个具体的时间点（比如到 2024-05-07T12:01:10.123）。多数函数都对两种超时方式进行处理。**处理持续时间的函数以 `_for` 作为后缀，处理绝对时间的函数以 `_until` 作为后缀**。
+
+条件变量 `std::condition_variable` 的等待函数，也有两个超时的版本 [`wait_for`](https://zh.cppreference.com/w/cpp/thread/condition_variable/wait_for) 和 [`wait_until`](https://zh.cppreference.com/w/cpp/thread/condition_variable/wait_until) 。它们和我们先前讲的 `wait` 成员函数一样有两个重载，可以选择是否传递一个[*谓词*](https://zh.cppreference.com/w/cpp/named_req/Predicate)。它们相比于 `wait` 多了一个解除阻塞的可能，即：**超过指定的时长或抵达指定的时间点**。
+
+在讲述它的使用细节之前，我们还是要来先聊一下 C++ 中的[**时间库**](https://zh.cppreference.com/w/cpp/chrono#std::chrono_.E5.BA.93)（chrono），指定时间的方式，它较为麻烦。我们分：***时钟**（clock）*、***时间段**（duration）*、***时间点**（time point）*三个阶段稍微介绍一下。
+
+### 时钟
+
+在 C++ 标准库中，时钟被视为时间信息的来源。C++ 定义了很多种时间类型，每种时钟类型都提供了四种不同的信息：
+
+- 当前时间：
+
+  当前时间可以通过静态成员函数 `now` 获取，例如，[`std::chrono::system_clock::now()`](https://zh.cppreference.com/w/cpp/chrono/system_clock/now) 会返回系统的当前时间。特定的时间点则可以通过 [`time_point`](https://zh.cppreference.com/w/cpp/chrono/time_point) 来指定。`system_clock::now()` 的返回类型就是 `time_point`。
+
+- 时间类型：
+
+  ```c++
+  _EXPORT_STD using nanoseconds  = duration<long long, nano>;
+  _EXPORT_STD using microseconds = duration<long long, micro>;
+  _EXPORT_STD using milliseconds = duration<long long, milli>;
+  _EXPORT_STD using seconds      = duration<long long>;
+  _EXPORT_STD using minutes      = duration<int, ratio<60>>;//（60秒一个节拍）
+  _EXPORT_STD using hours        = duration<int, ratio<3600>>;
+  ```
+
+- 时钟节拍：
+
+  时钟节拍被指定为 1/x（x 在不同硬件上有不同的值）秒，这是由时间周期所决定。假设一个时钟一秒有 25 个节拍，因此一个周期为 `std::ratio<1,25>` 。当一个时钟的时钟节拍每 2.5 秒一次，周期就可以表示为 `std::ratio<5,2>`（5秒两个节拍）。
+
+  类模板 [**`std::chrono::duration`**](https://zh.cppreference.com/w/cpp/chrono/duration) 表示时间间隔。
+
+  ```c++
+  template<class Rep, class Period = std::ratio<1>>
+  class duration;
+  ```
+
+  > [`std::ratio`](https://zh.cppreference.com/w/cpp/numeric/ratio/ratio) 是一个分数类模板，它有两个非类型模板参数，也就是分子与分母，分母有默认实参 1，所以 `std::ratio<1>` 等价于 `std::ratio<1,1>`（我们可以简单将`ratio<1>`当成1秒）。
+
+  如你所见，它默认的时钟节拍是 1（也就是一秒一个节拍），这是一个很重要的类，标准库通过它定义了很多的时间类型，比如 **`std::chrono::minutes`** 是分钟类型，那么它的 `Period` 就是 `std::ratio<60>` ，因为一分钟等于 60 秒。
+
+  ```c++
+  using minutes      = duration<int, ratio<60>>;
+  ```
+
+- 稳定时钟：
+
+  稳定时钟（Steady Clock）是指提供稳定、持续递增的时间流逝信息的时钟。它的特点是不受系统时间调整或变化的影响，即使在系统休眠或时钟调整的情况下，它也能保持稳定。在 C++ 标准库中，[`std::chrono::steady_clock`](https://zh.cppreference.com/w/cpp/chrono/steady_clock) 就是一个稳定时钟。它通常用于测量时间间隔和性能计时等需要高精度和稳定性的场景。可以通过 `is_steady` 静态常量判断当前时钟是否是稳定时钟。
+
+  稳定时钟的主要优点在于，它可以提供相对于起始时间的稳定的递增时间，因此适用于需要保持时间顺序和不受系统时间变化影响的应用场景。相比之下，像 [`std::chrono::system_clock`](https://zh.cppreference.com/w/cpp/chrono/system_clock) 这样的系统时钟可能会受到系统时间调整或变化的影响，因此在某些情况下可能不适合对时间间隔进行精确测量。
+
+- 补充：
+
+  不管使用哪种时钟获取时间，C++ 都提供了函数，可以将时间点转换为 [**time_t**](https://zh.cppreference.com/w/cpp/chrono/c/time_t) 类型的值：
+
+  ```c++
+  auto now = std::chrono::system_clock::now();
+  time_t now_time = std::chrono::system_clock::to_time_t(now);
+  std::cout << "Current time:\t" << std::put_time(std::localtime(&now_time), "%H:%M:%S\n");
+  
+  auto now2 = std::chrono::steady_clock::now();
+  now_time = std::chrono::system_clock::to_time_t(now);
+  std::cout << "Current time:\t" << std::put_time(std::localtime(&now_time), "%H:%M:%S\n");
+  ```
+
+  C++ 的时间库极其繁杂，主要在于类型之多，以及实现之复杂。根据我们的描述，了解基本构成、概念、使用，即可（但是`duation<>`和`ratio<>`还是很重要的）。
+
+### 时间段
+
+> - 通常使用`duration<>`处理时间段
+> - 如果使用`chrono`库中的时间类型，需要注意**数据截断**的问题（因为库中的时间类型都是整形）。
+> - 时间段一般搭配着`wait_for()`来使用
+
+- 简介：
+
+  时间部分最简单的就是时间段，主要的内容就是我们上面讲的类模板 `std::chrono::duration<class _Rep, class _Period>` ，它用于对时间段进行处理。
+
+  它的第一个参数是类型表示，第二个参数就是先前提到的“节拍”，需要传递一个 `std::ratio` 类型，也就是一个时钟所用的秒数。
+
+  标准库在 `std::chrono` 命名空间内为时间段提供了一系列的类型，它们都是通过 `std::chrono::duration` 定义的[别名](https://github.com/microsoft/STL/blob/daeb0a6/stl/inc/__msvc_chrono.hpp#L508-L519)：
+
+  ```c++
+  using nanoseconds  = duration<long long, nano>;
+  using microseconds = duration<long long, micro>;
+  using milliseconds = duration<long long, milli>;
+  using seconds      = duration<long long>;
+  using minutes      = duration<int, ratio<60>>;
+  using hours        = duration<int, ratio<3600>>;
+  // CXX20
+  using days   = duration<int, ratio_multiply<ratio<24>, hours::period>>;
+  using weeks  = duration<int, ratio_multiply<ratio<7>, days::period>>;
+  using years  = duration<int, ratio_multiply<ratio<146097, 400>, days::period>>;
+  using months = duration<int, ratio_divide<years::period, ratio<12>>>;
+  ```
+
+  如果没有指明 `duration` 的第二个非类型模板参数，那么代表默认 `std::ratio<1>`，比如 `seconds` 也就是一秒。
+
+  如上，是 MSVC STL 定义的，看似有一些没有使用 `ratio` 作为第二个参数，其实也还是别名罢了，[见](https://github.com/microsoft/STL/blob/daeb0a6/stl/inc/ratio#L262-L277)：
+
+  ```c++
+  using milli = ratio<1, 1000>; // 千分之一秒，也就是一毫秒了
+  ```
+
+- C++14中的时间字面量
+
+  ```c++
+  using namespace std::chrono_literals;
+  
+  auto one_nanosecond = 1ns;
+  auto one_microsecond = 1us;
+  auto one_millisecond = 1ms;
+  auto one_second = 1s;
+  auto one_minute = 1min;
+  auto one_hour = 1h;
+  ```
+
+  解释：
+
+  - 时间字面量的函数**自带无符号整型和浮点的两种类型重载**，如下：
+
+    ```c++
+    constexpr _CHRONO milliseconds operator""ms(unsigned long long _Val) noexcept
+    {
+        return _CHRONO milliseconds(_Val);
+    }
+    constexpr _CHRONO duration<double, milli> operator""ms(long double _Val) noexcept
+    {
+        return _CHRONO duration<double, milli>(_Val);
+    }
+    ```
+
+- **使用`chrono::duration_cast<>`时的数据截断**
+
+  当不要求截断值的情况下（时转换为秒时没问题的，但反过来不行）时间段有隐式转换，显式转换可以由 [`std::chrono::duration_cast<>`](https://zh.cppreference.com/w/cpp/chrono/duration/duration_cast) 来完成。
+
+  ```c++
+  std::chrono::milliseconds ms{ 3999 };
+  std::chrono::seconds s = std::chrono::duration_cast<std::chrono::seconds>(ms);
+  std::cout << s.count() << '\n';
+  ```
+
+  解释：
+
+  - 这里的结果是**截断**的，而不会进行所谓的四舍五入，`3999` 毫秒，也就是 `3.999` 秒最终的值是 `3`。
+  - 这是因为seconds 是 `duration<long long>` 这意味着它无法接受浮点数。
+
+  解决办法：
+
+  使用 `duration<double>` 即可：
+
+  ```c++
+  std::chrono::duration<double> s = std::chrono::duration_cast<std::chrono::duration<double>>(ms);
+  ```
+
+  或者使用隐式转换：
+
+  ```c++
+  std::chrono::duration<double, ratio<1>> s = ms;
+  ```
+
+- 时间段的四则运算，`count()`
+
+  时间库支持四则运算，可以对两个时间段进行加减乘除。时间段对象可以通过 [`count()`](https://zh.cppreference.com/w/cpp/chrono/duration/count) 成员函数获得计次数。例如 `std::chrono::milliseconds{123}.count()` 的结果就是 123。
+
+- 时间段的应用：
+
+  基于时间段的等待都是由 `std::chrono::duration<>` 来完成。例如：等待一个 future 对象在 35 毫秒内变为就绪状态：
+
+  ```c++
+  std::future<int> future = std::async([] {return 6; });
+  if (future.wait_for(35ms) == std::future_status::ready)
+      std::cout << future.get() << '\n';
+  ```
+
+  [`wait_for`](https://zh.cppreference.com/w/cpp/thread/future/wait_for)： 等*待结果，如果在指定的超时间隔后仍然无法得到结果，则返回*。它的返回类型是一个枚举类 [`std::future_status`](https://zh.cppreference.com/w/cpp/thread/future_status) ，三个枚举项分别表示三种 future 状态。
+
+  | `deferred` | 共享状态持有的函数正在延迟运行，结果将仅在明确请求时计算 |
+  | ---------- | -------------------------------------------------------- |
+  | `ready`    | **共享状态就绪**                                         |
+  | `timeout`  | **共享状态在经过指定的等待时间内仍未就绪**               |
+
+  `timeout` 超时，也很好理解，那我们就提一下 `deferred` ：
+
+  ```c++
+  auto future = std::async(std::launch::deferred, []{});
+  if (future.wait_for(35ms) == std::future_status::deferred)
+      std::cout << "future_status::deferred " << "正在延迟执行\n";
+  future.wait(); // 在 wait() 或 get() 调用时执行，不创建线程
+  ```
+
+### 时间点
+
+> - 使用时间点/时间段时，windows下默认精度为 15.6 毫秒，如果想要真正1ms的精度，需要使用**`winmm.lib`**
+
+- 前言：
+
+  时间点可用 [`std::chrono::time_point<>`](https://zh.cppreference.com/w/cpp/chrono/time_point) 来表示，第一个模板参数用来指定使用的时钟，第二个模板参数用来表示时间单位（`std::chrono::duration<>`）。时间点顾名思义就是时间中的一个点，在 C++ 中用于表达当前时间，先前提到的静态成员函数 `now()` 获取当前时间，它们的返回类型都是 `std::chrono::time_point`。
+
+  ```c++
+  template<
+      class Clock,
+      class Duration = typename Clock::duration
+  > class time_point;
+  ```
+
+  如你所见，它的第二个模板参数是**时间段**，就是时间的间隔，其实也就可以理解为表示时间点的**精度**，默认是根据第一个参数时钟得到的，所以假设有类型：
+
+  ```c++
+  std::chrono::time_point<std::chrono::system_clock>
+  ```
+
+  那它等价于：
+
+  ```c++
+  std::chrono::time_point<std::chrono::system_clock, std::chrono::system_clock::duration>
+  ```
+
+  也就是说第二个参数的实际类型是：
+
+  ```c++
+  std::chrono::duration<long long, std::ratio<1, 10000000>> //  // 100 nanoseconds
+  ```
+
+  也就是说 `std::chrono::time_point<std::chrono::system_clock>` 的精度是 100 纳秒。
+
+  > 注意，这里的精度并非是实际的时间精度。时间和硬件系统等关系极大，以 windows 为例：
+  >
+  > Windows 内核中的时间间隔计时器默认每隔 **15.6** 毫秒触发一次中断。因此，如果你使用基于系统时钟的计时方法，默认情况下精度约为 15.6 毫秒。不可能达到纳秒级别。
+  >
+  > 由于这个系统时钟的限制，那些基于系统时钟的 API（例如 `Sleep()`、`WaitForSingleObject()` 等）的最小睡眠时间默认就是 15.6 毫秒左右。
+  >
+  > 如：
+  >
+  > ```c++
+  > std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  > ```
+
+- windows下的精度缺陷
+
+  使用系统 API 调整系统时钟的精度，需要链接 windows 多媒体库 **`winmm.lib`** ，然后使用 API：
+
+  ```c++
+  #include <windows.h>
+  #pragma comment(lib, "winmm.lib")
+  
+  using namespace std;
+  
+  int main() {
+  	timeBeginPeriod(1);	// 设置时钟精度为 1 毫秒
+  
+  	auto start = std::chrono::high_resolution_clock::now();
+  	this_thread::sleep_for(1ms);
+  	auto end = std::chrono::high_resolution_clock::now();
+  	std::chrono::duration<double, ratio<1, 1000>> duration = end - start;
+  	std::cout << "所耗时间为：" << duration.count() << "ms" << std::endl;
+  
+  	timeEndPeriod(1);	// 恢复默认精度
+  }
+  ```
+
+  解释：
+
+  - `timeBeginPeriod()`和`timeEndPeriod()`必须成对使用
+  - 在被包围的范围内，精度被设为1ms，不过这也意味着现在系统每隔1ms就要检查需要处理的任务，开销成几何增长
+
+- 时间点的四则运算：
+
+  同样的，时间点也支持加减以及比较操作。
+
+  ```c++
+  std::chrono::steady_clock::now() + std::chrono::nanoseconds(500); // 500 纳秒之后的时间
+  ```
+
+  可以减去一个时间点，结果是两个时间点的时间差。这对于代码块的计时是很有用的，如：
+
+  ```c++
+  auto start = std::chrono::steady_clock::now();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  auto end = std::chrono::steady_clock::now();
+  
+  auto result = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::cout << result.count() << '\n';
+  ```
+
+  > [运行](https://godbolt.org/z/ExdnzKoYj)测试。
+
+  我们进行了一个显式的转换，最终输出的是以毫秒作为单位，有可能不会是 1000，没有这么精确。
+
+- 等待条件变量满足条件——带超时功能（future也有类似的功能）
+
+  ```c++
+  std::condition_variable cv;
+  bool done{};
+  std::mutex m;
+  
+  bool wait_loop() {
+      const auto timeout = std::chrono::steady_clock::now() + 500ms;
+      std::unique_lock<std::mutex> lk{ m };
+      while (!done) {
+          // 线程在wait_until中不断循环比较当前时间是否超时以及该线程是否被唤醒（包括虚假唤醒）
+          // 超时返回timeout，唤醒（包括虚假唤醒）返回no_timeout
+          if (cv.wait_until(lk, timeout) == std::cv_status::timeout){
+              std::cout << "超时 500ms\n";
+          }
+      }
+      cout << done << endl;
+      return true;
+  }
+  
+  int main() {
+      thread t{wait_loop};
+      cv.notify_one();
+      this_thread::sleep_for(800ms);
+      done = true;
+  
+      t.join();
+  }
+  ```
+
+  解释：
+
+  - `wait_until()`超时返回timeout，唤醒（包括虚假唤醒）返回no_timeout
+
+  - 这里的逻辑和条件变量中的`wait()`很相似，都是调用时会解锁，进入阻塞，被唤醒时（包括虚假唤醒）会上锁，并返回一个成功状态，所以为了避免虚假唤醒的影响，外围需要加一个`while`循环。只不过`wait_until()`多了个计时功能。
+
+## 异步任务执行
+
+[就是个qt而已，可以看看里面的`QMetaObject::invokeMethod`方法](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/04同步操作.html#异步任务执行)
+
+## C++20信号量
+
+
+
+
+
+
 
 
 
