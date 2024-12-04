@@ -3673,6 +3673,8 @@ void f() {
 
 ### 原子类型-别名、使用、自定义
 
+> - atomic的初始化不是原子操作
+
 > - 原子类型不可复制，移动，赋值，所以如果有一个类包含了原子类型做成员，则该类也不可复制，移动，赋值（其他类似的类型同理）
 >
 >   ```c++
@@ -3785,7 +3787,9 @@ void f() {
   >
   > 最后强调一下：任何 [std::atomic](https://zh.cppreference.com/w/cpp/atomic/atomic) 类型，**初始化不是原子操作**。
 
-## 线程池
+## 实现线程池
+
+[重点看本章的实现线程池部分](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/详细分析/04线程池.html)
 
 ```c++
 int main() {
@@ -3812,9 +3816,18 @@ int main() {
 
 - 如果最后不用`future.get()`阻塞等待线程池执行完毕，那么最后线程池中的任务一定无法全部执行完，这是因为：在`pool`析构时会调用`stop()`函数，而在`stop()`中，在设置`stop_`的标志位之后，`start()`中的所有线程会立刻退出while循环，并清空任务队列，这点和asio中的线程池很类似。
 
+## std::atomic_flag
 
+[简单看看这里就好了](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/05内存模型与原子操作.html#std-atomic-flag)
 
+> - 该类可以用于当自旋锁，但任何时候都不推荐使用自旋锁
+> - 不仅仅是atomic_flag，所有的原子类型都不能复制不能移动（比那些异步设施还夸张哦）
 
+## std::atomic\<bool>
+
+> - 本节操作不仅仅对于bool，对于其他类型一样适用
+
+[std::atomic::compare_exchange_weak, std::atomic::compare_exchange_strong - cppreference.com](https://zh.cppreference.com/w/cpp/atomic/atomic/compare_exchange)
 
 
 
@@ -3833,4 +3846,4 @@ int main() {
 1. 将原有的线程创建方式改为：《C++并发编程实战》p27的形式，[#joining_thread](#实现joining_thread)
 1. 找一个能更新为单例的类，单例实现看[#这里](#线程安全的单例模式)
 1. 消息队列改为[#此形式](#线程安全的队列)；同时给模板上SFINAE，只允许特定类型们使用消息队列；并使用CRTP减少冗余代码；并将queue改为循环队列
-1. 线程池改成[#此形式](#线程池)，同时参考asio中的线程库，加一个线程池的`join()`，保证能执行完所有任务队列中的任务；同时搭配上新的单例模式；同时参考`std::future<>`，补充一个`static_assert<>`进行检测；同时自己测试，如果函数参数传递时，会调用几次构造函数（关闭nrvo）；同时进行异常处理；同时进行模板参数检测。
+1. 线程池改成[#此形式](#线程池)，同时参考asio中的线程库，加一个线程池的`join()`，保证能执行完所有任务队列中的任务；同时搭配上新的单例模式；同时参考`std::future<>`，补充一个`static_assert<>`进行检测；同时自己测试，如果函数参数传递时，会调用几次构造函数（关闭nrvo）；同时进行异常处理；同时进行模板参数检测；同时更换掉`shared_ptr`。
