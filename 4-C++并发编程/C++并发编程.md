@@ -3462,7 +3462,355 @@ public:
 
 > `barrier`和`latch`很像，只是说，`barrier`在计数清0的时候，会将计数重置。
 
+## 总结-勘误初始化顺序
 
+
+
+[初始化顺序问题，值得一看](https://github.com/Mq-b/ModernCpp-ConcurrentProgramming-Tutorial/issues/27)
+
+# 内存模型与原子操作
+
+- 内存模型定义了多线程程序中，读写操作如何在不同线程之间可见，以及这些操作在何种顺序下执行。内存模型确保程序的行为在并发环境下是可预测的。
+- 原子操作即**不可分割的操作**。系统的所有线程，不可能观察到原子操作完成了一半。
+
+最基础的概念就是如此，这里不再过多赘述，后续还会详细展开内存模型的问题。
+
+## 原子操作
+
+> - 注意，现代cpu很复杂，绝对不要从什么汇编的角度去判断是否是原子操作，比如下面的这个`++a`，汇编指令看着好像没问题，但其实多线程下就是有数据竞争，尤其是在release模式下。
+
+```c++
+int a = 0;
+void f(){
+    ++a;
+}
+```
+
+显然，`++a` 是非原子操作，也就是说在多线程中可能会被另一个线程观察到只完成一半。
+
+1. 线程 A 和线程 B 同时开始修改变量 `a` 的值。
+2. 线程 A 对 `a` 执行递增操作，但还未完成。
+3. 在线程 A 完成递增操作之前，线程 B 也执行了递增操作。
+4. 线程 C 读取 `a` 的值。
+
+线程 C 到底读取到多少不确定，a 的值是多少也不确定。显然，这构成了数据竞争，出现了[未定义行为](https://zh.cppreference.com/w/cpp/language/ub)。
+
+在之前的内容中，我们讲述了使用很多同步设施，如互斥量，来保护共享资源。
+
+```c++
+std::mutex m;
+void f() {
+    std::lock_guard<std::mutex> lc{ m };
+    ++a;
+}
+```
+
+通过互斥量的保护，即使 `++a` 本身不是原子操作，**逻辑上也可视为原子操作**。互斥量确保了对共享资源的读写是线程安全的，避免了数据竞争问题。
+
+不过这显然不是我们的重点。我们想要的是一种**原子类型**，它的所有操作都直接是**原子**的，不需要额外的同步设施进行保护。C++11 引入了原子类型 [`std::atomic`](https://zh.cppreference.com/w/cpp/atomic/atomic)，在下节我们会详细讲解。
+
+- ++a中的数据竞争
+
+  ```c++
+  int n = 0;
+  
+  void read() {
+      while (1) {
+          this_thread::sleep_for(500ms);
+          cout << n << endl;
+      }
+  }
+  
+  void write() {
+      while (1) {
+          ++n;
+      }
+  }
+  
+  int main() {
+      thread t1{read};
+      thread t2(write);
+      t1.join();
+      t2.join();
+  }
+  ```
+
+  解释：
+
+  - 该代码在debug模式下无问题，但在release模式下只会输出0
+
+  - **因为对a的读写操作属于数据竞争，而数据竞争是未定义行为；**
+
+    **而编译器在release模式下进行优化时，会假设程序没有未定义行为；**
+
+    所以`read()`函数可以被看做优化为：
+
+    ```c++
+    void read() {
+        while (1) {
+            this_thread::sleep_for(500ms);
+            int a = n;
+            cout << a << endl;
+        }
+    }
+    ```
+
+    解释：
+
+    - 也就是说编译器会将a放在cache或寄存器中进行备份，解决办法是使用下节所学的原子类型
+
+    - 你可能会想使用`volatile`关键字，看似在release模式下确实可以，但不要这么使用！！！！
+
+      **因为volatile的行为是不确定的！**
+
+### 原子类型-ub优化与无锁
+
+> - 多线程下读写原子类型的数据是绝对线程安全的
+> - 当原子类型的操作使用原子指令实现时，会带来更高的性能。但是如果它的内部使用互斥量实现，那么不可能有性能的提升。
+
+- 前言：
+
+  标准原子类型定义在头文件 [`<atomic>`](https://zh.cppreference.com/w/cpp/header/atomic) 中。这些类型的操作都是原子的，语言定义中只有这些类型的操作是原子的，虽然也可以用互斥量来模拟原子操作（见上文）。
+
+  标准原子类型的实现通常包括一个 `is_lock_free()` 成员函数，允许用户查询特定原子类型的操作是否是通过直接的原子指令实现（返回 true），还是通过锁来实现（返回 false）。
+
+  **如果一个线程写入原子对象，同时另一线程从它读取，那么行为有良好定义**（数据竞争的细节见[内存模型](https://zh.cppreference.com/w/cpp/language/memory_model)）。
+
+- 注意：
+
+  原子操作可以在一些时候代替互斥量，来进行同步操作，也能带来更高的性能。但是如果它的内部使用互斥量实现，那么不可能有性能的提升。
+
+- 判断原子操作是否无锁
+
+  - `is_lock_free()` （C++11起）
+
+    **原子类型的成员函数**，用于查询特定原子类型的操作是否是通过直接的原子指令实现（返回 true），还是通过锁来实现（返回 false）。
+
+    ```c++
+    // 使用示例
+    int main() {
+        atomic<int> n = 1;
+        if (n.is_lock_free())			// 运行期判断
+            cout << "原子指令实现" << endl;
+        else
+            cout << "互斥量实现" << endl;
+    }
+    ```
+
+  - `is_always_lock_free`（C++17起）
+
+    **静态编译器常量**，如果当前环境上的原子类型 X 是无锁类型，那么 `X::is_always_lock_free` 将返回 `true` 
+
+    ```c++
+    // 使用示例
+    int main() {
+        atomic<int> n = 1;
+        if constexpr (atomic<int>::is_always_lock_free)	//编译期判断
+            cout << "原子指令实现" << endl;
+        else
+            cout << "互斥量实现" << endl;
+    }
+    ```
+
+    源码实现（建议自己去看看）：
+
+    ```c++
+    template <size_t _TypeSize>
+    constexpr bool _Is_always_lock_free = _TypeSize <= 8 && (_TypeSize & (_TypeSize - 1)) == 0;
+    
+    static constexpr bool is_always_lock_free = _Is_always_lock_free<sizeof(_Ty)>;
+    ```
+
+  - [`ATOMIC_xxx_LOCK_FREE`](https://zh.cppreference.com/w/cpp/atomic/atomic_is_lock_free)（C++11起）
+
+    **预编译期宏定义**，用于在编译时对各种整数原子类型是否无锁进行判断。
+
+    ```c++
+    #define ATOMIC_BOOL_LOCK_FREE 2
+    #define ATOMIC_CHAR_LOCK_FREE 2
+    #define ATOMIC_CHAR16_T_LOCK_FREE 2
+    #define ATOMIC_CHAR32_T_LOCK_FREE 2
+    #define ATOMIC_WCHAR_T_LOCK_FREE  2
+    #define ATOMIC_SHORT_LOCK_FREE    2
+    #define ATOMIC_INT_LOCK_FREE      2
+    #define ATOMIC_LONG_LOCK_FREE     2
+    #define ATOMIC_LLONG_LOCK_FREE    2
+    #define ATOMIC_POINTER_LOCK_FREE  2
+    ```
+
+    解释：
+
+    - **同一个宏名在不同平台定义的值不一定相同**，具体如下：
+      - 对于一定**有锁**的内建原子类型是 0；
+      - 对于**有时无锁**的内建原子类型是 1；
+      - 对于一定**无锁**的内建原子类型是 2。
+
+    ```c++
+    // 使用示例
+    int main() {
+        atomic<int> n = 1;
+    #if ATOMIC_INT_LOCK_FREE == 2
+        cout << "一定有锁" << endl;
+    #elif ATOMIC_INT_LOCK_FREE == 1
+        cout << "可能有锁，可能无锁" << endl;
+    #elif ATOMIC_INT_LOCK_FREE == 0
+        cout << "一定无锁" << endl;
+    #endif
+    }
+    ```
+
+- 总结：
+
+  在实际应用中，如果一个类型的原子操作总是无锁的，我们可以更放心地在性能关键的代码路径中使用它。例如，在高频交易系统、实时系统或者其它需要高并发性能的场景中，无锁的原子操作可以显著减少锁的开销和竞争，提高系统的吞吐量和响应时间。
+
+  另一方面，如果发现某些原子类型在目标平台上是有锁的，我们可以考虑以下优化策略：
+
+  1. **使用不同的数据结构**：有时可以通过改变数据结构来避免对原子操作的依赖。
+  2. **减少原子操作的频率**：通过批处理等技术，减少对原子操作的调用次数。
+  3. **使用更高效的同步机制**：在一些情况下，其它同步机制（如读写锁）可能比原子操作更高效。
+
+  当然，其实很多时候根本没这种性能的担忧，我们很多时候使用原子对象只是为了简单方便，比如 `std::atomic<bool>` 表示状态、`std::atomic<int>` 进行计数等。即使它们是用了锁，那也是封装好了的，起码用着方便，而不需要在代码中引入额外的互斥量来保护，更加简洁。这也是很正常的需求，各位不但要考虑程序的性能，同时也要考虑代码的简洁性、易用性。即使使用原子类型无法带来效率的提升，那也没有负提升。
+
+### 原子类型-别名、使用、自定义
+
+> - 原子类型不可复制，移动，赋值，所以如果有一个类包含了原子类型做成员，则该类也不可复制，移动，赋值（其他类似的类型同理）
+>
+>   ```c++
+>   struct X{
+>   	atomic_int n;  
+>   };
+>   int main(){
+>       X x1;
+>       X x2{x1};		// ERROR
+>       X x3{move(x1)};	// ERROR
+>       X x4 = x1;		// ERROR
+>   }
+>   ```
+>
+> - 任何 [std::atomic](https://zh.cppreference.com/w/cpp/atomic/atomic) 类型，**初始化不是原子操作**。
+
+- 前言：
+
+  通常 `std::atomic` 对象不可进行复制、移动、赋值，因为它们的[复制构造](https://zh.cppreference.com/w/cpp/atomic/atomic/atomic)与[复制赋值运算符](https://zh.cppreference.com/w/cpp/atomic/atomic/operator%3D)被定义为[弃置](https://zh.cppreference.com/w/cpp/language/function#.E5.BC.83.E7.BD.AE.E5.87.BD.E6.95.B0)的。不过可以**隐式转换**成对应的内置类型，因为它有[转换函数](https://zh.cppreference.com/w/cpp/atomic/atomic/operator_T)。
+
+  ```c++
+  atomic(const atomic&) = delete;
+  atomic& operator=(const atomic&) = delete;
+  operator T() const noexcept;
+  ```
+
+- 特化的原子类型模板的使用
+
+  可以使用 `load()`、`store()`、`exchange()`、`compare_exchange_weak()` 和 `compare_exchange_strong()` 等成员函数对 `std::atomic` 进行操作。如果是[整数类型](https://zh.cppreference.com/w/cpp/atomic/atomic#.E7.89.B9.E5.8C.96.E6.88.90.E5.91.98.E5.87.BD.E6.95.B0)的特化，还支持 `++`、`--`、`+=`、`-=`、`&=`、`|=`、`^=` 、`fetch_add`、`fetch_sub` 等操作方式。在后面详细的展开使用。
+
+- 使用自定义类型作为原子类型模板的参数
+
+  `std::atomic` 类模板不仅只能使用标准库为我们定义的特化类型，我们也完全可以自定义类型创建对应的原子对象。不过因为是通用模板，操作仅限 `load()`、`store()`、`exchange()`、`compare_exchange_weak()` 、 `compare_exchange_strong()`，以及一个转换函数。
+
+  - 要求：
+
+    模板 `std::atomic` 可用任何满足[*可复制构造 (CopyConstructible)*](https://zh.cppreference.com/w/cpp/named_req/CopyConstructible)及[*可复制赋值 (CopyAssignable)*](https://zh.cppreference.com/w/cpp/named_req/CopyAssignable)的[*可平凡复制 (TriviallyCopyable)*](https://zh.cppreference.com/w/cpp/named_req/TriviallyCopyable)类型 `T` 实例化（**不一定要平凡类型**，满足上述要求即可作为原子类型模板参数）。
+
+    ```c++
+    // 该类不是平凡类型，但依然可以作为原子类型模板的参数
+    struct trivial_type {
+        int x{};
+        float y{};
+    
+        trivial_type() {}
+    
+        trivial_type(int a, float b) : x{ a }, y{ b } {}
+    
+        trivial_type(const trivial_type& other) = default;
+    
+        trivial_type& operator=(const trivial_type& other) = default;
+    
+        ~trivial_type() = default;
+    };
+    // 写成这样该类就变成了平凡类型，当然也可以
+    struct trivial_type {
+        int x;
+        float y;
+    };
+    ```
+
+  - 验证：
+
+    验证自己的类型是否满足 `std::atomic` 要求，我们可以使用[静态断言](https://zh.cppreference.com/w/cpp/language/static_assert)：
+
+    ```c++
+    static_assert(std::is_trivially_copyable<trivial_type>::value, "");
+    static_assert(std::is_copy_constructible<trivial_type>::value, "");
+    static_assert(std::is_move_constructible<trivial_type>::value, "");
+    static_assert(std::is_copy_assignable<trivial_type>::value, "");
+    static_assert(std::is_move_assignable<trivial_type>::value, "");
+    ```
+
+    程序能通过编译即代表满足要求。如果不满足要求，静态断言求值中第一个表达式求值为 false，则编译错误。
+
+  - 示例：
+
+    ```c++
+    // 创建一个 std::atomic<trivial_type> 对象
+    std::atomic<trivial_type> atomic_my_type { trivial_type{ 10, 20.5f } };
+    
+    // 使用 store 和 load 操作来设置和获取值
+    trivial_type new_value{ 30, 40.5f };
+    atomic_my_type.store(new_value);
+    
+    trivial_type loadedValue = atomic_my_type.load();
+    std::cout << "x: " << loadedValue.x << ", y: " << loadedValue.y << std::endl;
+    
+    // 使用 exchange 操作
+    trivial_type exchanged_value = atomic_my_type.exchange(trivial_type{ 50, 60.5f });
+    std::cout << "交换前的 x: " << exchanged_value.x
+              << ", 交换前的 y: " << exchanged_value.y << std::endl;
+    std::cout << "交换后的 x: " << atomic_my_type.load().x
+              << ", 交换后的 y: " << atomic_my_type.load().y << std::endl;
+    ```
+
+    解释：
+
+    - 其中`exchange()`的返回值是原子变量在调用前的值。
+
+- 原子类型的内存序参数
+
+  原子类型的每个操作函数，都有一个内存序参数，这个参数可以用来指定执行顺序，在后面的内容会详细讲述，现在只需要知道操作分为三类：
+
+  1. **Store 操作（存储操作）**：可选的内存序包括 `memory_order_relaxed`、`memory_order_release`、`memory_order_seq_cst`。
+  2. **Load 操作（加载操作）**：可选的内存序包括 `memory_order_relaxed`、`memory_order_consume`、`memory_order_acquire`、`memory_order_seq_cst`。
+  3. **Read-modify-write（读-改-写）操作**：可选的内存序包括 `memory_order_relaxed`、`memory_order_consume`、`memory_order_acquire`、`memory_order_release`、`memory_order_acq_rel`、`memory_order_seq_cst`。
+
+  > 本节主要广泛介绍 `std::atomic`，而未展开具体使用。在后续章节中，我们将更详细地讨论一些版本，如 `std::atomic<bool>`，并介绍其成员函数和使用方法。
+  >
+  > 最后强调一下：任何 [std::atomic](https://zh.cppreference.com/w/cpp/atomic/atomic) 类型，**初始化不是原子操作**。
+
+## 线程池
+
+```c++
+int main() {
+    ThreadPool pool{ 4 }; // 创建一个有 4 个线程的线程池
+    std::vector<std::future<int>> futures; // future 集合，获取返回值
+
+    for (int i = 0; i < 10; ++i) {
+        futures.emplace_back(pool.submit(print_task, i));
+    }
+
+    for (int i = 0; i < 10; ++i) {
+        futures.emplace_back(pool.submit(print_task2, i));
+    }
+
+    //int sum = 0;
+    //for (auto& future : futures) {
+    //    sum += future.get(); // get() 成员函数 阻塞到任务执行完毕，获取返回值
+    //}
+    //std::cout << "sum: " << sum << '\n';
+} // 析构自动 stop()
+```
+
+注意：
+
+- 如果最后不用`future.get()`阻塞等待线程池执行完毕，那么最后线程池中的任务一定无法全部执行完，这是因为：在`pool`析构时会调用`stop()`函数，而在`stop()`中，在设置`stop_`的标志位之后，`start()`中的所有线程会立刻退出while循环，并清空任务队列，这点和asio中的线程池很类似。
 
 
 
@@ -3485,3 +3833,4 @@ public:
 1. 将原有的线程创建方式改为：《C++并发编程实战》p27的形式，[#joining_thread](#实现joining_thread)
 1. 找一个能更新为单例的类，单例实现看[#这里](#线程安全的单例模式)
 1. 消息队列改为[#此形式](#线程安全的队列)；同时给模板上SFINAE，只允许特定类型们使用消息队列；并使用CRTP减少冗余代码；并将queue改为循环队列
+1. 线程池改成[#此形式](#线程池)，同时参考asio中的线程库，加一个线程池的`join()`，保证能执行完所有任务队列中的任务；同时搭配上新的单例模式；同时参考`std::future<>`，补充一个`static_assert<>`进行检测；同时自己测试，如果函数参数传递时，会调用几次构造函数（关闭nrvo）；同时进行异常处理；同时进行模板参数检测。
