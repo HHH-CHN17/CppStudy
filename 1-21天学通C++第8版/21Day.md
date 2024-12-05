@@ -43,7 +43,9 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
 
 > - 初始化列表的初始化方式总是先于构造函数完成的（实际在编译完成时就已经决定了)。
 
-### C++11列表初始化
+### C++11列表初始化？？？
+
+[？？？C++的花括号初始化就是用来匹配std::initializer_list构造函数的吗](https://github.com/Mq-b/Loser-HomeWork/discussions/207)
 
 [列表初始化及decltype_列表初始化类中的结构体-CSDN博客](https://blog.csdn.net/wh9109/article/details/133104216)
 
@@ -96,7 +98,7 @@ int main()
 
 > - 如果在 Date 类的构造函数加上 explicit ，那么 Date d3 = { 2022, 1, 3 }; 就会出现编译报错，因为这条语句本质上是因为**多参数的构造函数支持隐式类型转换**。Date d2{ 2022, 1, 2 }; 没事，仍然可以正常运行。
 >
-> - 如果Date既有多参构造函数，又有initializer_list做参数的构造函数，那么在使用列表初始化的时候，只会调用后者
+> - 如果Date既有多参构造函数，又有initializer_list做参数的构造函数，那么在使用列表初始化的时候，优先调用后者
 
 ```c++
 class Date
