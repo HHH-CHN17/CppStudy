@@ -3821,13 +3821,419 @@ int main() {
 [简单看看这里就好了](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/05内存模型与原子操作.html#std-atomic-flag)
 
 > - 该类可以用于当自旋锁，但任何时候都不推荐使用自旋锁
+> - 显然，
 > - 不仅仅是atomic_flag，所有的原子类型都不能复制不能移动（比那些异步设施还夸张哦）
 
 ## std::atomic\<bool>
 
 > - 本节操作不仅仅对于bool，对于其他类型一样适用
+> - 注意`operator=`的返回值是`_Ty`而非`atomic<_Ty>&`
+> - 进行读-改-写操作时，比较与复制都是**逐位**的
+> - `compare_exchange_weak()`需要在循环中进行，`compare_exchange_strong()`不需要
 
-[std::atomic::compare_exchange_weak, std::atomic::compare_exchange_strong - cppreference.com](https://zh.cppreference.com/w/cpp/atomic/atomic/compare_exchange)
+- 概念：
+
+  `std::atomic<bool>` 是最基本的**整数原子类型** ，它相较于 `std::atomic_flag` 提供了更加完善的布尔标志。虽然同样不可复制不可移动，但可以使用非原子的 bool 类型进行构造，初始化为 true 或 false，并且能从非原子的 bool 对象赋值给 `std::atomic<bool>`：
+
+  ```c++
+  std::atomic<bool> b{ true };
+  b = false;
+  ```
+
+- `operator=()`的返回值
+
+  与其他类型不同，`atomic<_Ty>::operator=()`返回的是`_Ty`而非`atomic<_Ty>&`
+
+  ```c++
+  int main(){
+      atomic<bool> ab1 = true;
+      //atomic<bool>& ab2 = (ab1 = false);  // ERROR
+      bool b3 = (ab1 = false);
+  }
+  ```
+
+  因为如果`operator=()`返回值类型为`atomic<_Ty>&`的话，那么则表明`atomic<bool> ab2 = (ab1 = false);`合法，这显然不对，因为`atomic<_Ty>`是不可复制的。
+
+- 简单读，写，读-改-写`atomic<bool>`的值
+
+  获取 `std::atomic<bool>` 的值有两种方式，**调用 `load()` 函数**，或者**隐式转换**。
+
+  **`store` 是一个存储操作、`load` 是一个*加载操作*、`exchange` 是一个“*读-改-写*”操作**：
+
+  ```c++
+  std::atomic<bool> b;
+  
+  /********读********/
+  bool x1 = b.load();
+  bool x2 = b;	// 内部调用b.load()
+  
+  /********写********/
+  b.store(true);
+  bool y1 = b;	// 内部调用b.store()
+  
+  /********读-改-写********/
+  bool z1 = b.exchange(false);	// 读出b中存储的数据，对其进行修改，再写回存储器中
+  ```
+
+  解释：
+
+  - 存储器分类：
+
+    <img src="assets/b83681ae15ba18ce741af5d7c270e8b9.png" alt="img" style="zoom: 50%;" />
+
+    其中主存就是内存
+
+  - 读-改-写操作
+
+    **先读出存储器中的数据，对其进行修改后，再写入存储器**（显然在上面的代码中，存储器指的是内存）。
+
+- 较为复杂的读-改-写操作
+
+  [推荐看这个](https://zh.cppreference.com/w/cpp/atomic/atomic/compare_exchange)
+
+  `std::atomic<bool>` 提供多个“*读-改-写*”的操作，exchange 只是其中之一。它还提供了一种存储方式：**当前值与预期值一致时，当前值更新为新值，并返回true；否则，预期值更新为当前值，并返回false。**
+
+  这种操作叫做“比较/交换”，它的形式表现为 [`compare_exchange_weak()`](https://zh.cppreference.com/w/cpp/atomic/atomic/compare_exchange) 和 `compare_exchang_strong()`
+
+  - `compare_exchange_weak()`
+
+    尝试将原子对象的当前值与预期值进行比较[^1]，，如果相等则将其更新为新值并返回 `true`；否则，将原子对象的值加载进 expected（进行加载操作）并返回 `false`。此操作可能会由于某些硬件的特性而出现假失败[^2]，**需要在循环中重试**。
+
+    ```c++
+    // 简单例子
+    std::atomic<bool> flag{ false };
+    bool expected = false;
+    bool desired = true;
+    while (!flag.compare_exchange_weak(expected, desired));// 只有当返回true时，才会退出循环；所以该循环会一直重复直到当前值更新为desired并返回true
+    
+    // 复杂例子
+    #include <atomic>
+     
+    template<typename T>
+    struct node
+    {
+        T data;
+        node* next;
+        node(const T& data) : data(data), next(nullptr) {}
+    };
+     
+    template<typename T>
+    class stack
+    {
+        std::atomic<node<T>*> head;
+    public:
+        void push(const T& data)
+        {
+            node<T>* new_node = new node<T>(data);
+     
+            // 将 head 的当前值放到 new_node->next 中
+            new_node->next = head.load(std::memory_order_relaxed);
+     
+            // 现在令 new_node 为新的 head ，但如果 head 不再是
+            // 存储于 new_node->next 的值（某些其他线程必须在刚才插入结点）
+            // 那么将新的 head 放到 new_node->next 中并再尝试
+            while(!head.compare_exchange_weak(new_node->next, new_node,))
+                ; // 循环体为空
+        }
+    };
+     
+    int main()
+    {
+        stack<int> s;
+        s.push(1);
+        s.push(2);
+        s.push(3);
+    }
+    ```
+
+  - `compare_exchang_strong()`
+
+    类似于 `compare_exchange_weak`，**但不会出现假失败，因此不需要重试**。用于要么更改原子对象的值，要么将变量用于比较。
+
+    ```c++
+    std::atomic<int> ai;
+     
+    int tst_val = 4;
+    int new_val = 5;
+    bool exchanged= false;
+     
+    void valsout()
+    {
+        std::cout << "ai = " << ai
+    	      << "  tst_val = " << tst_val
+    	      << "  new_val = " << new_val
+    	      << "  exchanged = " << std::boolalpha << exchanged
+    	      << "\n";
+    }
+     
+    int main()
+    {
+        ai= 3;
+        valsout();
+     
+        // tst_val != ai   ==>  tst_val 被修改
+        exchanged= ai.compare_exchange_strong(tst_val, new_val);
+        valsout();
+     
+        // tst_val == ai   ==>  ai 被修改
+        exchanged= ai.compare_exchange_strong(tst_val, new_val);
+        valsout();
+    }
+    ```
+
+## std::atomic<T*>
+
+> - `atomic<T*>`**只能保证对指针本身的操作是原子操作**，无法保证对指针指向的值的操作是原子操作。
+
+- 前言：
+
+  `std::atomic<T*>` 是一个原子指针类型，`T` 是指针所指向的对象类型。操作是针对 `T` 类型的指针进行的。虽然 `std::atomic<T*>` 不能被拷贝和移动，但它可以通过符合类型的指针进行构造和赋值。
+
+- 通用的成员函数：
+
+  `std::atomic<T*>` 拥有以下成员函数：
+
+  - `load()`：以原子方式读取指针值。
+  - `store()`：以原子方式存储指针值。
+  - `exchange()`：以原子方式交换指针值。
+  - `compare_exchange_weak()` 和 `compare_exchange_strong()`：以原子方式比较并交换指针值。
+
+  **显然这些函数接受并返回的类型都是 T*，即指针类型**。
+
+- 独有的成员函数
+
+  此外，`std::atomic<T*>` 还提供了以下操作：
+
+  - `fetch_add`：以原子方式增加指针的值。（`p.fetch_add(1)` 会将指针 `p` 向前移动一个元素，并**返回操作前的指针值**）
+
+  - `fetch_sub`：以原子方式减少指针的值。**返回操作前的指针值**。
+
+  - `operator+=` 和 `operator-=`：以原子方式增加或减少指针的值。返回操作前的指针值（和前两个函数没区别）。
+
+    ```c++
+    _Ty operator+=(const ptrdiff_t _Diff) noexcept {
+        return fetch_add(_Diff) + _Diff;
+    }
+    ```
+
+  这些操作确保在多线程环境下进行安全的指针操作，避免数据竞争和并发问题。
+
+- 示例：
+
+  ```c++
+  struct Foo {};
+  
+  Foo array[5]{};
+  std::atomic<Foo*> p{ array };
+  
+  // p 加 2，并返回原始值
+  Foo* x = p.fetch_add(2);
+  assert(x == array);
+  assert(p.load() == &array[2]);
+  
+  // p 减 1，并返回原始值
+  x = (p -= 1);
+  assert(x == &array[1]);
+  assert(p.load() == &array[1]);
+  
+  // 函数也允许内存序作为给定函数的参数
+  p.fetch_add(3, std::memory_order_release);
+  ```
+
+## std::atomic\<std::shared_ptr>
+
+> - `shared_ptr<>`成员：
+>   - 指向底层元素的指针（[get()](https://zh.cppreference.com/w/cpp/memory/shared_ptr/get)) 所返回的指针）
+>   - 指向*控制块* 的指针
+> - 从线程安全的角度讲，`shared_ptr<>`需要考虑三方面的线程安全
+>   - 控制块的线程安全（标准保证）
+>   - 底层元素的线程安全（用户保证，可以使用互斥锁或者原子类型）
+>   - `shared_ptr<>`本身的线程安全，也就是说`shared_ptr<>`对成员指针的操作会造成数据竞争（不同线程使用不同副本，原子类型，互斥锁保证）
+
+在前文中，我们多次提到 `std::shared_ptr`：
+
+> 第四章中提到：*多个线程能在不同的 shared_ptr 对象上调用**所有成员函数**[[3\]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/05内存模型与原子操作.html#footnote3)（包含复制构造函数与复制赋值）而不附加同步，即使这些实例是同一对象的副本且共享所有权也是如此。若多个执行线程访问**同一 shared_ptr** 对象而不同步，且任一线程使用 shared_ptr 的非 const 成员函数，则将出现数据竞争；`std::atomic<shared_ptr>` 能用于避免数据竞争。[文档](https://zh.cppreference.com/w/cpp/memory/shared_ptr#:~:text=多个线程能在不同的 shared_ptr 对象上调用所有成员函数（包含复制构造函数与复制赋值）而不附加同步，即使这些实例是同一对象的副本且共享所有权也是如此。若多个执行线程访问同一 shared_ptr 对象而不同步，且任一线程使用 shared_ptr 的非 const 成员函数，则将出现数据竞争；std%3A%3Aatomic 能用于避免数据竞争。)。*
+
+一个在互联网上非常热门的八股问题是：***`std::shared_ptr` 是不是线程安全？***
+
+显然，它并不是完全线程安全的，尽管在多线程环境中有很大的保证，但这还不够。在 C++20 中，原子模板 `std::atomic` 引入了一个偏特化版本 [`std::atomic`](https://zh.cppreference.com/w/cpp/memory/shared_ptr/atomic2) 允许用户原子地操纵 `shared_ptr` 对象。因为它是 `std::atomic` 的特化版本，即使我们还没有深入讲述它，也能知道它是**原子类型**，这意味着它的所有操作都是**原子操作**。
+
+若多个执行线程不同步地同时访问**同一** `std::shared_ptr` 对象，且任何这些访问使用了 shared_ptr 的**非 const 成员函数**，则将**出现数据竞争**，**除非通过 `std::atomic<std::shared_ptr>` 的实例进行所有访问**。
+
+```c++
+class Data {
+public:
+    Data(int value = 0) : value_(value) {}
+    int get_value() const { return value_; }
+    void set_value(int new_value) { value_ = new_value; }
+private:
+    int value_;
+};
+
+auto data = std::make_shared<Data>();
+
+void writer(){
+    for (int i = 0; i < 10; ++i) {
+        std::shared_ptr<Data> new_data = std::make_shared<Data>(i);
+        data.swap(new_data); // 调用非 const 成员函数
+        std::this_thread::sleep_for(100ms);
+    }
+}
+
+void reader(){
+    for (int i = 0; i < 10; ++i) {
+        if (data) {
+            std::cout << "读取线程值: " << data->get_value() << std::endl;
+        }
+        else {
+            std::cout << "没有读取到数据" << std::endl;
+        }
+        std::this_thread::sleep_for(100ms);
+    }
+}
+
+int main(){
+    std::thread writer_thread{ writer };
+    std::thread reader_thread{ reader };
+
+    writer_thread.join();
+    reader_thread.join();
+}
+```
+
+> [运行](https://godbolt.org/z/6zo7hK8h1)测试。
+
+以上这段代码是典型的**线程不安全**，它满足：
+
+1. 多个线程不同步地同时访问**同一** `std::shared_ptr` 对象
+2. 任一线程使用 shared_ptr 的**非 const** 成员函数
+
+那么**为什么呢**？为什么满足这些概念就是线程不安全呢？为了理解这些概念，首先需要了解 shared_ptr 的内部实现：
+
+shared_ptr 的通常实现只保有两个指针
+
+- 指向底层元素的指针（[get()](https://zh.cppreference.com/w/cpp/memory/shared_ptr/get)) 所返回的指针）
+- 指向*控制块* 的指针
+
+**控制块**是一个动态分配的对象，其中包含：
+
+- 指向被管理对象的指针或被管理对象本身
+- 删除器（类型擦除）
+- 分配器（类型擦除）
+- 持有被管理对象的 `shared_ptr` 的数量
+- 涉及被管理对象的 `weak_ptr` 的数量
+
+**控制块是线程安全的**，这意味着多个线程可以安全地操作引用计数和访问管理对象，即使这些 `shared_ptr` 实例是同一对象的副本且共享所有权也是如此。因此，多个线程可以安全地创建、销毁和复制 `shared_ptr` 对象，因为这些操作仅影响控制块中的引用计数。
+
+然而，`shared_ptr` 对象实例本身并不是线程安全的。`shared_ptr` 对象实例包含一个指向控制块的指针和一个指向底层元素的指针。这两个指针的操作在多个线程中并没有同步机制。因此，如果多个线程同时访问同一个 `shared_ptr` 对象实例并调用非 `const` 成员函数（如 `reset` 或 `operator=`），这些操作会导致对这些指针的并发修改，进而引发数据竞争。
+
+如果不是同一 shared_ptr 对象，每个线程读写的指针也不是同一个，控制块又是线程安全的，那么自然不存在数据竞争，可以安全的调用所有成员函数。
+
+------
+
+使用 `std::atomic<shared_ptr>` 修改：
+
+```c++
+std::atomic<std::shared_ptr<Data>> data = std::make_shared<Data>();
+
+void writer() {
+    for (int i = 0; i < 10; ++i) {
+        std::shared_ptr<Data> new_data = std::make_shared<Data>(i);
+        data.store(new_data); // 原子地替换所保有的值
+        std::this_thread::sleep_for(10ms);
+    }
+}
+
+void reader() {
+    for (int i = 0; i < 10; ++i) {
+        if (auto sp = data.load()) {
+            std::cout << "读取线程值: " << sp->get_value() << std::endl;
+        }
+        else {
+            std::cout << "没有读取到数据" << std::endl;
+        }
+        std::this_thread::sleep_for(10ms);
+    }
+}
+```
+
+很显然，这是线程安全的，`store` 是原子操作，而 `sp->get_value()` 只是个读取操作。
+
+我知道，你肯定会想着：*能不能调用 `load()` 成员函数原子地返回底层的 `std::shared_ptr` 再调用 `swap` 成员函数？*
+
+可以，但是没有意义，因为 **`load()` 成员函数返回的是底层 `std::shared_ptr` 的副本**，也就是一个临时对象。对这个临时对象调用 `swap` 并不会改变 `data`，也就是原子对象中的值，因此这种操作没有实际意义，尽管这不会引发数据竞争（因为是副本）。
+
+由于我们没有对读写操作进行同步，只是确保了操作的线程安全，所以多次运行时可能会看到一些无序的打印，这是正常的。
+
+不过事实上 `std::atomic<std::shared_ptr>` 的功能相当有限，单看它提供的修改接口（`=`、`store`、`load`、`exchang`）就能明白。如果要操作其保护的共享指针指向的资源还是得 `load()` 获取底层共享指针的副本。此时再进行操作时就得考虑 `std::shared_ptr` 本身在多线程的支持了。
+
+------
+
+在使用 `std::atomic<std::shared_ptr>` 的时候，我们要注意第三章中关于共享数据的一句话：
+
+> **切勿将受保护数据的指针或引用传递到互斥量作用域之外**，不然保护将**形同虚设**。
+
+原子类型也有类似的问题，以下是一个例子：
+
+```c++
+std::atomic<std::shared_ptr<int>> ptr = std::make_shared<int>(10);
+*ptr.load() = 100;
+```
+
+1. 调用 `load()` 成员函数，原子地返回底层共享指针的**副本** `std::shared_ptr`
+2. 解引用，等价 `*get()`，返回了 `int&`
+3. 直接修改这个引用所指向的资源。
+
+在第一步时，已经脱离了 `std::atomic` 的保护，第二步就获取了被保护的数据的引用，第三步进行了修改，这导致了数据竞争。当然了，这种做法非常的愚蠢，只是为了表示，所谓的线程安全，也是要靠**开发者的正确使用**。
+
+正确的用法如下：
+
+```c++
+std::atomic<std::shared_ptr<int>> ptr = std::make_shared<int>(10);
+std::atomic_ref<int> ref{ *ptr.load() };
+ref = 100; // 原子地赋 100 给被引用的对象
+```
+
+通过使用 [`std::atomic_ref`](https://zh.cppreference.com/w/cpp/atomic/atomic_ref) 我们得以确保在修改共享资源时保持操作的原子性，从而避免了数据竞争。
+
+------
+
+最后再来稍微聊一聊提供的 `wait`、`notify_one` 、`notify_all` 成员函数。这并非是 `std::atomic<shared_ptr>` 专属，C++20 以后任何 atomic 的特化都拥有这些成员函数，使用起来也都十分的简单，我们这里用一个简单的例子为你展示一下：
+
+```c++
+std::atomic<std::shared_ptr<int>> ptr = std::make_shared<int>();
+
+void wait_for_wake_up(){
+    std::osyncstream{ std::cout }
+        << "线程 "
+        << std::this_thread::get_id()
+        << " 阻塞，等待更新唤醒\n";
+
+    // 等待 ptr 变为其它值
+    ptr.wait(ptr.load());
+
+    std::osyncstream{ std::cout }
+        << "线程 "
+        << std::this_thread::get_id()
+        << " 已被唤醒\n";
+}
+
+void wake_up(){
+    std::this_thread::sleep_for(5s);
+
+    // 更新值并唤醒
+    ptr.store(std::make_shared<int>(10));
+    ptr.notify_one();
+}
+```
+
+
+
+
+
+
+
+
 
 
 
@@ -3847,3 +4253,8 @@ int main() {
 1. 找一个能更新为单例的类，单例实现看[#这里](#线程安全的单例模式)
 1. 消息队列改为[#此形式](#线程安全的队列)；同时给模板上SFINAE，只允许特定类型们使用消息队列；并使用CRTP减少冗余代码；并将queue改为循环队列
 1. 线程池改成[#此形式](#线程池)，同时参考asio中的线程库，加一个线程池的`join()`，保证能执行完所有任务队列中的任务；同时搭配上新的单例模式；同时参考`std::future<>`，补充一个`static_assert<>`进行检测；同时自己测试，如果函数参数传递时，会调用几次构造函数（关闭nrvo）；同时进行异常处理；同时进行模板参数检测；同时更换掉`shared_ptr`。
+
+
+
+[^1]: 注： 比较和复制是**逐位**的（类似 [std::memcmp](https://zh.cppreference.com/w/cpp/string/byte/memcmp) 和 [std::memcpy](https://zh.cppreference.com/w/cpp/string/byte/memcpy)）；不使用构造函数、赋值运算符或比较运算符。
+[^2]: 即使 expected 与原子对象的值相等，表现如同 `*this != expected` [↩︎](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/05内存模型与原子操作.html#footnote-ref2)
