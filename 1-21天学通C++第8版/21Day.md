@@ -43,173 +43,313 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
 
 > - 初始化列表的初始化方式总是先于构造函数完成的（实际在编译完成时就已经决定了)。
 
-### C++11列表初始化？？？
+### 聚合类
 
-[？？？C++的花括号初始化就是用来匹配std::initializer_list构造函数的吗](https://github.com/Mq-b/Loser-HomeWork/discussions/207)
+> - 聚合类，可以简单当成 成员变量为public的POD类型
+
+### C++11列表初始化
+
+[C++的花括号初始化就是用来匹配std::initializer_list构造函数的吗](https://github.com/Mq-b/Loser-HomeWork/discussions/207)
 
 [列表初始化及decltype_列表初始化类中的结构体-CSDN博客](https://blog.csdn.net/wh9109/article/details/133104216)
 
 [【C++从练气到飞升】24--C++11：列表初始化 | 声明 | STL的升级-CSDN博客](https://blog.csdn.net/m0_68662723/article/details/142185423)
 
-#### C++98中的{}
+#### C++98中的初始化
 
-仅允许使用花括号 { } 对**数组**或者**结构体元素**进行统一的列表初始化
+在C++11之前，初始化对象的方式有多种，包括：
 
-```c++
-struct Point
-{
-	int _x;
-	int _y;
-};
- 
-int main()
-{
-	int arrya1[] = { 1, 2, 3, 4 };//列表初始化，初始化数组
-	int array2[5] = { 0 };//列表初始化，初始化数组
-	Point p = { 1, 2 };//列表初始化，初始化结构体元素
-	Point array3[] = { {1, 2}, {3, 4}, {5, 6} };//列表初始化，初始化结构体数组
-	return 0;
-}
-```
+1. 直接初始化：`Type variable(value);`
 
-#### C++11中的{}
+2. 拷贝初始化：`Type variable = value;`
 
-##### 用于内置类型初始化
+3. 聚合初始化：`Type variable{value};` 或 `Type variable = {value};`（C++11起叫列表初始化）
 
-使用初始化列表时，可以添加等号（=），也可以不添加，其中new表达式中不可带等号
+4. 默认初始化：`Type variable;`
 
-```c++
-int main()
-{
-	//C++11 中列表初始化应用在内置类型上
-	int x1 = 10;
-	int x2 = { 20 };
-	int x3{ 30 };//不带等号
- 
-	//C++11 中列表初始化也可以适用于 new 表达式中
-	int* p1 = new int[5]{100, 112, 113};
-	return 0;
-}
-```
+这些初始化方式依赖于其具体类型
 
-##### 用于用户自定义的类型初始化
+- 基础类型，可以使用拷贝初始化
 
-创建对象时也可以使用列表初始化的方式来调用构造函数初始化
+  ```c++
+  int a = 42;
+  double b = 1.2;
+  ```
 
-> - 如果在 Date 类的构造函数加上 explicit ，那么 Date d3 = { 2022, 1, 3 }; 就会出现编译报错，因为这条语句本质上是因为**多参数的构造函数支持隐式类型转换**。Date d2{ 2022, 1, 2 }; 没事，仍然可以正常运行。
->
-> - 如果Date既有多参构造函数，又有initializer_list做参数的构造函数，那么在使用列表初始化的时候，优先调用后者
+- 类类型，在其只有一个参数，且没有声明`explict`的情况下，也可以使用拷贝初始化
 
-```c++
-class Date
-{
-public:
-	Date(int year, int month, int day) : _year(year), _month(month), _day(day)
-	{
-		cout << "Date(int year, int month, int day)" << endl;
-	}
-private:
-	int _year;
-	int _month;
-	int _day;
-};
- 
-int main()
-{
-	Date d1(2022, 1, 1); // old style
- 
-	// C++11支持的列表初始化，这里会调用构造函数初始化
-	Date d2{ 2022, 1, 2 };
-	Date d3 = { 2022, 1, 3 };//本质上是多参数的构造函数支持隐式类型转换，注意此处由于是在初始化阶段，所以调用的是有参构造函数，不是operate=()
-    const Date& d1 = { 2003, 10, 18 };//(正确)
-	return 0;
-}
-```
+  ```c++
+  class foo
+  {
+    int a_;
+  public:
+    foo(int a):a_(a) {}
+  };
+  foo f1 = 42;		// 存在隐式转换
+  ```
 
-但是如果稍加更改
+- 非聚合类，可以使用直接初始化，对于不需要参数的则不能添加括号，否则编译器会认为是函数声明。
 
-```c++
-// 添加了一个initializer_list作为参数的构造函数
-#include <iostream>
-#include <initializer_list>
-using namespace std;
+  ```c++
+  foo f1;           // 默认初始化
+  foo f2(42, 1.2);
+  foo f3(42);
+  foo f4();         // 识别为函数申明
+  ```
 
-class Date
-{
-public:
-	Date(int year, int month, int day) : _year(year), _month(month), _day(day)
-	{
-		cout << "Date(int year, int month, int day)" << endl;
-	}
+- 聚合类可以使用列表初始化
 
-	explicit Date(initializer_list<int> il)
-	{
-		cout << "Date(initializer_list<int> il)" << endl;
-	}
+  ```c++
+  struct bar{
+  	int a;
+  	double b;
+  };
+  
+  bar b = {42, 1.2};
+  int a[] = {1, 2, 3, 4, 5};
+  ```
 
-private:
-	int _year;
-	int _month;
-	int _day;
-};
+- 除了以上初始化方式之外，对于标准容器来说，都是先声明一个对象，然后通过插入的方式进行初始化，不过，std::vector是个例外，其可以从先前使用了聚合初始化的数组分配，如下：
 
-int main()
-{
-	Date d2{ 2022, 1, 2 };		// 编译通过，调用了一元有参构造函数
-							  // 我理解成Date d2({ 2022, 1, 2 })
-	Date d1 = { 2022, 1, 2 };	// 编译错误：复制列表初始化不能使用标记为“显式”的构造函数
-    						  // 也就是说，此处也调用了一元有参构造，而不是三元有参构造
-	auto e = { 2022, 1, 2 };
-	Date d3 = static_cast<Date>(e);	// 编译通过，调用了一元有参构造函数
-    Date d4(2022, 1, 2 );			// 编译通过，调用三元有参构造
-	return 0;
-}
-```
+  ```c++
+  nt arr[] = {1, 2, 3, 4, 5}; // 使用聚合初始化初始化的数组
+  
+  std::vector<int> vec(std::begin(arr), std::end(arr)); // 使用数组的值初始化 std::vector
+  ```
 
-如上：**在添加了一个`initializer_list`作为参数的构造函数之后，使用列表初始化时就只会调用这个构造函数了，只能使用传统方式调用三元有参构造**
+#### C++11列表初始化
 
-##### typeid(变量名).name()
+在上节中，我们看到在C++11之前有多种初始化方式，开发人员往往需要对每种的场景都需要了解，以防止性能损失或者编译错误，正是为了解决这个问题，自C++11起，引入了统一初始化（**Uniform initialization**），或者叫列表初始化（**List initialization**）。
 
- C++11 标准中，`typeid(变量名).name() `函数返回的是一个 const char*，指向一个以 null 终止的字符串，表示类型的类型名称。
+- 定义：
 
-##### initializer_list
+  列表初始化，用{}方式进行初始化，如下：
 
-一般作为容器中构造函数的参数
+  ```c++
+  T object {other};   
+  T object = {other}; 
+  ```
 
-```c++
-int main()
-{
-	auto il = { 1, 2, 3 };
-	cout << typeid(il).name() << endl;
-	return 0;
-}
-// 输出结果：
-// class std::initializer_list<int>
-```
+- 分类：
 
-##### 用于容器初始化以及赋值
+  [列表初始化 (C++11 起) - cppreference.com](https://zh.cppreference.com/w/cpp/language/list_initialization)
 
-新增 initializer_list 作为参数的构造函数和operator=，创建对象时使用 initializer_list 来调用构造函数初始化
+  - 直接列表初始化
 
-> 需要注意，下面代码中创建 Date 类型的对象 d1，本质上是隐式类型的转换。但是**容器存储的数据个数可多可少，并不确定，所以提供了形参为 initializer_list 的构造函数**，这样就方便我们将任意数量的元素存到容器中。而 Date 作为一个日期类对象，它的三个成员变量是固定的，所以不需要提供形参为 initializer_list 的构造函数。因此**自定义类的列表初始化本质上是隐式类型转换，而容器类的列表初始化本质上是使用 initializer_list 作为形参的构造函数**。
+    **重载决议时会考虑 explicit 和非 explicit 构造函数，且两者都能调用**
 
-```c++
-int main()
-{
-    //调用vector中形参为 initializer_list 的构造函数
-	vector<int> v = { 1,2,3,4 };
-	// 这里先隐式转换，调用有参构造创建一个pair对象，再调用形参为 initializer_list 的构造函数
-	map<string, string> dict = { {"sort", "排序"}, {"insert", "插入"} };
-	//调用vector中形参为 initializer_list 的赋值运算符重载函数
-	v = { 10, 20, 30 };
- 
-	Date d1 = { 2003, 4, 5 };//这里是直接调用3个参数的构造函数 --- 隐式类型转换
- 
-	return 0;
-}
-```
+    ```c++
+    T 对象{ 实参1, 实参2, ... };
+    
+    T { 实参1, 实参2, ... };				// 使用列表初始化构造临时对象
+    
+    new T{ 实参1, 实参2, ... };
+    
+    类 { T 成员{ 实参1, 实参2, ... }; };		// 在类中使用列表初始化来初始化非静态成员变量
+    
+    类::类() : 成员{ 实参1, 实参2, ... } {...	// 在初始化列表中使用列表初始化
+    ```
 
-##### 防止类型收窄
+  - 拷贝列表初始化
+
+    **重载决议时会考虑 explicit 和非 explicit 构造函数，但只能调用非 explicit 构造函数**
+
+    ```c++
+    T 对象 = { 实参1, 实参2, ... };			// 会发生隐式转换
+    
+    // 函数调用表达式中，以花括号包围的初始化器列表作为实参，以列表初始化对函数形参进行初始化
+    // 会优先匹配形参为 initializer_list<> 的函数（前提是 {pram_list} 可以转换为initializer_list<>）
+    // 如 {1,2,3,4} 就无法转换为 initializer_list<string>
+    函数 ({ 实参1, 实参2, ... });				
+    
+    return { 实参1, 实参2, ... };
+    
+    // 在具有用户定义的 operator[] 的下标表达式中，以列表初始化对重载运算符的形参进行初始化
+    对象 [{ 实参1, 实参2, ... }];
+    
+    // 构造函数调用，其中花括号包围的初始化器列表用作构造函数实参。以复制初始化对构造函数的形参初始化（注意：此例中的类型 U 不是被列表初始化的类型；但 U 的构造函数的形参是）
+    U ({ 实参1, 实参2, ... });
+    
+    // 在类中使用拷贝列表初始化来初始化非静态成员变量
+    类 { T 成员 = { 实参1, 实参2, ... }; };
+    ```
+
+  - 聚合初始化
+
+    列表初始化的一种形式，当该类为聚合体时，就是聚合初始化
+
+    ```c++
+    T 对象 = { 实参1, 实参2, ... };
+    
+    T 对象 { 实参1, 实参2, ... };
+    ```
+
+- 示例：
+
+  - 直接列表初始化
+
+    ```c++
+    struct test{
+        test(int a, int b) : _a{a}, _b{b}{
+            _a = 3;
+            _b = 4;		// 注意各初始化的优先级：a, b先是1, 2；随后被更新为2, 3；最后变成3，4
+        }
+        int _a{1};
+        int _b{2};
+    };
+    
+    int main(){
+        test a{2, 3};
+    }
+
+  - 拷贝列表初始化
+
+    当以下多参构造函数用`explict`修饰时，所有拷贝列表初始化均编译错误，因为只能调用非 explicit 构造函数
+
+    ```c++
+    struct test{
+        test(int a, int b){ }
+        
+        // 拷贝列表初始化
+        int _a = {1};
+        int _b = {2};
+    };
+    
+    test func(test t) {
+        // todo...
+        return {1, 2};
+    }
+    
+    int main(){
+        test t1 = func({1, 2});	// 此处发生了两次拷贝列表初始化，一次移动构造
+    }
+    ```
+
+    解释：
+
+    - 之所以此处只发生一次移动构造，是因为`return {1, 2};`时，临时对象由*拷贝列表初始化*初始化，而不是由局部变量初始化。
+
+    - 在`func()`定义如下时，发生两次拷贝列表初始化，两次移动构造
+
+      ```c++
+      // case 1
+      test func(test t) {
+          return test{1, 2};
+      }
+      
+      // case 2
+      test func(test t) {
+          test t2 = {1, 2};
+          return t2;
+      }
+      ```
+
+#### 列表初始化的细节
+
+- `{param_list}`的名字，类型：
+
+  `{param_list}`该叫什么？ 我们应该称它为**花括号初始化器列表**
+
+  括号初始化器列表**不是表达式**，**因此它没有类型**，**即`decltype({1,2})`非良构，**没有类型意味着模板类型推导无法推导出与花括号初始化器列表相匹配的类型，因此给定声明`template<class T>void f(T);`则表达式`f({1, 2, 3})`**非良构。**
+
+  对于`auto`而言，在复制列表初始化中将任何*花括号初始化器列表*均推导为`std::initializer_list`
+
+  ```c++
+  auto p = { 1,2,3,4,5,6 };//复制列表初始化将花括号初始化器列表推导为std::initializer_list
+  auto p2  { 1,2,3,4,5,6 };//无法推导
+  ```
+
+- 防止缩窄转换：
+
+  ```c++
+  int main() {
+      int a = 3;
+      bool b = a;		// 编译通过，但此时已经发生了类型收窄，可能这不是我们想要的
+      bool b1 = {a};	// 编译失败，检测到发生了类型收窄
+      
+  //	解决办法：显式转换
+      bool b2 = {static_cast<bool>(a)};
+  };
+  ```
+
+- 初始化方式：
+
+  这里使用直接初始化做例子，其他初始化方式同理
+
+  ```c++
+  struct test{
+      test(){ }
+      test(string a, int b){ }
+      test(initializer_list<int> il){ }
+  };
+  
+  int main(){
+      // 只能匹配有参构造函数
+      test t();		// 识别为函数声明
+      test t1(2, 4);	// ERROR
+      test t2("2", 4);// OK
+  
+      // 只要可以隐式转换，就优先匹配 参数为initlizer_list<>的构造函数
+      test t3{};		// 默认构造
+      test t4{2, 4};
+      test t5{"2", 4};
+  
+      // 花括号初始化器列表用作构造函数实参。以复制初始化对构造函数的形参初始化
+      // 注意：此例中的类型 test 不是被列表初始化的类型；但 test 的构造函数的形参是
+      test t6({});		// 先构造initializer_list临时对象，然后构造test
+      test t7({2, 4});    // 同上
+      test t8({"2", 4});  // 先构造test临时对象，然后拷贝构造test
+  }
+  ```
+
+- 重载决议：
+
+  当进行列表初始化时，如果类中既有 参数为`initlizer_list<>`的构造函数，又有 单参/多参构造函数：
+
+  - 重载决议会优先匹配 参数为`initlizer_list<>`的构造函数
+
+  - 如果匹配不上 参数为`initlizer_list<>`的构造函数，则会拆分`initializer_list<>`，去匹配有相同参数个数，相同参数类型的构造函数。
+
+  - 如果构造函数被explicit修饰，不论时直接列表初始化还是拷贝列表初始化，都会忽略explicit进行重载决议；如果最终绑定的是explicit修饰的构造函数，则使用拷贝列表初始化编译失败
+
+    ```c++
+    struct test{
+        test(int a, int b){ }
+        explicit test( initializer_list<int> il ){ }
+    };
+    
+    int main(){
+        // 以下两种列表初始化都绑定的是explicit修饰的构造函数
+        test t1{1, 2};		// OK
+        test t2 = {1, 2};	// 编译失败
+    }
+    ```
+
+- 类模板形参推导（C++17起）
+
+  **当从类型为当前，或者说正在构造的类模板的特化或特化子级的 单个元素 进行初始化时，复制构造函数优先于列表构造函数。**
+
+  ```c++
+  template<typename T>
+  struct Test {
+      Test() {}
+      Test(std::initializer_list<T>) { puts("被调用"); }
+      Test(const Test<T>&) { puts("复制构造"); }
+  };
+  
+  template<typename T>
+  Test(std::initializer_list<T>) -> Test<T>;
+  
+  int main() {
+      Test<int> a;
+      Test t{ a,a };		//被调用         会推导为Test<Test<int>>
+      Test t2{ a };		//复制构造       会推导为Test<int>
+      
+  //	如果希望 Test t2{ a }; 中Test类型被推导为 Test<Test<int>>, 需要以下做法
+      Test t3({ a });		//被调用         会推导为Test<Test<int>>
+  }
+
+#### 类型收窄
 
 ![image-20240827215725158](assets/image-20240827215725158.png)
 
