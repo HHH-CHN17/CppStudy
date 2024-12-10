@@ -45,7 +45,10 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
 
 ### 聚合类
 
+[聚合类型与POD类型 - Jerry_SJTU - 博客园](https://www.cnblogs.com/jerry-fuyi/p/12854248.html)
+
 > - 聚合类，可以简单当成 成员变量为public的POD类型
+> - 不过聚合类的成员可以是非聚合/非pod类型？？？？？？
 
 ### C++11列表初始化
 
@@ -515,8 +518,6 @@ int &&ref_a = std::move(temp);
 ref_a = 6;
 ```
 
-## 
-
 ### C++中的运算符
 
 - 逻辑运算符：`!`，`&&`，`||`
@@ -716,6 +717,7 @@ void main()
   
   	void test() { }		// test是个函数地址
   	virtual void virtest() { }
+      virtual void virtest2() { }
   	static void stattest() { }
   
   	A() {
@@ -737,15 +739,19 @@ void main()
   
   //	如果想访问类成员函数的地址，需要用到我的union_cast函数
   	void* pf1 = union_cast(a.p1);
-  	void* pf2 = union_cast(&A::virtest);
+  	void* pf2 = union_cast(&A::virtest2);
   
   	return 1;
   }
   ```
 
+  注意：
+
+  - 在msvc中，虚函数有具体的地址，且在debug模式下，虚函数表空间中虚函数与虚函数的地址之间还有其他内容；但在release模式下，是标准的8字节。而在mingw中，虚函数为偏移量，且不论在debug还是release模式下，虚函数地址之间的间隔都是8字节。
+
 - 判断系统的大小端序
 
-  将**低位字节存储在起始地址**，这称为小端(little-endian)字节序；
+  将**低位字节存储在起始地址（低地址）**，这称为小端(little-endian)字节序；
 
   将**高位字节存储在起始地址**，这称为大端(big-endian)字节序。
 
@@ -755,11 +761,17 @@ void main()
   		int i;
   		char c;
   	};
+      // 左边是高位，右边是低位
   	i = 0x01020304;
   	// c为04表示低位存储在起始地址，是小端序
   	printf("%d", c);// 注意转换成int
   }
   ```
+
+  注意：
+
+  - **字符串在网络中传输时，不需要注意字节序的问题**，因为字符串相当于一个字符数组，转换成大端序后：①字符只占一个字节，不会变；②数组中各个字符之间的顺序，不会变。所以不需要注意字节序的问题。
+  - 但如果是int，就会变。
 
 - 访问类中的私有变量
 
@@ -1271,6 +1283,8 @@ int main()
 ```
 
 #### operate"" YourLiteral用户自定义字面量/自定义后缀操作符
+
+> - 基础类型->类类型：①通过构造函数进行转换；②通过自定义字面量进行转换
 
 [C++11 用户自定义字面量-CSDN博客](https://blog.csdn.net/K346K346/article/details/85322227)
 
