@@ -1353,11 +1353,11 @@ int main() {
 
 [c++ for_each 用法_c++ foreach用法-CSDN博客](https://blog.csdn.net/u014613043/article/details/50619254)
 
-### 。。。C++类型转换
+### C++类型转换
 
 [C++类型转换：隐式转换和显式转换_c++隐式转换-CSDN博客](https://blog.csdn.net/luolaihua2018/article/details/111996610)
 
-[???C++隐式转换](https://www.cnblogs.com/apocelipes/p/14415033.html#)
+[？？？好好看，C++隐式转换](https://www.cnblogs.com/apocelipes/p/14415033.html#)
 
 #### 隐式转换
 
@@ -1397,6 +1397,24 @@ int main(void) {
 ```
 
 本来用于两个Test对象的比较，竟然和int类型相等了。这里就是由于发生了隐式转换，实际比较的是一个临时的Test对象。这个在程序中是绝对不能允许的。
+
+- 禁止两次用户自定义的转换
+
+  ```c++
+  struct A{
+      A(bool b){ }
+      A(string bb){ }
+      std::string _s;
+  };
+  
+  int main() {
+      unsigned long ul1 = 100;
+      A a = ul1;		// OK
+      
+      A aa="aaaa";	// ERROR，MSVC中编译通过，MinGW编译失败
+      return 1;
+  }
+  ```
 
 #### explicit关键字
 
@@ -1495,7 +1513,7 @@ dynamic_cast<type&&>(e);		// 只能转换成指针/引用
 >
 > - 用途：
 >
->   用于基类与子类之间的向下转换（因为转换开销比static_cast大）
+>   用于基类向子类的转换（下行转换，转换开销比static_cast大）
 >
 > - 当 基类指针所指对象为基类类型 时，向下转换失败（和动态多态的使用及条件很像）
 
@@ -1578,7 +1596,7 @@ int main()
 >
 >   用来处理无关类型之间的转换，强制编译器接受 static_cast 不允许的类型转换；它会产生一个新的值，这个值会有与原始参数（expressoin）有完全相同的比特位。
 >
-> - 使用场景（指针 <==>整数，类A指针<==>类B指针）：
+> - 使用场景（指针 <\==>整数，类A指针<==>类B指针）：
 >
 >   - 从指针类型到一个足够大的整数类型
 >   - 从整数类型或者枚举类型到指针类型
@@ -1854,7 +1872,7 @@ C++程序员常用于 STL 算法的函数对象可分为下列两种类型。
 - return type 是返回值类型，用于指定 Lambda表达式的返回值类型，可以省略，表示由编译器根据函数体推导，也可以使用 -> 符号显式指定，还可以在 c++14 中使用 auto 关键字来实现泛型返回值。
 - function body 是函数体，用于表示 Lambda表达式的具体逻辑，可以是一条语句，也可以是多条语句，还可以在 c++14 中使用 constexpr 来实现编译期计算。
 
-可将 lambda 表达式视为包含公有 `operator( )`的匿名结构（或类）。从这种意义上说，lambda 表达式属于函数对象。
+可将 lambda 表达式视为包含公有 `operator()`的匿名结构（或类）。从这种意义上说，lambda 表达式属于函数对象。
 
 编译器见到下述 lambda 表达式时：
 
@@ -2044,7 +2062,7 @@ private:
 
 #### shared_ptr中的循环引用
 
-[智能指针中的循环引用与weak_ptr的应用](https://blog.csdn.net/qq_38410730/article/details/105903979)
+[智能指针中的循环引用与weak_ptr的应用？？？](https://blog.csdn.net/qq_38410730/article/details/105903979)
 
 ```c++
 class B;
@@ -2088,10 +2106,16 @@ weak_ptr属于弱指针，相对的，shared_ptr属于强指针
 #### shared_ptr的线程安全问题
 
 > - shared_ptr的引用计数读写都是线程安全的（都是原子操作）
+>
 > - 修改shared_ptr指向是线程不安全的（看例1）
+>
+>   解决办法：①使用`atomic<>`。②使用互斥锁
+>
 > - 对shared_ptr中的data_ptr进行操作是线程不安全的（看例2）
+>
+>   解决办法：①正常环境下用互斥锁。②观察者模式观察者中用`weak_ptr<>`，这样就不会影响到被观察者中的引用计数
 
-**例1：**[C++ 智能指针线程安全的问题-CSDN博客](https://blog.csdn.net/weixin_42142630/article/details/121165649)
+**例1：**[C++ 智能指针线程安全的问题-CSDN博客？？？](https://blog.csdn.net/weixin_42142630/article/details/121165649)
 此处调用了`operator=`的重载，通过上面的实现可知，原引用计数是需要--的，如果线程A在拷贝构造到一半时轮到线程B，线程B此时调用`operator=`，执行完后转回线程A，此时线程A中的data_ptr对应的值可能已经被释放了
 
 **例2：**线程A和线程B访问一个共享的对象，如果线程B在调用该共享对象的成员方法时时间片结束而轮到线程A，线程A析构完该对象后时间片结束轮到线程B，此时线程B再去访问该对象，就会发生错误。此可以通过shared_ptr和weak_ptr来解决共享对象的线程安全问题。
@@ -2135,6 +2159,8 @@ int main()
 如果设置t2为分离线程t2.detach()，让main主线程结束，sp智能指针析构，进而把Test对象析构，此时showID方法已经不会被调用，因为在thread2方法中，t提升到sp时，lock方法判定Test对象已经析构，提升失败！
 
 **补充：智能指针在观察者模式中的应用**
+
+[weak_ptr 的几个应用场景？？？](https://blog.csdn.net/qq_53111905/article/details/122240842)
 
 在多数实现中，观察者通常都在另一个独立的线程中，这就涉及到在多线程环境中，共享对象的线程安全问题(解决方法就是使用上文的智能指针)。这是因为在找到监听者并让它处理事件时，其实在多线程环境中，肯定不明确此时监听者对象是否还存活，或是已经在其它线程中被析构了，此时再去通知这样的监听者，肯定是有问题的。
 
