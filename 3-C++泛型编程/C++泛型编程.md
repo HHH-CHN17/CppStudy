@@ -935,7 +935,7 @@ int main() {
 
 ### 特化的成员
 
-[完整版看这里：模板的特化成员](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/04模板全特化#特化的成员)
+[推荐先看这里：模板的特化成员](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/04模板全特化#特化的成员)
 
 1. **特化成员类模板**。设置 `A<int>` 情况下模板类 `C` 中有一个函数`f()`输出”hello world“。
 
@@ -1062,16 +1062,17 @@ const char* str<int, T2> = "T = int";
 template<typename T>					// 2.2. 偏特化模板参数个数（不要求偏特化顺序）
 const char* str<T, int> = "T2 = int";
 
- // 偏特化，但是只是对 T[] 这一类类型，而不是数组类型，因为 int[] 和 int[N] 不是一个类型
-template<typename T2>
-const char* s<T[], T2> = "array";  
+// 偏特化，但是只是对 T[] 这一类类型，而不是数组类型，因为 int[] 和 int[N] 不是一个类型
+template<typename T, typename T2>
+const char* str<T[], T2> = "array";
 
 int main() {
-	cout << str<void, void> << endl;
-	cout << str<void*, int&> << endl;
-	cout << str<int, void> << endl;
-	cout << str<void, int> << endl;
-
+	cout << str<void, void> << endl;	// ???
+	cout << str<void*, int&> << endl;	// T = T*, T2 = T2&
+	cout << str<int, void> << endl;		// T = int
+	cout << str<void, int> << endl;		// T2 = int
+	cout << str<int[], void> << endl;	// array
+	cout << str<int[2], void> << endl;	// ???		int[] 和 int[N] 不是一个类型
 	return 1;
 }
 ```
@@ -1213,6 +1214,7 @@ int main() {
       cout << "111" << endl;
   }
   template struct X<int>;		// 显式实例化int版本的struct X
+  
   //main.cpp
   #include "test.h"
   int main(){
@@ -1233,7 +1235,7 @@ int main() {
 
 [也很简单，看这里：显式实例化解决模板导出静态库动态库](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/07显式实例化解决模板导出静态动态库#模板生成动态库与测试)
 
-函数模板、类模板**显式实例化**，不要放在 `.h` 文件中，因为 **一个显式实例化定义在程序中最多只能出现一次**；如果放在 `.h` 文件中，被多个翻译单元使用，就会产生问题。
+函数模板、类模板**显式实例化**，不要放在 `.h` 文件中，因为 **一个显式实例化定义在程序中最多只能出现一次**；如果放在 `.h` 文件中，被多个翻译单元使用，就会产生问题，会违反ODR规则，解决办法是写在.cpp文件中（注意不能使用inline，static修饰显示实例化来解决该问题）。
 
 > 当显式实例化函数模板、变量模板 (C++14 起)、类模板的成员函数或静态数据成员，或成员函数模板时，**只需要它的声明可见**。
 
