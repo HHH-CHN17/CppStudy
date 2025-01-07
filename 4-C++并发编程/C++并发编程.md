@@ -126,12 +126,30 @@ Oops！编译失败了，编译器会将第9行解析为函数声明，而不是
 
     所以你发现了，`thread t(Task())`相当于 `thread t(Task p())`。但这并不准确，实际上是相当于 `thread t(Task (*p)())`，这是因为：
 
-    > 在确定每个形参的类型后，类型是 “T 的数组”或某个**函数类型 T 的形参会调整为具有类型“指向 T 的指针”**
+    > 在确定每个形参的类型后，类型是 “T 的数组”或某个**函数类型 T 的形参会调整为具有类型“指向 T 的指针”**。[文档](https://zh.cppreference.com/w/cpp/language/function#.E5.BD.A2.E5.8F.82.E7.B1.BB.E5.9E.8B.E5.88.97.E8.A1.A8)。
     >
-
+    > ```c++
+    > void test(int a[]) {
+    > 	cout << sizeof(a) << endl;	// 8，a从int[]被调整为了int*
+    > }
+    > 
+    > void test1(int (&a)[4]){
+    >     cout << sizeof(a) << endl;	// 16，使用引用可以避免类型调整，不过函数形参类型不能写成int (&a)[]，因为实参类型为int[4]，对于编译器来说，int[4]和int[]是不同类型。
+    > }
+    > 
+    > int main() {
+    > 	int a[] = {1,2,3,4};
+    > 	cout << sizeof(a) << endl;	// 16
+    > 	test(a);
+    > 	test1(a);
+    > }
+    > ```
+    >
+    > 拓展知识：[#类型退化](#decay类型退化)
+    
     显然 `Task()`是个函数类型，它被调整为了指向这个函数类型的指针类型：`Task(*)()`。
   - 总结：
-
+  
     通过上面分析，你会发现 `int test(int)`和 `thread t(Task())`都是只有一个占位参数的函数声明，很好理解。
 - 解决办法：
 
@@ -141,7 +159,7 @@ Oops！编译失败了，编译器会将第9行解析为函数声明，而不是
     thread t{Task()};
     ```
 
-    但注意，我们平时使用列表初始化时，如果类中有定义 `参数为initializer_list的构造函数`，则会优先调用此构造，而非 多参构造函数。
+    但注意，我们平时使用列表初始化时，如果类中有定义 `参数为initializer_list的构造函数`，则会优先调用此构造，而非多参构造函数。
   - 使用括号表达式：
 
     ```c++
@@ -315,6 +333,89 @@ int main() {
 
 注意只有在抛出的异常被捕获时，thread_guard的析构函数才会被调用
 
+### decay类型退化
+
+[std::decay - cppreference.com](https://zh.cppreference.com/w/cpp/types/decay)
+
+- 定义
+
+  - 头文件 `<type_traits>`
+
+    ```c++
+    template< class T >
+    struct decay; // (since C++11)
+    ```
+
+  - 辅助类型
+    ```c++
+    template< class T >
+    using decay_t = typename decay<T>::type; // (since C++14)
+    ```
+
+- 作用
+
+  进行等价于**按值传递函数实参**时进行的类型转换。正式而言：
+
+  - 如果 `T` 是“`U` 的数组”或到它的引用，那么成员 `typedef type` 是 `U*`。
+
+  - 否则，如果 `T` 是函数类型 `F` 或到它的引用，那么成员 `typedef type` 是 `std::add_pointer<F>::type`。
+
+  - 否则，成员 `typedef type` 是 `std::remove_cv<std::remove_reference<T>::type>::type`。
+
+  如果程序添加了 `std::decay` 的特化，那么行为未定义。
+
+- 实现（要先看懂作用，再带着对作用的理解看实现）
+
+  ```c++
+  // cppreference
+  template<class T>
+  struct decay
+  {
+  private:
+      typedef typename std::remove_reference<T>::type U;
+  public:
+      typedef typename std::conditional< 
+          std::is_array<U>::value,
+          typename std::add_pointer<typename std::remove_extent<U>::type>::type,
+          typename std::conditional< 
+              std::is_function<U>::value,
+              typename std::add_pointer<U>::type,
+              typename std::remove_cv<U>::type
+          >::type
+      >::type type;
+  };
+  // MSVC
+  template <class _Ty>
+  struct decay { // determines decayed version of _Ty
+      using _Ty1 = remove_reference_t<_Ty>;
+      using _Ty2 = typename _Select<is_function_v<_Ty1>>::template _Apply<add_pointer<_Ty1>, remove_cv<_Ty1>>;
+      using type = typename _Select<is_array_v<_Ty1>>::template _Apply<add_pointer<remove_extent_t<_Ty1>>, _Ty2>::type;
+  };
+  ```
+
+- 使用示例：
+
+  ```c++
+  #include <iostream>
+  #include <type_traits>
+   
+  template <typename T, typename U>
+  struct decay_equiv : 
+      std::is_same<typename std::decay<T>::type, U>::type 
+  {};
+   
+  int main()
+  {
+      std::cout << std::boolalpha
+                << decay_equiv<int, int>::value << '\n'    // 情况3
+                << decay_equiv<int&, int>::value << '\n'  // 情况3
+                << decay_equiv<int&&, int>::value << '\n'  // 情况3
+                << decay_equiv<const int&, int>::value << '\n'  // 情况3
+                << decay_equiv<int[2], int*>::value << '\n' // 情况1
+                << decay_equiv<int(int), int(*)(int)>::value << '\n'; // 情况2
+  }
+  ```
+
 ### 传递参数
 
 > - 一般情况下，不论线程函数中的参数类型是否为引用，在参数传递时都是先使用[`decay_t`](https://zh.cppreference.com/w/cpp/types/decay)确定退化后的参数类型，然后通过复制构造函数/移动构造函数构造出一个新的[退化后的纯右值副本](https://zh.cppreference.com/w/cpp/standard_library/decay-copy)（也就是`decay_t`中获得的类型），存入`tuple`中，并将指针传给`unique_ptr`，然后将指针传入子线程中，然后子线程再将该副本作为函数实参传入可调用对象，所以当函数参数类型为普通类型`T`和右值类型`T&&`时，可以按预期正常使用，类型为`T&`时，需要使用`ref()`才行（看不懂先看下面）
@@ -367,7 +468,7 @@ int main() {
         move_only(const move_only&) = delete;
     };
     
-    void f(move_only){}	// 线程函数
+    void f(move_only mo){}	// 线程函数
     
     int main(){
         move_only obj;
@@ -448,6 +549,8 @@ int main() {
 
   - bind()忘了看[#这里](../C++八股文/C++学习难点.md#非静态函数)
   - `std::bind` 也是默认按值[**复制**](https://godbolt.org/z/c5bh8Easd)的，所以和我们之前的处理一样，引用需要使用`ref()`
+  
+- [#总结看开头](#传递参数)
 
 #### 传递参数中的bug悬空引用
 
