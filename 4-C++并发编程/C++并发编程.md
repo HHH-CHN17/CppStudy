@@ -778,7 +778,7 @@ int main(){
 
 - 定义：
 
-  互斥量（Mutex），又常被称为互斥锁、互斥体（或者直接被称作“锁”），是一种用来保护**临界区**[[1\]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#footnote1)的特殊对象，其相当于实现了一个公共的“**标志位**”。它可以处于锁定（locked）状态，也可以处于解锁（unlocked）状态：
+  互斥量（Mutex），又常被称为互斥锁、互斥体（或者直接被称作“锁”），是一种用来保护**临界区**[[1\]](指的是一个访问共享资源的程序片段，而这些共享资源又无法同时被多个线程访问的特性。在临界区中，通常会使用同步机制，比如我们要讲的互斥量（Mutex）。)的特殊对象，其相当于实现了一个公共的“**标志位**”。它可以处于锁定（locked）状态，也可以处于解锁（unlocked）状态：
 
   1. 如果互斥量是锁定的，通常说某个特定的线程正持有这个锁。
   2. 如果没有线程持有这个互斥量，那么这个互斥量就处于解锁状态。
@@ -971,7 +971,7 @@ int main(){
 
   解释：
 
-  - 注意第一行：被互斥锁包围的代码块在输出完"thread: "后时间片结束，转到了另一个线程，说明被互斥锁包围的代码块，并不能保证全在一个时间片内执行完毕，只能保证在同一时间只有一个线程能访问被互斥锁包围的代码块。
+  - 注意第一行：被互斥锁包围的代码块在输出完"thread: "后时间片结束，转到了另一个线程，说明被互斥锁包围的代码块，并不能保证全在一个时间片内执行完毕，只能保证在**同一时间只有一个线程能访问被互斥锁包围的代码块**。
   - 想改也很简单，把这些`cout`语句合并成一个就好了
 
 ## 保护共享数据
@@ -1247,7 +1247,7 @@ void foo(){
 
   此处应该打开msvc STL的实现
 
-  **重点关注`_Validate()`以及变量`_Owns`的变化**
+  **重点关注`_Validate()`(验证mutex是否可以上锁)以及变量`_Owns`的变化**
 
   - ```c++
     _EXPORT_STD _INLINE_VAR constexpr adopt_lock_t adopt_lock{};	// adopt：接收，采纳
@@ -1468,7 +1468,7 @@ void foo(){
 
 - `std::unique_lock<>`
 
-  `std::lock_guard<>`的加强版，更加灵活，可以手动`lock()`，`unlock()`，也可以像`std::lock_guard<>`一样使用RAII自动`lock()`，`unlock()`
+  `std::lock_guard<>`的加强版，多了一个`_Owns`表示该对象是否持有锁，更加灵活，可以手动`lock()`，`unlock()`，也可以像`std::lock_guard<>`一样使用RAII自动`lock()`，`unlock()`
 
 - `std::lock<>()`
 
@@ -1595,7 +1595,7 @@ private:
 public:
     //GetInstance
     static shared_ptr<Singleton> GetInstance() {
-        if (m_spSingle == nullptr) {
+        if (m_spSingle == nullptr) {	// 未被锁保护的读取操作，存在潜在的条件竞争
             m_mtx.lock();
             if (m_spSingle == nullptr) {
                 m_spSingle = make_shared<Singleton>();
@@ -1609,11 +1609,23 @@ shared_ptr<Singleton> Singleton::m_spSingle = nullptr;
 mutex Singleton::m_mtx;
 ```
 
-使用双检锁时，不论是使用new初始化，或者智能指针中的reset初始化，都不是线程安全的，因为new/reset并非原子操作，分析如下：
+解释：
 
-在单例还未被创建时，线程A和线程B同时调用GetInstance()，假设线程A先获得时间片，时间片在执行到reset中，刚好为单例指针分配好内存空间，但是没调用构造函数初始化时，刚好结束，轮到线程B执行，对于此时的线程B而言，单例指针非空，所以直接返回指针。明显地，线程B中的单例指针初始化并不完全，所以线程不安全
+- `make_shared<Type>()`与`new Type()`的区别：
 
-shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时GetInstance的返回值改为Singleton&。这样做的好处是会少占用一部分空间
+  - `make_shared<Type>()`
+    1. 它可以在单一的[内存分配](https://zhida.zhihu.com/search?content_id=240244745&content_type=Article&match_order=1&q=内存分配&zhida_source=entity)中同时分配对象的存储空间和[引用计数](https://zhida.zhihu.com/search?content_id=240244745&content_type=Article&match_order=1&q=引用计数&zhida_source=entity)控制块，从而提高内存分配效率并减少内存占用。
+    2. 它是异常安全的，因为在构造对象时，如果抛出异常，不会留下未被删除的引用计数控制块。
+    3. 使用 `std::make_shared` 简化了代码，避免了直接使用 `new` 操作符。
+  - `new Type()`
+    1. 这种方法涉及两次内存分配：一次用于对象，一次用于引用计数控制块，这比 `std::make_shared` 的单次内存分配效率低。
+    2. 如果在 `std::shared_ptr` 构造函数参数列表中同时创建多个 `shared_ptr`，并且其中一个 `new` 表达式抛出异常，可能会导致内存泄露。
+
+- 使用双检锁时，不论是使用new初始化，或者智能指针中的reset初始化，都不是线程安全的，因为new/reset并非原子操作，可以被其他线程打断（尽管`operator new()`本身线程安全，但并不代表该函数是原子操作，这点很重要！），分析如下（建议结合教案阅读）：
+
+  在单例还未被创建时，线程A和线程B同时调用GetInstance()，假设线程A先获得时间片，时间片在执行到reset中，刚好为单例指针分配好内存空间，但是没调用构造函数初始化时，刚好结束，轮到线程B执行，对于此时的线程B而言，单例指针非空，所以直接返回指针。明显地，线程B中的单例指针初始化并不完全，所以线程不安全
+
+  shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时GetInstance的返回值改为Singleton&。这样做的好处是会少占用一部分空间
 
 ### call_once配合once_flag
 
@@ -1729,7 +1741,7 @@ shared_ptr<>可以，但不是最好的选择，最好使用unique_ptr，同时G
   };
   ```
 
-### 线程安全的单例模式
+### 。。。线程安全的单例模式
 
 - 饿汉式
 
