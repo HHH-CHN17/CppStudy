@@ -1741,7 +1741,7 @@ mutex Singleton::m_mtx;
   };
   ```
 
-### 。。。线程安全的单例模式
+### 线程安全的单例模式
 
 - 饿汉式
 
@@ -1753,7 +1753,7 @@ mutex Singleton::m_mtx;
   public:
       static Singleton_Hungry& Instance(){
           static Singleton_Hungry _instance;	//对象在全局静态数据区
-          //static Singleton_Hungry* p_instance = new Singleton_Hungry; 对象也在全局静态数据区，两者都可以
+          //static Singleton_Hungry* p_instance = new Singleton_Hungry; 对象地址在全局静态数据区，对象在堆数据区，这种方式创建单例也是可以的
           return _instance;
       }
   private:
@@ -1820,7 +1820,7 @@ mutex Singleton::m_mtx;
   
       // 初始化函数也要写成static！！！
       template<typename ...Args>
-      static void init(Args... args) {
+      static void init(Args&&... args) {
           up.reset(new T(forward<Args>(args)...));
           cout << "init_multiArgs" << endl;
       }
@@ -1843,12 +1843,13 @@ mutex Singleton::m_mtx;
           });
           return *up;
       }
+      
+  	Singleton_Lazy_Base(const Singleton_Lazy_Base&) = delete;
+  	Singleton_Lazy_Base(Singleton_Lazy_Base&&) = delete;
+  	Singleton_Lazy_Base& operator=(const Singleton_Lazy_Base&) = delete;
   
   protected:
        Singleton_Lazy_Base() = default;
-       Singleton_Lazy_Base(const Singleton_Lazy_Base&) = delete;
-       Singleton_Lazy_Base(Singleton_Lazy_Base&&) = delete;
-       Singleton_Lazy_Base& operator=(const Singleton_Lazy_Base&) = delete;
       ~Singleton_Lazy_Base(){ cout << "~Singleton" << endl;}
   };
   template<typename T>
@@ -1868,11 +1869,12 @@ mutex Singleton::m_mtx;
       void test(){
           std::cout << "hello word" << std::endl;
       }
-  private:
-      Single_CRTP() = default;
+      
       Single_CRTP(const Single_CRTP&) = delete;
       Single_CRTP(Single_CRTP&&) = delete;
       Single_CRTP& operator=(const Single_CRTP&) = delete;
+  private:
+      Single_CRTP() = default;
       ~Single_CRTP(){ cout << "~Single_CRTP" << endl; };
   };
   ```
@@ -1883,6 +1885,7 @@ mutex Singleton::m_mtx;
   - 为了防止用户直接使用子类/基类创建对象，此处应将子类的构造/析构函数都设为`private`，基类的构造/析构函数设为`protected`，并将基类设为子类的友元类
   - 由于析构函数也为私有，所以`unique_ptr`在释放的时候无法直接访问，需要自定义一个静态的删除函数，并在构造`unique_ptr`的时候显式指明删除器
   - 如果想通过`GetInstance`来调用CRTP类的多参数构造函数，则需要重载`GetInstance`并配合完美转发和`call_once`一起使用。不过lambda函数不支持万能引用（C++20前），所以需要额外实现一个新的静态的init函数。
+  - 由于单例特性，赋值，拷贝，移动应当被删除。
 
 ## 保护不常更新的数据结构
 
@@ -1906,7 +1909,7 @@ mutex Singleton::m_mtx;
 
   C++ 标准库自然为我们提供了： [`std::shared_timed_mutex`](https://zh.cppreference.com/w/cpp/thread/shared_timed_mutex)（C++14）、 [`std::shared_mutex`](https://zh.cppreference.com/w/cpp/thread/shared_mutex)（C++17）。它们的区别简单来说，前者支持更多的操作方式，后者有更高的性能优势。
 
-  `std::shared_mutex` 同样支持 `std::lock_guard`、`std::unique_lock`。和 `std::mutex` 做的一样，保证*写线程*的独占访问。**而那些无需修改数据结构的\*读线程\*，可以使用 [`std::shared_lock`](https://zh.cppreference.com/w/cpp/thread/shared_lock) 获取访问权**，多个线程可以一起读取。
+  `std::shared_mutex` 同样支持 `std::lock_guard`、`std::unique_lock`。和 `std::mutex` 做的一样，保证*写线程*的独占访问。**而那些无需修改数据结构的*读线程*，可以使用 [`std::shared_lock`](https://zh.cppreference.com/w/cpp/thread/shared_lock) 获取访问权**，多个线程可以一起读取。
 
   ```c++
   class Settings {
@@ -1988,7 +1991,13 @@ mutex Singleton::m_mtx;
 
 [C++ 中 new 操作符内幕：new operator、operator new、placement new - slgkaifa - 博客园？？？](https://www.cnblogs.com/slgkaifa/p/6887887.html)
 
-> - 只有C++11以上的库函数版本的new，delete等分配/释放内存相关的库函数是线程安全的
+[operator new, operator new[] - cppreference.com？？？](https://zh.cppreference.com/w/cpp/memory/new/operator_new)
+
+[new 表达式 - cppreference.com](https://zh.cppreference.com/w/cpp/language/new)
+
+> - 对于`int* a = new int();`而言，`new int()`叫做new表达式，在执行new表达式的时候，会先调用`operator new`决定需要分配的内存大小，再调用对应的构造函数**（重要！！！）**。
+>
+> - 只有C++11以上的库函数版本的new，delete等分配/释放内存相关的库函数是线程安全的，但他们并非原子操作，是可以被打断的。
 >
 > - 但是在我们调用new/delete时，涉及到的不仅仅只有调用库函数这一个步骤，所以是否线程安全应该考虑以下几个方面：
 >
@@ -1999,6 +2008,12 @@ mutex Singleton::m_mtx;
 >   3. C++ 只保证了 `operator new`、`operator delete` 这两个方面的线程安全（不包括用户定义的），其它方面就得自己保证了。前面的内容也都提到了。
 >
 > - 综上，**是否线程安全不能仅仅只看是否使用new/delete，还得看有没有涉及到数据竞争，共享变量**，要根据这些情况进行综合判定
+>
+> - **更加完善的回答**：首先需要知道：对于new表达式而言，会先调用`operator new`决定需要分配的内存大小，再调用对应的构造函数，最后返回构造好的对象的地址并赋值给对应的指针（`int* a = new int();`）。
+>
+>   所以这里其实有三方面需要考虑：1. `operator new`的库函数版本线程安全。2. 构造函数不一定线程安全。3. 赋值操作不一定线程安全。
+>
+> - 补充知识：对于new/delete表达式而言，申请和删除内存是线程安全的，因为操作系统全局有一把大锁，基本各语言和规定也能保证。
 
 - 前言：
 
@@ -2082,11 +2097,41 @@ mutex Singleton::m_mtx;
 
   C++ 只保证了 `operator new`、`operator delete` 这两个方面的线程安全（不包括用户定义的），其它方面就得自己保证了。前面的内容也都提到了。
 
-## 线程存储期？？？
+## 存储类说明符
+
+[必看：存储类说明符 - cppreference.com](https://zh.cppreference.com/w/cpp/language/storage_duration)
+
+以下关键词是*存储类说明符* ﻿：
+
+```c++
+auto			// (C++11 前) 
+register		// (C++17 前) 
+static
+thread_local	// (C++11 起) 
+extern
+mutable
+```
+
+*声明说明符序列* ﻿中只能出现一个存储类说明符，但 thread_local 可以与 static 或 extern 一起出现(C++11 起)。
+
+mutable 不会影响存储期。它的用法参考 [const/volatile](https://zh.cppreference.com/w/cpp/language/cv)。
+
+其他存储类说明符可以在以下声明的*声明说明符序列* ﻿中出现：
+
+![image-20250109150822541](assets/image-20250109150822541.png)
+
+由上，thread_local可以修饰：1. 静态成员。2. 普通/静态全局变量。3. 普通/静态局部变量
+
+## 线程存储期
 
 [必看：C++11中thread_local的使用](https://blog.csdn.net/fengbingchun/article/details/108691986)
 
 > - 其实可以把线程存储期的变量和全局存储期的变量进行对比，会发现其实两者都差不多，只有在存储期上有差别。
+> - `thread_local` 只对声明于命名空间作用域的对象、声明于块作用域的对象以及静态数据成员允许。它指示对象拥有**线程存储期**。它能与 `static` 或 `extern` 结合，以分别指定内部或外部链接（除了静态数据成员始终拥有外部链接），但附加的 `static` 不影响存储期。
+> - **线程存储期**：对象的存储在线程开始时分配，而在线程结束时解分配。每个线程拥有其自身的对象实例。唯有声明为 `thread_local` 的对象拥有此存储期。 `thread_local` 能与 `static` 或 `extern` 一同出现，以调整链接。
+> - **线程变量初始化时期**：
+>   - 非局部变量（全局变量，类中的静态成员变量）：所有具有线程局部存储期的非局部变量的初始化，会**作为线程启动的一部分进行**，并按顺序早于线程函数的执行开始。
+>   - 静态局部变量[[4]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#footnote4)（包括普通静态局部变量以及`thread_local`修饰的静态局部变量）：控制流首次**经过它的声明**时才会被初始化（除非它被[零初始化](https://zh.cppreference.com/w/cpp/language/zero_initialization)或[常量初始化](https://zh.cppreference.com/w/cpp/language/constant_initialization)）。在其后所有的调用中，声明都会被跳过。
 
 - 定义：
 
@@ -2096,17 +2141,13 @@ mutex Singleton::m_mtx;
 
   - **生命周期：** TLS 变量的生命周期从初始化时开始，到线程终止时结束。
   - **可见性：** TLS 变量在线程级别具有可见性。
-  - **使用范围：**
-    1. 命名空间(全局)变量；
-    2. 文件**静态**变量；
-    3. 函数**静态**变量（和静态局部变量类似，只进行一次初始化，不过线程局部变量具有线程存储期）；
-    4. **静态**成员变量（`thread_local`作为类成员变量时必须是static的）。
-
+  - **作用域：**thread_local只改变了变量的生命周期，不会改变变量作用域。（static也一样，也就是说线程局部变量只能在当前作用域中访问，不能在其他的作用域或者其他函数中访问该局部变量）
+  
 - 实际效果
 
   - 对于全局中定义的`thread_local`变量而言，就是将全局变量在各个线程都copy一份，互不干扰独立使用。
   - 对于类中定义的`thread_local`成员变量而言，必须用`static`修饰，且同一个线程内的该类的多个对象都会共享一个变量实例，并且只会在第一次执行这个成员函数时初始化这个变量实例，这一点是跟类的静态成员变量类似的，**不过静态成员变量具有全局存储期，`thread_local`静态成员变量具有线程存储期**
-  - 对于类的成员函数中定义的`thread_local`变量而言，默认是静态的，且同一个线程内的该类的多个对象都会共享一个变量实例，并且只会在第一次执行这个成员函数时初始化这个变量实例，这一点是跟局部静态成员变量类似的，**不过局部静态变量具有全局存储期，`thread_local`局部静态变量具有线程存储期**
+  - 对于类的成员函数/普通函数中定义的`thread_local`变量而言，**默认是静态的**，且同一个线程内的该类的多个对象都会共享一个变量实例，并且只会在第一次执行这个成员函数时初始化这个变量实例，这一点是跟局部静态成员变量类似的，**不过局部静态变量具有全局存储期，`thread_local`局部静态变量具有线程存储期**
 
 - 代码演示：
 
@@ -2159,20 +2200,20 @@ mutex Singleton::m_mtx;
   ```c++
   class A {
   public:
-      static thread_local int tmp1;
+      static thread_local int tmp1;	// 线程静态成员变量
       void operator()() {
           cout << "function" << endl;
-          static thread_local int tmp2 = (puts("init1"),0);
+          static thread_local int tmp2 = (puts("init1"),0);	// 线程静态局部变量
       }
   };
   thread_local int A::tmp1 = (puts("init"),0);
   
   // a, b是全局变量，对于线程来说，也就是共享数据，以此观测thread_local变量在不同线程，以及同一个线程不同对象中的表现
   A a;
-  A b;
+  A a1;
   void f() {	// 分别调用operator()
       a();
-      b();
+      a1();
   }
   
   int main() {
@@ -2220,6 +2261,8 @@ mutex Singleton::m_mtx;
   3. **性能优化**：在一些情况下，使用 TLS 可以提高性能。例如，如果一个函数需要一个大的缓冲区，而这个函数在多个线程中都被频繁调用，那么每次调用都分配和释放缓冲区可能会影响性能。你可以使用 TLS 来为每个线程分配一个缓冲区，然后在多次调用之间重用这个缓冲区。
 
   4. **错误处理**：在一些编程环境中，例如 C，错误信息通常通过全局变量来传递。这在多线程环境中可能会引发问题，因为一个线程的错误可能会覆盖另一个线程的错误。你可以使用 TLS 来为每个线程存储错误信息，从而避免这个问题。
+  
+- [#总结](#线程存储期)
 
 ## CPU变量
 
@@ -2245,43 +2288,47 @@ CPU 变量的概念很好理解。就像线程变量为每个线程提供独立�
 
 - 线程变量
 
-  - 拥有**线程（thread）**存储期。它的存储在线程开始时分配，并在线程结束时解分配。每个线程拥有它自身的对象实例。只有声明为 thread_local 的对象拥有此存储期（不考虑非标准用法）。它的初始化需要考虑局部与非局部两种情况：
+  - 拥有**线程（thread）**存储期。它的存储在线程开始时分配，并在线程结束时解分配。每个线程拥有它自身的对象实例。只有声明为 thread_local 的对象拥有此存储期（不考虑非标准用法）。它的**初始化**需要考虑局部与非局部两种情况：
 
-    - 非局部变量：所有具有线程局部存储期的非局部变量的初始化，会**作为线程启动的一部分进行**，并按顺序早于线程函数的执行开始。
-    - 静态局部变量[[4\]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#footnote4)（包括普通静态局部变量以及`thread_local`修饰的静态局部变量）：控制流首次**经过它的声明**时才会被初始化（除非它被[零初始化](https://zh.cppreference.com/w/cpp/language/zero_initialization)或[常量初始化](https://zh.cppreference.com/w/cpp/language/constant_initialization)）。在其后所有的调用中，声明都会被跳过。
+    - 非局部变量（全局变量，类中的静态成员变量）：所有具有线程局部存储期的非局部变量的初始化，会**作为线程启动的一部分进行**，并按顺序早于线程函数的执行开始。
+    - 静态局部变量[[4]](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/03共享数据.html#footnote4)（包括普通静态局部变量以及`thread_local`修饰的静态局部变量）：控制流首次**经过它的声明**时才会被初始化（除非它被[零初始化](https://zh.cppreference.com/w/cpp/language/zero_initialization)或[常量初始化](https://zh.cppreference.com/w/cpp/language/constant_initialization)）。在其后所有的调用中，声明都会被跳过。
 
-  - 示例：？？？（注意此处输出和线程存储期中的输出的区别）
+  - 示例：
 
     ```c++
-    thread_local static int n = (puts("init n"), 0);
+    thread_local int n = (puts("init n"), 0);
     
     void f() {
-        puts("thread f");
+    	puts("thread f");
     }
     
     void f2() {
-        cout << "f2" << endl;
-        thread_local static int n = (puts("init f2 n"), 0);
+    	cout << "f2" << endl;
+    	thread_local static int n = (puts("init f2 n"), 0);
     }
     
     int main() {
-        cout << "main" << endl;
-        thread{f}.join();
-        cout << endl;
-        f2();
-        f2();
+    	cout << "main" << endl;	// 主线程中的thread_local非局部变量初始化时期
+    	cout << endl;
+    
+    	thread{f}.join();		// 子线程中的thread_local非局部变量初始化时期
+    	cout << endl;
+    
+    	f2();					// 主线程中thread_local静态局部变量初始化时期
+    	f2();
     }
     ```
-
+    
     解释：
-
+    
     - 其中`f()`用于观测thread_local全局静态变量的初始化时期，`f2()`用于观测thread_local局部静态变量的初始化时期。
-
+    
     输出：
-
+    
     ```c++
     init n
     main
+        
     init n
     thread f
         
@@ -2289,10 +2336,10 @@ CPU 变量的概念很好理解。就像线程变量为每个线程提供独立�
     init f2 n
     f2
     ```
-
+    
     解释：
-
-    - 对于thread_local全局静态变量而言：变量的初始化会**作为线程启动的一部分**，初始化时期早于线程函数运行时期
+    
+    - 对于thread_local全局静态变量而言：变量的初始化会**作为线程启动的一部分**，初始化时期早于线程函数运行时期（以上是msvc的实现，对于g++而言，只有在首次使用线程全局静态变量的地方按顺序初始化所有的线程全局静态变量）
     - 对于thread_local局部静态变量而言：控制流首次**经过它的声明**时才会被初始化
 
 - CPU 变量
