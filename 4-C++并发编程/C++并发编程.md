@@ -4045,7 +4045,7 @@ int main() {
 
 - 较为复杂的读-改-写操作
 
-  [推荐看这个](https://zh.cppreference.com/w/cpp/atomic/atomic/compare_exchange)
+  [！！！推荐看这个](https://zh.cppreference.com/w/cpp/atomic/atomic/compare_exchange)
 
   `std::atomic<bool>` 提供多个“*读-改-写*”的操作，exchange 只是其中之一。它还提供了一种存储方式：**当前值与预期值一致时，当前值更新为新值，并返回true；否则，预期值更新为当前值，并返回false。**
 
@@ -4136,6 +4136,10 @@ int main() {
         valsout();
     }
     ```
+    
+  - 总结
+  
+    在看完上面两个函数的逻辑之后，需要注意的是对于“期待值”的解释：期待值指的不是期待原子对象最后变成该值，而是期待在调用“比较/转换”函数时，在我预想中的，原子对象里实际存储的值，也就是说该函数可以看成两步：compare，exchange；只有当原子对象中实际存储的值与我预想中的值相等时，我才进行exchange操作，否则告诉我原子对象中实际存储的值。
 
 ## std::atomic<T*>
 
@@ -4383,7 +4387,9 @@ void wake_up(){
 }
 ```
 
+### 内存序
 
+[？？？谈谈 C++ 中的内存顺序 (Memory Order) - Luyu Huang's Blog](https://luyuhuang.tech/2022/06/25/cpp-memory-order.html#总结)
 
 
 
