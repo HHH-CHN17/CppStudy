@@ -1862,9 +1862,8 @@ mutex Singleton::m_mtx;
   {
       friend class Singleton_Lazy_Base<Single_CRTP>;
   private:
-      static void Destory(Single_CRTP* p_sgl) {
-          delete p_sgl;
-      }
+  
+      
   public:
       void test(){
           std::cout << "hello word" << std::endl;
