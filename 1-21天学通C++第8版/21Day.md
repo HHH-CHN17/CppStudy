@@ -177,6 +177,32 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
     类 { T 成员 = { 实参1, 实参2, ... }; };
     ```
 
+    注意：
+
+    **按照c++11标准规定，拷贝列表初始化会先调用普通构造函数，然后再调用拷贝或者移动构造函数，不过编译器有自己的优化，所以具体实现有所不同**
+
+    ```c++
+    struct test{
+        test(){cout << "init \n"; }
+        test(test& t){cout << "test&" << endl;}
+        test(test&& t){cout << "test&&" << endl;}
+    };
+    
+    int main(){
+        test t1 = {};
+        cout << "---" << endl;
+        test t2 = test{};
+    }
+    // stdc++11 -fno-elide-constructors
+    // c++17后有复制消除，故体现不出差别
+    /*
+    init 
+    ---
+    init 
+    test&&
+    */
+    ```
+
   - 聚合初始化
 
     列表初始化的一种形式，当该类为聚合体时，就是聚合初始化
@@ -405,7 +431,7 @@ int main()
 
 ### C++11 constexpr 关键字
 
-
+[#decltype](../2-深入理解C++11/深入理解C++11.md/#decltype)
 
 ### 左值引用和右值引用
 
@@ -467,6 +493,38 @@ int main(){
     x2.show();					// 此时x2就是make_x()的返回值，x2延长了返回值的生命周期。
 }
 ```
+
+### 返回值中的左值/右值引用
+
+```c++
+int& f() {
+    int a = 1;
+    return a;//局部变量 'a'的地址可能转义该函数
+}
+
+int& f1() {
+    int* p = new int(1);
+    return *p; // 返回动态分配内存的引用，或者返回一个全局变量之类，可以避免悬空引用
+}
+
+int&& f2() {
+    int a = 1;
+    return move(a);	// 返回值为右值引用时，只能返回一个右值
+}
+
+int f3() {
+    int a = 1;
+    return a;
+}
+```
+
+注意：
+
+- 不论返回值是左值引用还是右值引用，其值类别始终是右值，
+
+### 值类别
+
+[C++表达式的类型与值类别详解-CSDN博客](https://blog.csdn.net/m0_62327743/article/details/134178090)
 
 ### std::move
 
@@ -665,7 +723,7 @@ ref_a = 6;
     
     ```
 
-### Union关键字
+### 。。。Union关键字
 
 [【C++学习笔记】Union关键字](https://www.cnblogs.com/yyehl/p/6652928.html)
 
