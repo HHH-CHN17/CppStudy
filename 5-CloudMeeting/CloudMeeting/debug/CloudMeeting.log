@@ -1,0 +1,560 @@
+﻿   Qt/MSBuild: 3.3.1.1
+   Qt: 5.15.2
+  qrc_resource.cpp
+  moc_AudioInput.cpp
+  moc_AudioOutput.cpp
+  moc_chatmessage.cpp
+  moc_mytcpsocket.cpp
+  moc_mytextedit.cpp
+  moc_myvideosurface.cpp
+  moc_partner.cpp
+  moc_recvsolve.cpp
+  moc_sendimg.cpp
+  moc_sendtext.cpp
+  moc_widget.cpp
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xba 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xbc 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xbd 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xbe 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xc0 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xc1 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xc2 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xc4 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xc6 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xd2 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xd6 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xd8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xd9 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xda 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xdb 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xdc 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xdd 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xe4 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xe8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xe9 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xec 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xee 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xef 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf0 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf1 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf2 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf4 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf6 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf7 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0x104 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0x105 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0x107 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0x108 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(3,10): error C1083: 无法打开包括文件: “QObject”: No such file or directory
+  (编译源文件“Debug/moc_AudioInput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\chatmessage.h(4,10): error C1083: 无法打开包括文件: “QWidget”: No such file or directory
+  (编译源文件“Debug/moc_chatmessage.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\partner.h(4,10): error C1083: 无法打开包括文件: “QLabel”: No such file or directory
+  (编译源文件“Debug/moc_partner.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xcb 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xcf 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xd1 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xd2 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xd3 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xd4 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xd5 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xd7 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xd8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\netheader.h(3,10): error C1083: 无法打开包括文件: “QMetaType”: No such file or directory
+  (编译源文件“Debug/moc_recvsolve.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xd9 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xdb 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xdc 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0xe2 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x15c 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x15d 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x15e 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x15f 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x160 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x162 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x164 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x166 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x167 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x168 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x169 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x16a 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x16d 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x16e 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x16f 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x173 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x174 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x175 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x178 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x179 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x17a 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x17f 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x180 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioOutput.h(1,1): warning C4828: 文件包含在偏移 0x60 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioOutput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x183 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioOutput.h(1,1): warning C4828: 文件包含在偏移 0x61 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioOutput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioOutput.h(1,1): warning C4828: 文件包含在偏移 0x62 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioOutput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x184 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioOutput.h(1,1): warning C4828: 文件包含在偏移 0x65 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioOutput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x187 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioOutput.h(1,1): warning C4828: 文件包含在偏移 0x66 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_AudioOutput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x188 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x18b 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\sendtext.h(4,10): error C1083: 无法打开包括文件: “QThread”: No such file or directory
+  (编译源文件“Debug/moc_sendtext.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x18e 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x18f 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x191 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x194 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x197 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x199 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xab 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x19d 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xad 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x19e 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x1a3 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xae 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioOutput.h(3,10): error C1083: 无法打开包括文件: “QObject”: No such file or directory
+  (编译源文件“Debug/moc_AudioOutput.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x1a5 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xaf 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xb3 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x1a6 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xb6 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xb7 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3cc 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xb8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xba 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3cd 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xbe 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xc1 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xc3 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3cf 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3d1 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xc7 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3d2 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3d3 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3d5 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xca 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3d6 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xd1 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3d7 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xd2 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3da 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xd7 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xd8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3db 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xd9 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xdb 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3df 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3e0 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xdd 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xdf 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xe0 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3e6 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xe1 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xe2 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3e7 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xe5 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3f1 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xeb 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(1,1): warning C4828: 文件包含在偏移 0xec 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3f3 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\sendimg.h(4,10): error C1083: 无法打开包括文件: “QThread”: No such file or directory
+  (编译源文件“Debug/moc_sendimg.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(1,1): warning C4828: 文件包含在偏移 0x3f6 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\myvideosurface.h(4,10): error C1083: 无法打开包括文件: “QAbstractVideoSurface”: No such file or directory
+  (编译源文件“Debug/moc_myvideosurface.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytextedit.h(4,10): error C1083: 无法打开包括文件: “QWidget”: No such file or directory
+  (编译源文件“Debug/moc_mytextedit.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\mytcpsocket.h(4,10): error C1083: 无法打开包括文件: “QThread”: No such file or directory
+  (编译源文件“Debug/moc_mytcpsocket.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xba 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xbc 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xbd 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xbe 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xc0 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xc1 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xc2 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xc4 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xc6 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xd2 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xd6 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xd8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xd9 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xda 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xdb 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xdc 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xdd 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xe4 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xe8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xe9 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xec 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xee 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xef 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf0 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf1 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf2 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf4 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf6 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf7 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0xf8 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0x104 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0x105 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0x107 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(1,1): warning C4828: 文件包含在偏移 0x108 处开始的字符，该字符在当前源字符集中无效(代码页 65001)。
+  (编译源文件“Debug/moc_widget.cpp”)
+  
+D:\1_Code\Visual Studio 2022\CloudMeeting\AudioInput.h(3,10): error C1083: 无法打开包括文件: “QObject”: No such file or directory
+  (编译源文件“Debug/moc_widget.cpp”)
+  

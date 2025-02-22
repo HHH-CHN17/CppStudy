@@ -1,0 +1,920 @@
+2024-03-03 15:08:39 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-03-03 15:08:39 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x000000000000055C
+2024-03-03 15:08:40 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000008368
+2024-03-03 15:08:40 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000007D00
+2024-03-03 15:08:40 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000006B3C
+2024-03-03 15:08:41 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000006930
+2024-03-03 15:33:38 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::427>>>failed to connenct 192.168.232.128:8888
+2024-03-03 15:33:46 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::427>>>failed to connenct 192.168.232.128:8888
+2024-03-03 15:34:51 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::427>>>failed to connenct 127.0.0.1:8888
+2024-03-03 15:34:57 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000006B3C
+2024-03-03 15:34:58 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000008368
+2024-03-03 15:35:00 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000007D00
+2024-03-03 15:35:01 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000006930
+2024-03-03 15:36:34 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-03-03 15:36:34 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000007FB4
+2024-03-03 15:36:35 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000007120
+2024-03-03 15:36:35 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x000000000000189C
+2024-03-03 15:36:35 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000014DC
+2024-03-03 15:36:35 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000005D70
+2024-03-03 15:37:14 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::427>>>failed to connenct 192.168.232.128:8888
+2024-03-03 15:42:13 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::427>>>failed to connenct 192.168.232.128:8888
+2024-03-03 15:48:13 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::427>>>failed to connenct 192.168.232.128:8008
+2024-03-03 15:51:33 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::419>>>succeeed connecting to 192.168.232.128:8008
+2024-03-03 15:51:48 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::485>>>meeting not exist
+2024-03-03 15:51:50 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::485>>>meeting not exist
+2024-03-03 15:51:54 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::269>>>create meeting
+2024-03-03 15:51:55 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::461>>>succeed creating room 31997
+2024-03-03 15:51:59 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::348>>>open camera
+2024-03-03 15:52:01 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::335>>>close camera
+2024-03-03 15:52:07 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_exitmeetBtn_clicked::323>>>exit meeting
+2024-03-03 15:57:37 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000014DC
+2024-03-03 15:57:37 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000007120
+2024-03-03 15:57:39 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x000000000000189C
+2024-03-03 15:57:39 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000005D70
+2024-03-03 16:05:09 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-03-03 16:05:09 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000007974
+2024-03-03 16:05:09 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000002014
+2024-03-03 16:05:09 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000085BC
+2024-03-03 16:05:10 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000078F0
+2024-03-03 16:05:10 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000007BC4
+2024-03-03 16:05:22 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::419>>>succeeed connecting to 192.168.232.128:8008
+2024-03-03 16:05:24 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::269>>>create meeting
+2024-03-03 16:05:26 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::461>>>succeed creating room 32303
+2024-03-03 16:15:04 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_exitmeetBtn_clicked::323>>>exit meeting
+2024-03-03 16:35:29 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::419>>>succeeed connecting to 192.168.232.128:8008
+2024-03-03 16:35:32 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::269>>>create meeting
+2024-03-03 16:35:33 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::461>>>succeed creating room 32802
+2024-03-03 16:46:34 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-03-03 16:46:34 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000003ED4
+2024-03-03 16:46:35 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000001E08
+2024-03-03 16:46:35 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000006538
+2024-03-03 16:46:35 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000006EBC
+2024-03-03 16:46:35 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000007708
+2024-03-03 16:46:47 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::419>>>succeeed connecting to 192.168.232.128:8008
+2024-03-03 16:46:52 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::269>>>create meeting
+2024-03-03 16:46:53 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::461>>>succeed creating room 32802
+2024-03-03 17:10:18 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_exitmeetBtn_clicked::323>>>exit meeting
+2024-03-03 17:10:20 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::419>>>succeeed connecting to 192.168.232.128:8008
+2024-03-03 17:10:22 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::269>>>create meeting
+2024-03-03 17:10:24 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::461>>>succeed creating room 32802
+2024-03-03 17:14:47 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-03-03 17:14:56 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::348>>>open camera
+2024-03-03 17:15:00 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::335>>>close camera
+2024-03-03 17:15:07 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::348>>>open camera
+2024-03-03 17:15:17 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::335>>>close camera
+2024-03-03 17:15:19 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::348>>>open camera
+2024-03-03 17:15:20 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::348>>>open camera
+2024-03-03 17:15:28 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::335>>>close camera
+2024-03-03 17:15:30 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::348>>>open camera
+2024-03-03 17:15:33 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-03-03 17:15:34 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_exitmeetBtn_clicked::323>>>exit meeting
+2024-03-03 17:15:38 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::419>>>succeeed connecting to 192.168.232.128:8008
+2024-03-03 17:15:40 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::269>>>create meeting
+2024-03-03 17:15:41 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::461>>>succeed creating room 32802
+2024-03-03 17:15:48 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-03-03 17:15:55 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::348>>>open camera
+2024-03-03 17:15:57 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::335>>>close camera
+2024-03-03 17:16:12 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::348>>>open camera
+2024-03-03 17:16:20 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::335>>>close camera
+2024-03-03 17:16:44 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-03-03 17:16:48 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000006EBC
+2024-03-03 17:16:49 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000001E08
+2024-03-03 17:16:50 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000006538
+2024-03-03 17:16:52 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000007708
+2024-03-10 15:32:05 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-03-10 15:32:05 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000004C60
+2024-03-10 15:32:06 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000005DB8
+2024-03-10 15:32:06 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000008DE0
+2024-03-10 15:32:07 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000005FAC
+2024-03-10 15:32:07 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x000000000000830C
+2024-03-10 15:32:11 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000005FAC
+2024-03-10 15:32:12 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000005DB8
+2024-03-10 15:57:56 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-03-10 15:57:56 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000001754
+2024-03-10 15:57:57 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000006830
+2024-03-10 15:57:57 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000008164
+2024-03-10 15:57:57 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000006634
+2024-03-10 15:57:57 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x000000000000489C
+2024-03-10 15:58:33 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000006634
+2024-03-10 15:58:35 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000006830
+2024-03-10 15:58:37 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000008164
+2024-03-10 15:58:37 D:\VSProject\CloudMeeting\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x000000000000489C
+2024-04-06 20:19:09 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-06 20:19:09 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000061B4
+2024-04-06 20:19:10 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000006F38
+2024-04-06 20:19:10 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000062EC
+2024-04-06 20:19:10 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000007080
+2024-04-06 20:19:11 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000007174
+2024-04-06 20:24:52 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::419>>>succeeed connecting to 192.168.232.128:8000
+2024-04-06 20:24:56 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::269>>>create meeting
+2024-04-06 20:24:57 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::461>>>succeed creating room 22613
+2024-04-06 20:25:00 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::348>>>open camera
+2024-04-06 20:25:37 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000007080
+2024-04-06 20:25:38 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000006F38
+2024-04-06 20:25:40 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000062EC
+2024-04-06 20:25:41 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000007174
+2024-04-11 15:43:11 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-11 15:43:11 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000298B0
+2024-04-11 15:43:12 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000029CEC
+2024-04-11 15:43:12 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000029CF8
+2024-04-11 15:43:13 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000029E38
+2024-04-11 15:43:13 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000029E80
+2024-04-11 15:43:17 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000029E38
+2024-04-11 15:43:30 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-11 15:43:30 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000012F88
+2024-04-11 15:43:31 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000029C30
+2024-04-11 15:43:31 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000029C38
+2024-04-11 15:43:31 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000029C40
+2024-04-11 15:43:31 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000029C7C
+2024-04-11 15:43:35 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000029C40
+2024-04-11 15:43:37 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000029C30
+2024-04-11 15:43:39 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000029C38
+2024-04-11 15:43:39 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000029C7C
+2024-04-12 13:31:10 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-12 13:31:10 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x000000000000BDC4
+2024-04-12 13:31:11 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x000000000000C064
+2024-04-12 13:31:11 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000027F94
+2024-04-12 13:31:11 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000023F0
+2024-04-12 13:31:11 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x000000000000B9B4
+2024-04-12 13:31:13 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000023F0
+2024-04-12 13:31:15 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x000000000000C064
+2024-04-12 13:31:17 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000027F94
+2024-04-12 13:31:17 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x000000000000B9B4
+2024-04-16 15:29:09 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-16 15:29:09 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000013A8
+2024-04-16 15:29:10 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x000000000000561C
+2024-04-16 15:29:10 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000005624
+2024-04-16 15:29:11 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000056C4
+2024-04-16 15:29:11 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000056D8
+2024-04-16 15:32:50 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::419>>>succeeed connecting to 10.157.161.210:8888
+2024-04-16 15:36:15 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::269>>>create meeting
+2024-04-16 15:36:16 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::461>>>succeed creating room 5220
+2024-04-16 15:36:24 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-04-16 15:38:15 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::42>>>start collecting audio
+2024-04-16 15:38:21 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::52>>>stop collecting audio
+2024-04-16 15:38:25 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::348>>>open camera
+2024-04-16 15:38:26 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::42>>>start collecting audio
+2024-04-16 15:39:52 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::52>>>stop collecting audio
+2024-04-16 15:40:24 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::42>>>start collecting audio
+2024-04-16 15:41:14 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::52>>>stop collecting audio
+2024-04-16 16:00:08 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-04-16 16:00:08 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_exitmeetBtn_clicked::323>>>exit meeting
+2024-04-16 16:00:32 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000056C4
+2024-04-16 16:00:33 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x000000000000561C
+2024-04-16 16:00:33 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000005624
+2024-04-16 16:00:34 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000056D8
+2024-04-16 16:00:34 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::~Widget::248>>>-------------------Application End-----------------
+2024-04-16 16:01:36 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-16 16:01:36 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000005BC8
+2024-04-16 16:01:36 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000002970
+2024-04-16 16:01:36 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000044E8
+2024-04-16 16:01:36 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000044D4
+2024-04-16 16:01:37 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000005308
+2024-04-16 16:01:41 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::419>>>succeeed connecting to 10.157.161.210:8888
+2024-04-16 16:01:49 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::269>>>create meeting
+2024-04-16 16:01:50 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::461>>>succeed creating room 5220
+2024-04-16 16:03:35 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::419>>>succeeed connecting to 10.157.161.210:8888
+2024-04-16 16:05:37 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000044D4
+2024-04-16 16:05:38 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000002970
+2024-04-16 16:05:39 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000044E8
+2024-04-16 16:05:41 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000005308
+2024-04-16 16:10:01 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-16 16:10:01 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000005434
+2024-04-16 16:10:01 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000005F34
+2024-04-16 16:10:01 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000007C8
+2024-04-16 16:10:01 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000003974
+2024-04-16 16:10:02 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000005A70
+2024-04-16 16:10:13 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::419>>>succeeed connecting to 10.157.161.210:8888
+2024-04-16 16:10:17 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::269>>>create meeting
+2024-04-16 16:10:18 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::461>>>succeed creating room 5901
+2024-04-16 18:15:45 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000003974
+2024-04-16 18:15:46 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000005F34
+2024-04-17 10:01:13 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-17 10:01:13 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000051C4
+2024-04-17 10:01:14 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000053E0
+2024-04-17 10:01:14 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000022A4
+2024-04-17 10:01:15 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000004278
+2024-04-17 10:01:15 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000013CC
+2024-04-17 10:01:23 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000004278
+2024-04-17 10:01:24 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x00000000000053E0
+2024-04-17 10:01:26 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000022A4
+2024-04-17 10:01:27 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000013CC
+2024-04-17 10:19:41 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-17 10:19:41 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000000E70
+2024-04-17 10:19:41 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000003758
+2024-04-17 10:19:41 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000002BC4
+2024-04-17 10:19:41 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000027C8
+2024-04-17 10:19:42 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000003DA0
+2024-04-17 10:19:43 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000027C8
+2024-04-17 10:19:45 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000003758
+2024-04-17 10:19:47 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000002BC4
+2024-04-17 10:19:48 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000003DA0
+2024-04-18 10:03:01 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 10:03:01 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000102AC
+2024-04-18 10:03:02 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000011BDC
+2024-04-18 10:03:02 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000004068
+2024-04-18 10:03:02 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000065AC
+2024-04-18 10:03:07 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000115DC
+2024-04-18 13:25:22 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 13:25:22 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000010B88
+2024-04-18 13:25:22 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000011E80
+2024-04-18 13:25:22 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000112B8
+2024-04-18 13:25:23 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000133E8
+2024-04-18 13:25:23 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000131A8
+2024-04-18 13:25:27 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000133E8
+2024-04-18 13:25:29 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000011E80
+2024-04-18 13:25:31 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000112B8
+2024-04-18 13:25:31 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000131A8
+2024-04-18 13:44:35 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 13:44:35 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000005770
+2024-04-18 13:45:38 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 13:45:38 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000125C0
+2024-04-18 13:45:52 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 13:45:52 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000012150
+2024-04-18 13:47:18 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 13:47:18 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000010A68
+2024-04-18 13:47:27 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000011390
+2024-04-18 13:47:33 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000013938
+2024-04-18 13:47:33 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000013684
+2024-04-18 13:47:33 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000001130
+2024-04-18 13:47:35 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000013684
+2024-04-18 13:47:37 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000011390
+2024-04-18 13:47:39 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000013938
+2024-04-18 13:47:39 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000001130
+2024-04-18 13:53:43 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 13:53:43 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000136C4
+2024-04-18 13:53:44 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000011544
+2024-04-18 13:53:44 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000127C8
+2024-04-18 13:53:44 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000136EC
+2024-04-18 13:53:44 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000011FC0
+2024-04-18 13:53:50 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000136EC
+2024-04-18 13:53:52 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000011544
+2024-04-18 13:53:52 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000127C8
+2024-04-18 13:53:52 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000011FC0
+2024-04-18 14:17:15 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 14:17:15 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000012420
+2024-04-18 14:17:15 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000011848
+2024-04-18 14:17:16 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x00000000000045E4
+2024-04-18 14:17:16 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000010950
+2024-04-18 14:17:16 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000012280
+2024-04-18 14:17:16 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000012AF8
+2024-04-18 14:17:20 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000012AF8
+2024-04-18 14:17:21 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000011848
+2024-04-18 14:17:22 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000012280
+2024-04-18 14:17:24 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000010950
+2024-04-18 14:17:43 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 14:17:43 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000011090
+2024-04-18 14:17:43 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000005828
+2024-04-18 14:17:43 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x0000000000005778
+2024-04-18 14:17:43 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000004E10
+2024-04-18 14:17:43 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000012E64
+2024-04-18 14:17:44 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000013664
+2024-04-18 14:17:48 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000013664
+2024-04-18 14:17:49 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000005828
+2024-04-18 14:17:50 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000012E64
+2024-04-18 14:18:01 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 14:18:01 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000133D8
+2024-04-18 14:18:02 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000112F4
+2024-04-18 14:18:02 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x0000000000004054
+2024-04-18 14:18:02 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000125E8
+2024-04-18 14:18:02 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000011CA8
+2024-04-18 14:18:02 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000006284
+2024-04-18 14:18:06 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000006284
+2024-04-18 14:18:08 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x00000000000112F4
+2024-04-18 14:18:08 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000011CA8
+2024-04-18 14:18:10 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000125E8
+2024-04-18 14:22:08 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 14:22:08 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000014320
+2024-04-18 14:22:08 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000105FC
+2024-04-18 14:22:08 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x0000000000003CBC
+2024-04-18 14:22:09 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000055B0
+2024-04-18 14:22:09 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000013570
+2024-04-18 14:22:09 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000134B4
+2024-04-18 14:22:33 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 10.157.161.210:8888
+2024-04-18 14:22:49 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 10.157.161.210:8888
+2024-04-18 14:23:20 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 10.157.161.210:8888
+2024-04-18 14:23:31 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 10.157.161.210:8888
+2024-04-18 14:23:59 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 10.157.161.210:8888
+2024-04-18 14:24:19 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 10.157.161.210:8888
+2024-04-18 14:24:29 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-04-18 14:24:30 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 12995
+2024-04-18 14:24:36 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-04-18 14:24:56 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-18 14:25:02 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-18 14:25:04 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::60>>>stop sending picture thread: 0x0000000000003CBC
+2024-04-18 14:25:14 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-18 14:25:46 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-18 14:25:46 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-04-18 14:25:54 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_exitmeetBtn_clicked::322>>>exit meeting
+2024-04-18 14:26:02 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000134B4
+2024-04-18 14:26:03 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x00000000000105FC
+2024-04-18 14:26:03 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000013570
+2024-04-18 14:26:03 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000055B0
+2024-04-18 14:26:03 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::~Widget::247>>>-------------------Application End-----------------
+2024-04-18 14:26:46 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 14:26:46 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000012F1C
+2024-04-18 14:26:47 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000047BC
+2024-04-18 14:26:47 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x00000000000139E0
+2024-04-18 14:26:47 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000138B0
+2024-04-18 14:26:47 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x000000000001164C
+2024-04-18 14:26:47 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x000000000001387C
+2024-04-18 14:27:14 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 10.157.161.210:8888
+2024-04-18 14:27:17 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-04-18 14:27:18 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 12995
+2024-04-18 14:27:30 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-04-18 14:27:38 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-18 14:28:34 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-18 14:28:36 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::60>>>stop sending picture thread: 0x00000000000139E0
+2024-04-18 14:28:41 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::347>>>open camera
+2024-04-18 14:28:41 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-18 14:29:03 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-18 14:29:04 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-18 14:31:04 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 14:31:04 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000011D9C
+2024-04-18 14:31:05 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000000AD4
+2024-04-18 14:31:05 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000012540
+2024-04-18 14:31:05 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000134CC
+2024-04-18 14:31:05 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000126D8
+2024-04-18 14:31:23 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000126D8
+2024-04-18 14:31:25 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000000AD4
+2024-04-18 14:31:34 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 14:31:34 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x000000000001389C
+2024-04-18 14:31:35 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000000EB0
+2024-04-18 14:31:35 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000003A10
+2024-04-18 14:31:35 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000011930
+2024-04-18 14:31:35 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000002EDC
+2024-04-18 14:34:59 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 10.157.161.210:8888
+2024-04-18 14:35:04 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-04-18 14:35:05 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 12995
+2024-04-18 14:35:16 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-04-18 14:35:26 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::347>>>open camera
+2024-04-18 14:35:27 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-18 14:36:02 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-18 14:36:03 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-18 14:36:05 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-18 14:36:05 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-18 14:36:08 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-18 14:36:25 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-04-18 14:36:33 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000002EDC
+2024-04-18 14:36:33 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000000EB0
+2024-04-18 14:36:34 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000011930
+2024-04-18 14:36:35 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000003A10
+2024-04-18 14:36:35 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::~Widget::247>>>-------------------Application End-----------------
+2024-04-18 14:50:28 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 14:50:28 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000012A5C
+2024-04-18 14:50:28 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000133C8
+2024-04-18 14:50:29 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000013770
+2024-04-18 14:50:29 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000012B20
+2024-04-18 14:50:29 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000012468
+2024-04-18 14:50:31 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000012468
+2024-04-18 15:26:34 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 15:26:34 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000052A8
+2024-04-18 15:26:34 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000012160
+2024-04-18 15:26:35 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x000000000001342C
+2024-04-18 15:26:35 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000001640
+2024-04-18 15:26:35 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000147E8
+2024-04-18 15:26:39 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000147E8
+2024-04-18 15:26:40 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000012160
+2024-04-18 15:26:41 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000001640
+2024-04-18 15:26:43 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x000000000001342C
+2024-04-18 15:26:59 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 15:26:59 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000000150
+2024-04-18 15:27:00 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000014B50
+2024-04-18 15:27:00 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000005600
+2024-04-18 15:27:00 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000014B24
+2024-04-18 15:27:00 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000014704
+2024-04-18 15:27:02 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000014704
+2024-04-18 15:27:04 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000014B50
+2024-04-18 15:27:04 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000014B24
+2024-04-18 15:27:06 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000005600
+2024-04-18 15:27:26 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 15:27:26 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000067DC
+2024-04-18 15:27:27 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000037F4
+2024-04-18 15:27:27 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000014228
+2024-04-18 15:27:27 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000129F0
+2024-04-18 15:27:27 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x000000000000211C
+2024-04-18 15:27:29 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x000000000000211C
+2024-04-18 15:27:31 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x00000000000037F4
+2024-04-18 15:27:31 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000129F0
+2024-04-18 15:27:33 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000014228
+2024-04-18 15:30:35 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 15:30:35 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x000000000001397C
+2024-04-18 15:30:35 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000012AB4
+2024-04-18 15:30:35 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000127B4
+2024-04-18 15:30:35 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x000000000001460C
+2024-04-18 15:30:35 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000130BC
+2024-04-18 15:30:45 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 10.157.161.210:8888
+2024-04-18 15:30:55 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-04-18 15:30:55 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 12995
+2024-04-18 15:31:02 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-04-18 15:31:11 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-18 15:31:31 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-18 15:31:32 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-18 15:32:12 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-18 15:32:19 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000130BC
+2024-04-18 15:32:19 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000012AB4
+2024-04-18 15:32:21 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x000000000001460C
+2024-04-18 15:32:22 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-04-18 15:32:22 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000127B4
+2024-04-18 15:32:22 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::~Widget::247>>>-------------------Application End-----------------
+2024-04-18 15:35:55 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 15:35:55 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000012EC4
+2024-04-18 15:35:55 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x000000000001234C
+2024-04-18 15:35:56 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000013554
+2024-04-18 15:35:56 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000014074
+2024-04-18 15:35:56 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000014A78
+2024-04-18 15:35:58 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000014A78
+2024-04-18 15:35:59 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x000000000001234C
+2024-04-18 15:36:00 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000014074
+2024-04-18 15:36:04 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-18 15:36:04 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000013FE8
+2024-04-18 15:36:04 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000142FC
+2024-04-18 15:36:05 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000014558
+2024-04-18 15:36:05 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000011E0
+2024-04-18 15:36:05 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000013DC8
+2024-04-18 15:36:18 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 10.157.161.210:8888
+2024-04-18 16:18:27 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-04-18 16:18:32 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 12995
+2024-04-18 16:18:41 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-04-18 16:19:28 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-04-18 16:32:20 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000013DC8
+2024-04-18 16:32:21 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x00000000000142FC
+2024-04-18 16:32:23 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000011E0
+2024-04-19 08:22:19 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-19 08:22:19 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000044C8
+2024-04-19 08:22:21 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000117F0
+2024-04-19 08:22:21 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000011DA8
+2024-04-19 08:22:21 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000010CB4
+2024-04-19 08:22:21 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000010370
+2024-04-19 08:22:25 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000010370
+2024-04-19 08:22:27 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x00000000000117F0
+2024-04-19 08:22:27 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000010CB4
+2024-04-19 08:22:29 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000011DA8
+2024-04-19 08:24:28 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-19 08:24:28 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000011C90
+2024-04-19 08:24:28 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000010B88
+2024-04-19 08:24:29 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x000000000000FE34
+2024-04-19 08:24:29 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000011538
+2024-04-19 08:24:29 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000013A38
+2024-04-19 08:25:02 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 10.157.161.210:8888
+2024-04-19 08:25:06 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-04-19 08:25:07 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 15610
+2024-04-19 08:26:19 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-04-19 08:26:36 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-19 08:27:22 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-19 08:27:22 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-04-19 08:34:01 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-19 08:34:01 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000013450
+2024-04-19 08:34:02 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000011D50
+2024-04-19 08:34:02 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x0000000000013DC4
+2024-04-19 08:34:02 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000010970
+2024-04-19 08:34:02 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000118F0
+2024-04-19 08:34:02 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000012AB8
+2024-04-19 08:34:04 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000012AB8
+2024-04-19 08:34:06 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000011D50
+2024-04-19 08:34:06 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000118F0
+2024-04-19 08:35:45 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-19 08:35:45 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000014170
+2024-04-19 08:35:45 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000014638
+2024-04-19 08:35:45 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x00000000000119A4
+2024-04-19 08:35:45 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000129FC
+2024-04-19 08:35:45 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000003B78
+2024-04-19 08:35:45 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x000000000000FD40
+2024-04-19 08:35:55 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 10.157.161.210:8888
+2024-04-19 08:36:19 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-04-19 08:36:20 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 15610
+2024-04-19 08:36:26 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-04-19 08:36:40 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_openVedio_clicked::347>>>open camera
+2024-04-19 08:36:41 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-19 08:37:17 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-19 08:37:19 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::60>>>stop sending picture thread: 0x00000000000119A4
+2024-04-19 08:37:38 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-19 08:37:54 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-19 08:37:54 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-19 08:38:13 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-19 08:38:13 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-04-19 08:38:13 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_exitmeetBtn_clicked::322>>>exit meeting
+2024-04-19 08:38:21 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 10.157.161.210:8888
+2024-04-19 08:38:30 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-04-19 08:38:31 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 15610
+2024-04-19 08:38:31 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-04-19 08:38:48 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-04-19 08:38:48 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::575>>>240.127.0.0 not exist
+2024-04-19 08:39:38 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-04-19 08:40:06 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-04-19 08:40:10 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x000000000000FD40
+2024-04-19 08:40:10 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000014638
+2024-04-19 08:40:13 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-19 08:40:13 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x000000000000548C
+2024-04-19 08:40:14 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000013150
+2024-04-19 08:40:14 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x00000000000136D8
+2024-04-19 08:40:14 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000005A58
+2024-04-19 08:40:14 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000146EC
+2024-04-19 08:40:14 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000011D9C
+2024-04-19 08:40:28 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 10.157.161.210:8888
+2024-04-19 08:40:33 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-04-19 08:40:34 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 15610
+2024-04-19 08:40:56 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-04-19 08:41:06 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::startCollect::80>>>start collecting audio
+2024-04-19 08:41:38 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::stopCollect::90>>>stop collecting audio
+2024-04-19 08:41:39 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::60>>>stop sending picture thread: 0x00000000000136D8
+2024-04-19 08:41:44 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-04-19 15:07:00 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-04-19 15:07:00 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000151E0
+2024-04-19 15:07:02 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000013430
+2024-04-19 15:07:02 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x0000000000012F10
+2024-04-19 15:07:02 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000012520
+2024-04-19 15:07:02 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000143A8
+2024-04-19 15:07:02 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000131B4
+2024-04-19 15:07:04 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000131B4
+2024-04-19 15:07:06 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000013430
+2024-04-19 15:07:06 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000143A8
+2024-04-19 15:07:08 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000012520
+2024-05-10 10:24:50 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-10 10:24:50 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000016840
+2024-05-10 10:24:50 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000018310
+2024-05-10 10:24:51 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x0000000000016988
+2024-05-10 10:24:51 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000015230
+2024-05-10 10:24:51 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000178A0
+2024-05-10 10:24:51 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000182F0
+2024-05-10 21:44:41 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000182F0
+2024-05-10 21:44:43 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000018310
+2024-05-10 21:44:43 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000178A0
+2024-05-10 21:44:43 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000015230
+2024-05-11 04:24:51 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-11 04:24:51 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000050E8
+2024-05-11 04:24:51 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000004DC8
+2024-05-11 04:24:51 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x00000000000056C4
+2024-05-11 04:24:51 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000005A20
+2024-05-11 04:24:51 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000005778
+2024-05-11 04:24:51 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000002B50
+2024-05-11 14:36:56 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000002B50
+2024-05-11 14:36:58 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000004DC8
+2024-05-11 14:36:58 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000005778
+2024-05-12 09:56:49 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-12 09:56:49 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000006D84
+2024-05-12 09:56:50 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000004B8
+2024-05-12 09:56:50 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x00000000000076EC
+2024-05-12 09:56:50 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000006540
+2024-05-12 09:56:50 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000003230
+2024-05-12 09:56:50 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000005F08
+2024-05-12 13:42:35 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-12 13:42:35 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000010B8
+2024-05-12 13:42:36 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000006488
+2024-05-12 13:42:36 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x0000000000005DCC
+2024-05-12 13:42:36 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000006464
+2024-05-12 13:42:36 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000033F4
+2024-05-12 13:42:36 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000007DF0
+2024-05-15 12:07:49 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-15 12:07:49 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000002518
+2024-05-15 12:07:49 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x000000000000667C
+2024-05-15 12:07:50 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x00000000000068A0
+2024-05-15 12:07:50 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000064E8
+2024-05-15 12:07:50 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000005B0C
+2024-05-15 12:07:50 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000074A4
+2024-05-15 13:12:52 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000074A4
+2024-05-15 13:12:54 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x000000000000667C
+2024-05-15 13:12:54 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000005B0C
+2024-05-15 13:12:56 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000064E8
+2024-05-16 13:37:04 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-16 13:37:04 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x000000000000518C
+2024-05-16 13:37:05 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000060A4
+2024-05-16 13:37:05 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x0000000000004DAC
+2024-05-16 13:37:05 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x000000000000638C
+2024-05-16 13:37:05 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000045D8
+2024-05-16 13:37:05 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000007DC4
+2024-05-16 13:37:23 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2024-05-16 13:37:25 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-05-16 13:37:26 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 97826
+2024-05-16 13:40:45 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_exitmeetBtn_clicked::322>>>exit meeting
+2024-05-16 13:40:55 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 10.157.161.210:8888
+2024-05-16 13:41:01 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-05-16 13:41:02 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 97826
+2024-05-16 13:41:37 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-05-16 20:39:49 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-05-16 20:39:50 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_exitmeetBtn_clicked::322>>>exit meeting
+2024-05-16 20:39:54 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000007DC4
+2024-05-16 20:39:54 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x00000000000060A4
+2024-05-16 20:39:54 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000045D8
+2024-05-16 20:39:54 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x000000000000638C
+2024-05-17 13:05:39 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-17 13:05:39 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000005F74
+2024-05-17 13:05:39 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x000000000000780C
+2024-05-17 13:05:40 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending picture thread: 0x00000000000088D8
+2024-05-17 13:05:40 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x000000000000134C
+2024-05-17 13:05:40 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x000000000000893C
+2024-05-17 13:05:40 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000026A8
+2024-05-17 15:16:51 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000026A8
+2024-05-17 15:16:53 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x000000000000780C
+2024-05-17 15:16:53 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x000000000000893C
+2024-05-17 15:16:55 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x000000000000134C
+2024-05-17 15:16:55 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::~Widget::247>>>-------------------Application End-----------------
+2024-05-18 09:10:02 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-18 09:10:02 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000009494
+2024-05-18 09:10:03 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x000000000000A070
+2024-05-18 09:10:03 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x00000000000088EC
+2024-05-18 09:10:03 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000093D4
+2024-05-18 09:10:03 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000080A8
+2024-05-18 09:10:03 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x000000000000A0C0
+2024-05-18 09:10:07 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x000000000000A0C0
+2024-05-18 09:10:09 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x000000000000A070
+2024-05-18 09:10:09 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000080A8
+2024-05-18 09:10:11 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000093D4
+2024-05-18 10:08:06 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-18 10:08:06 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000032AC
+2024-05-18 10:08:06 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000073FC
+2024-05-18 10:08:07 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000008D70
+2024-05-18 10:08:07 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000001CA8
+2024-05-18 10:08:07 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x000000000000498C
+2024-05-18 10:08:07 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000009320
+2024-05-18 10:11:14 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 192.168.1.126:8888
+2024-05-18 10:11:23 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2024-05-18 10:12:44 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-05-18 10:12:46 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::460>>>succeed creating room 123469
+2024-05-18 10:18:18 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_exitmeetBtn_clicked::322>>>exit meeting
+2024-05-18 10:42:08 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000009320
+2024-05-18 10:42:09 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x00000000000073FC
+2024-05-18 10:42:10 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x000000000000498C
+2024-05-18 10:42:11 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000001CA8
+2024-05-21 15:50:54 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-21 15:50:54 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000005470
+2024-05-21 15:50:55 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x000000000000294C
+2024-05-21 15:50:55 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000004F90
+2024-05-21 15:50:55 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000003340
+2024-05-21 15:50:55 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000080F0
+2024-05-21 15:50:56 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000089E8
+2024-05-21 15:50:58 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000089E8
+2024-05-21 15:50:59 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x000000000000294C
+2024-05-21 15:50:59 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000080F0
+2024-05-22 11:13:24 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-22 11:13:24 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000059B4
+2024-05-22 11:13:25 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000002AAC
+2024-05-22 11:13:25 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000005C44
+2024-05-22 11:13:25 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000002ADC
+2024-05-22 11:13:25 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000001B6C
+2024-05-22 11:13:25 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000005A88
+2024-05-22 13:39:10 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 192.168.232.128:8888
+2024-05-22 13:39:14 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 192.168.232.128:8888
+2024-05-22 13:39:26 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 10.157.161.210:8888
+2024-05-22 13:39:39 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000005A88
+2024-05-22 13:39:42 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-22 13:39:42 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000006E78
+2024-05-22 13:39:43 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000006EB4
+2024-05-22 13:39:43 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x00000000000069A0
+2024-05-22 13:39:43 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000016CC
+2024-05-22 13:39:43 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000006E18
+2024-05-22 13:39:43 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000006EFC
+2024-05-22 13:39:52 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 10.157.161.210:8888
+2024-05-22 13:39:59 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 10.157.161.210:8888
+2024-05-22 13:40:11 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 196.128.232.128:8888
+2024-05-22 13:40:50 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2024-05-22 13:41:15 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-22 13:41:15 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000006428
+2024-05-22 13:41:15 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000020F8
+2024-05-22 13:41:15 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000002A9C
+2024-05-22 13:41:16 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000006D64
+2024-05-22 13:41:16 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000059B4
+2024-05-22 13:41:16 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x000000000000601C
+2024-05-22 13:41:28 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 192.168.232.128:8888
+2024-05-22 13:41:33 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 192.168.232.128:8888
+2024-05-22 13:41:45 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 192.168.232.128:8888
+2024-05-22 13:42:01 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 10.157.161.210:8888
+2024-05-22 13:42:04 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x000000000000601C
+2024-05-22 13:42:07 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-22 13:42:07 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000055FC
+2024-05-22 13:42:07 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000067A0
+2024-05-22 13:42:07 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x00000000000065A0
+2024-05-22 13:42:07 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000060D4
+2024-05-22 13:42:07 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000005F44
+2024-05-22 13:42:07 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000006138
+2024-05-22 13:42:18 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 10.157.161.210:8888
+2024-05-22 13:42:37 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::426>>>failed to connenct 192.168.232.128:8888
+2024-05-22 13:42:50 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2024-05-22 13:43:06 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::datasolve::501>>>succeed joining room
+2024-05-22 13:43:06 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::startPlay::91>>>start playing audio
+2024-05-22 14:17:49 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::stopPlay::103>>>stop playing audio
+2024-05-22 14:17:55 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000006138
+2024-05-22 14:17:57 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x00000000000067A0
+2024-05-22 14:17:58 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000005F44
+2024-05-22 14:18:00 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000060D4
+2024-05-26 09:19:55 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-26 09:19:55 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x000000000000597C
+2024-05-26 09:19:56 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000005A20
+2024-05-26 09:19:56 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x00000000000059DC
+2024-05-26 09:19:56 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000005A94
+2024-05-26 09:19:56 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000055F8
+2024-05-26 09:19:56 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000005894
+2024-05-26 09:20:40 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000005894
+2024-05-26 09:20:42 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000005A20
+2024-05-26 09:20:42 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000055F8
+2024-05-26 09:20:44 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000005A94
+2024-05-26 22:17:43 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-26 22:17:43 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000003500
+2024-05-26 22:17:46 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000005554
+2024-05-26 22:17:46 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x000000000000574C
+2024-05-26 22:17:46 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000054FC
+2024-05-26 22:17:46 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000005504
+2024-05-26 22:17:47 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000005810
+2024-05-26 22:18:01 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000005810
+2024-05-26 22:18:02 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000005554
+2024-05-26 22:18:02 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000005504
+2024-05-26 22:18:04 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000054FC
+2024-05-26 22:21:42 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2024-05-26 22:21:42 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000057A4
+2024-05-26 22:21:43 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x000000000000597C
+2024-05-26 22:21:43 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x000000000000275C
+2024-05-26 22:21:43 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000003584
+2024-05-26 22:21:43 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000005330
+2024-05-26 22:21:43 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000004920
+2025-01-02 21:11:15 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:11:15 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000093B4
+2025-01-02 21:11:15 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000097FC
+2025-01-02 21:11:16 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x000000000000936C
+2025-01-02 21:11:16 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000009304
+2025-01-02 21:11:16 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000094B4
+2025-01-02 21:11:16 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000008548
+2025-01-02 21:11:55 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:11:55 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000007600
+2025-01-02 21:11:56 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000091B8
+2025-01-02 21:11:56 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000009370
+2025-01-02 21:11:56 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000008BE4
+2025-01-02 21:11:56 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x000000000000971C
+2025-01-02 21:11:56 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000080A0
+2025-01-02 21:14:37 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:14:37 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000095A4
+2025-01-02 21:14:38 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000008824
+2025-01-02 21:14:38 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000007F2C
+2025-01-02 21:14:38 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000008A68
+2025-01-02 21:14:38 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000091B0
+2025-01-02 21:14:38 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000008B9C
+2025-01-02 21:15:52 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:15:52 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000005BA0
+2025-01-02 21:15:53 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000008B80
+2025-01-02 21:15:54 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000008418
+2025-01-02 21:15:54 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000007EC4
+2025-01-02 21:15:54 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000007D48
+2025-01-02 21:15:54 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000089AC
+2025-01-02 21:22:27 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:22:27 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000008C4C
+2025-01-02 21:22:28 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000007E04
+2025-01-02 21:22:28 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000009048
+2025-01-02 21:22:28 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000086F4
+2025-01-02 21:22:28 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000084F4
+2025-01-02 21:22:28 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000086E4
+2025-01-02 21:30:29 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:30:29 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000006458
+2025-01-02 21:30:31 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000009164
+2025-01-02 21:30:31 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x00000000000090D4
+2025-01-02 21:30:31 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000007ED0
+2025-01-02 21:30:31 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000047A0
+2025-01-02 21:30:32 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000007C08
+2025-01-02 21:30:45 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:30:45 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000008D84
+2025-01-02 21:30:45 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000085E0
+2025-01-02 21:30:45 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000008B5C
+2025-01-02 21:30:45 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x000000000000887C
+2025-01-02 21:30:45 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000093E4
+2025-01-02 21:30:45 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000008B1C
+2025-01-02 21:41:18 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:41:18 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000005BB0
+2025-01-02 21:41:19 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000082D0
+2025-01-02 21:41:19 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000008944
+2025-01-02 21:41:19 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000007064
+2025-01-02 21:41:19 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000008268
+2025-01-02 21:41:20 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000084E8
+2025-01-02 21:41:30 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:41:30 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000093B4
+2025-01-02 21:41:30 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000008A54
+2025-01-02 21:41:31 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000007920
+2025-01-02 21:41:31 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x000000000000950C
+2025-01-02 21:41:31 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000008E68
+2025-01-02 21:41:31 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000007A3C
+2025-01-02 21:44:31 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:44:31 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000087BC
+2025-01-02 21:44:31 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000009410
+2025-01-02 21:44:31 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000008E08
+2025-01-02 21:44:31 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000006124
+2025-01-02 21:44:31 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000073FC
+2025-01-02 21:44:31 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000007F6C
+2025-01-02 21:48:28 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:48:28 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000008300
+2025-01-02 21:48:28 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000008870
+2025-01-02 21:48:28 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x000000000000868C
+2025-01-02 21:48:29 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000008714
+2025-01-02 21:48:29 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000090A4
+2025-01-02 21:48:29 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x00000000000092DC
+2025-01-02 21:48:41 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x00000000000092DC
+2025-01-02 21:48:42 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000008870
+2025-01-02 21:48:43 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000090A4
+2025-01-02 21:48:45 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000008714
+2025-01-02 21:57:11 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-01-02 21:57:11 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x000000000000743C
+2025-01-02 21:57:12 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000095E8
+2025-01-02 21:57:12 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000007320
+2025-01-02 21:57:12 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000008924
+2025-01-02 21:57:12 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x000000000000889C
+2025-01-02 21:57:13 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000007BF8
+2025-01-02 21:57:19 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000007BF8
+2025-01-02 21:57:20 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x00000000000095E8
+2025-01-02 21:57:21 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x000000000000889C
+2025-01-02 21:57:23 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000008924
+2025-02-04 13:18:03 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-02-04 13:18:03 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x000000000000B35C
+2025-02-04 13:18:05 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x000000000000E780
+2025-02-04 13:18:06 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x00000000000083E4
+2025-02-04 13:18:06 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x000000000000E420
+2025-02-04 13:18:06 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x000000000000E418
+2025-02-04 13:18:07 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x000000000000E430
+2025-02-04 13:18:52 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 13:19:01 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 13:26:58 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x000000000000E430
+2025-02-04 13:27:00 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x000000000000E780
+2025-02-04 13:27:01 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x000000000000E418
+2025-02-04 13:27:02 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x000000000000E420
+2025-02-04 13:34:41 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-02-04 13:34:41 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x000000000000E7D0
+2025-02-04 13:34:43 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x000000000000E3F8
+2025-02-04 13:34:43 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000008BB8
+2025-02-04 13:34:43 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000063C4
+2025-02-04 13:34:43 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x000000000000E608
+2025-02-04 13:34:44 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x000000000000B638
+2025-02-04 13:35:13 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 13:35:20 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 13:36:18 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 13:36:24 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 13:40:48 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 13:40:52 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 13:41:46 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 13:41:48 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 13:42:20 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 13:42:23 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 13:42:59 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 13:43:03 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 13:44:36 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 13:44:40 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:18:48 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:18:51 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:20:49 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:20:51 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:21:22 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:21:24 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:21:30 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x000000000000B638
+2025-02-04 14:21:31 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x000000000000E3F8
+2025-02-04 14:21:32 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x000000000000E608
+2025-02-04 14:21:34 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000063C4
+2025-02-04 14:30:34 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-02-04 14:30:34 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x000000000000E734
+2025-02-04 14:30:38 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x000000000000B214
+2025-02-04 14:30:39 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x000000000000D7C0
+2025-02-04 14:30:39 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x000000000000B084
+2025-02-04 14:30:39 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x000000000000D900
+2025-02-04 14:30:40 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000006AE4
+2025-02-04 14:32:05 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:32:18 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:34:28 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:40:29 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:40:31 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:43:32 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:43:37 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:46:06 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:46:09 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:46:29 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:46:31 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:47:33 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:47:35 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:48:40 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:48:42 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:50:35 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:50:36 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:51:02 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:51:04 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:52:50 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:52:51 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:53:04 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:53:09 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:53:23 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:53:25 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:53:57 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:53:59 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:55:15 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:55:17 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 14:57:04 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 14:57:08 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 15:05:59 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 15:06:05 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 15:17:57 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-04 15:18:02 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-04 15:23:25 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000006AE4
+2025-02-04 15:23:25 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x000000000000B214
+2025-02-04 15:23:27 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x000000000000D900
+2025-02-04 15:23:28 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x000000000000B084
+2025-02-05 21:04:17 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-02-05 21:04:17 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x00000000000044C8
+2025-02-05 21:04:18 F:\Workspace\meeting-client\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x00000000000042C4
+2025-02-05 21:04:19 F:\Workspace\meeting-client\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x0000000000004BC0
+2025-02-05 21:04:19 F:\Workspace\meeting-client\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000006F94
+2025-02-05 21:04:19 F:\Workspace\meeting-client\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000071E8
+2025-02-05 21:04:23 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000001BC0
+2025-02-05 21:04:50 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
+2025-02-05 21:04:57 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
