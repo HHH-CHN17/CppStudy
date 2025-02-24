@@ -918,3 +918,25 @@
 2025-02-05 21:04:23 F:\Workspace\meeting-client\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000001BC0
 2025-02-05 21:04:50 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_connServer_clicked::418>>>succeeed connecting to 192.168.232.128:8888
 2025-02-05 21:04:57 F:\Workspace\meeting-client\CloudMeeting\widget.cpp:Widget::on_createmeetBtn_clicked::268>>>create meeting
+2025-02-23 13:36:02 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-02-23 13:36:02 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000006AC4
+2025-02-23 13:36:03 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000005F04
+2025-02-23 13:36:03 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x00000000000038F8
+2025-02-23 13:36:03 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x0000000000005A24
+2025-02-23 13:36:03 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x00000000000031B4
+2025-02-23 13:36:03 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000001F0C
+2025-02-23 13:36:09 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000001F0C
+2025-02-23 13:36:11 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000005F04
+2025-02-23 13:36:11 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x00000000000031B4
+2025-02-23 13:36:13 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x0000000000005A24
+2025-02-23 13:40:53 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\widget.cpp:Widget::Widget::42>>>-------------------------Application Start---------------------------
+2025-02-23 13:40:53 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\widget.cpp:Widget::Widget::43>>>main UI thread id: 0x0000000000004AC4
+2025-02-23 13:40:53 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\sendimg.cpp:SendImg::run::17>>>start sending picture thread: 0x0000000000006BD0
+2025-02-23 13:40:53 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\AudioInput.cpp:AudioInput::run::44>>>start sending Audio thread: 0x00000000000045C4
+2025-02-23 13:40:53 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\AudioOutput.cpp:AudioOutput::run::111>>>start playing audio thread 0x00000000000057BC
+2025-02-23 13:40:53 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\sendtext.cpp:SendText::run::35>>>start sending text thread: 0x0000000000005F68
+2025-02-23 13:40:53 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\recvsolve.cpp:RecvSolve::run::21>>>start solving data thread: 0x0000000000004E2C
+2025-02-23 13:40:55 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\recvsolve.cpp:RecvSolve::run::28>>>stop solving data thread: 0x0000000000004E2C
+2025-02-23 13:40:57 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\sendimg.cpp:SendImg::run::33>>>stop sending picture thread: 0x0000000000006BD0
+2025-02-23 13:40:57 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\sendtext.cpp:SendText::run::48>>>stop sending text thread: 0x0000000000005F68
+2025-02-23 13:40:59 D:\1_Document\CppStudy\5-CloudMeeting\CloudMeeting\AudioOutput.cpp:AudioOutput::run::119>>>stop playing audio thread 0x00000000000057BC
