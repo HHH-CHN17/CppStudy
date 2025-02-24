@@ -44,106 +44,86 @@ private:
     explicit processpool(int listenfd, int process_number = 2, int thread_num_per_proc = 5);
     ~processpool(){std::cout << "delete correctly" << std::endl;}
 public:
-    processpool() = delete;
+    // 不想要默认构造但是设为delete后单例中的GetInstance()函数显然无法通过编译，可以通过在函数体中抛异常解决。
+    processpool(){ throw std::bad_exception(); };
     processpool(const processpool&) = delete;
     processpool(processpool&&) = delete;
     processpool& operator=(const processpool&) = delete;
 
-    /* 启动线程池 */
+    // 启动线程池
     void run();
 
     /* 将文件描述符设置成非阻塞,调用非阻塞I/O跟阻塞I/O的差别为调用之后立即返回，
-* 返回后，CPU的时间片可以用来处理其他事务，此时性能是提升的。
-* 但是非阻塞I/O的问题是：由于完整的I/O没有完成，立即返回的并不是业务层期望的数据，
-* 而仅仅是当前调用的状态。为了获取完整的数据，应用程序需要重复调用I/O操作来确认是否完成。
-* 这种重复调用判断操作是否完成的技术叫做轮询。 */
+    * 返回后，CPU的时间片可以用来处理其他事务，此时性能是提升的。
+    * 但是非阻塞I/O的问题是：由于完整的I/O没有完成，立即返回的并不是业务层期望的数据，
+    * 而仅仅是当前调用的状态。为了获取完整的数据，应用程序需要重复调用I/O操作来确认是否完成。
+    * 这种重复调用判断操作是否完成的技术叫做轮询。
+    */
     static int setnonblocking(int fd)
     {
-        /* fcntl函数可以改变文件描述符的性质 */
+        // fcntl函数可以改变文件描述符的性质
         int old_option = fcntl(fd, F_GETFL);
         int new_option = old_option | O_NONBLOCK;
         fcntl(fd, F_SETFL, new_option);
         return old_option;
     }
 
-/* 将文件描述符上的读事件注册到epollfd标识的epoll内核事件表上 */
+    // 将文件描述符上的读事件注册到epollfd标识的epoll内核事件表上
     static void addfd(int epollfd, int fd)
     {
         epoll_event event{};
         event.data.fd = fd;
-        /* 设置边沿触发和读事件 */
+        // 设置边沿触发和读事件
         event.events = EPOLLIN | EPOLLET;
         epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
         setnonblocking(fd);
     }
 
-/* 从epollfd标识的epoll内核事件表中删除fd上所有的注册事件 */
+    // 从epollfd标识的epoll内核事件表中删除fd上所有的注册事件
     static void removedfd(int epollfd, int fd)
     {
         epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, 0);
         close(fd);
     }
 
-/*信号处理函数*/
-    static void sig_handler(int sig)
-    {
-        /* 保存原来的errno，在函数最后恢复，以保证函数的可重入性，errno是记录系统的最后一次错误代码 */
-        int save_errno = errno;
-        int msg = sig;
-        /* 将信号写入管道，以通知主循环 */
-        //write_all(sig_fd_, (char*)&msg, 1);
-        cout << getpid() << ": msg send: " << msg <<"\n";
-        send(sig_fd_, (char*)&msg, 1, 0);
-        errno = save_errno;
-    }
-
-/* 设置信号的处理函数 */
-    static void addsig(int sig, void(handler)(int), bool restart = true)
-    {
-        /* sigaction函数的功能是检查或修改与指定信号相关联的处理动作 */
-        struct sigaction sa;
-        memset(&sa, '\0', sizeof(sa));
-        /* sa_handler此参数和signal()的参数handler相同，代表新的信号处理函数 */
-        sa.sa_handler = handler;
-        if (restart)
-        {
-            /* SA_RESTART重新调用被该系统终止的系统调用 */
-            sa.sa_flags |= SA_RESTART;
-        }
-        sigfillset(&sa.sa_mask);
-        assert(sigaction(sig, &sa, nullptr) != -1);
-    }
-
 private:
-    void setup_sig_pipe();
+    // 初始化epoll以及信号处理
+    void init_sig_and_epoll();
+
     void run_parent();
+
     void run_child();
-    void child_init();
+
+    void init_child();
+
+    void sig_handler_in_parent(int sockfd);
+
+    void sig_handler_in_child(int sockfd);
 
 private:
-    /* 进程池允许的最大进程数量 */
-    static const int MAX_PROCESS_NUMBER = 16;
-    /* 每个子进程最多能处理的事件数 */
-    static const int USER_PER_PROCESS = 65536;
-    /* epoll能处理的事件数 */
-    static const int MAX_EVENT_NUMBER = 10000;
-    /* 用于处理信号的fd */
-    static int sig_fd_;
-    /* 进程池中的进程总数 */
-    int m_process_number;
-    /* 每个进程都有一个epoll内核事件表，用m_epollfd标识 */
-    int m_epollfd;
-    /* 监听socket */
-    int m_listenfd;
-    /* 子进程通过m_stop来决定是否停止运行*/
-    int m_stop;
-    /*房间管理（主进程使用）*/
+    // 进程池允许的最大进程数量
+    static constexpr int MAX_PROCESS_NUMBER = 16;
+    // 每个子进程最多能处理的事件数
+    static constexpr int USER_PER_PROCESS = 65536;
+    // epoll能处理的事件数
+    static constexpr int MAX_EVENT_NUMBER = 10000;
+    // 用于处理信号的fd
+    int sig_fd_;
+    // 进程池中的进程总数
+    int process_number_;
+    // 每个进程都有一个epoll内核事件表，用m_epollfd标识
+    int epollfd_;
+    // 监听socket
+    int listenfd_;
+    // 子进程通过m_stop来决定是否停止运行
+    int stop_;
+    // 房间管理（主进程使用）
     std::shared_ptr<RoomGuard> sp_room_guard_;
-    /*房间（子进程使用）*/
+    // 房间（子进程使用）
     std::shared_ptr<Room> sp_room_;
-    /*子进程与父进程通信接口，父进程中该值为-1，也可以用于区分父子进程*/
+    // 子进程与父进程通信接口，父进程中该值为-1，也可以用于区分父子进程
     int ipc_fd_;
-    /*线程池，每个进程都有一份*/
+    // 线程池，每个进程都有一份
     ThreadPool<1000> thread_pool_;
 };
 

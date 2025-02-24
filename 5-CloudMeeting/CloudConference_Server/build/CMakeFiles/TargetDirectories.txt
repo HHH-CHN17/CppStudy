@@ -1,3 +1,0 @@
-/home/lipei/CloudConference_Server/build/CMakeFiles/CloudConference.dir
-/home/lipei/CloudConference_Server/build/CMakeFiles/edit_cache.dir
-/home/lipei/CloudConference_Server/build/CMakeFiles/rebuild_cache.dir

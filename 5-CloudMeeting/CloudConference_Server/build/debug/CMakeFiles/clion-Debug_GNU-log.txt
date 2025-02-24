@@ -1,4 +1,0 @@
-/home/lipei/.cache/JetBrains/RemoteDev/dist/784a2de1da5b1_CLion-251.20015.45/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -S /home/lipei/CloudConference_Server -B /home/lipei/CloudConference_Server/build/debug
--- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /home/lipei/CloudConference_Server/build/debug

@@ -1,4 +1,0 @@
-ToolSet: 1.0 (local)Ninja: 1.12.1@/home/lipei/.cache/JetBrains/RemoteDev/dist/784a2de1da5b1_CLion-251.20015.45/bin/ninja/linux/x64/ninja
-Options: 
-
-Options:

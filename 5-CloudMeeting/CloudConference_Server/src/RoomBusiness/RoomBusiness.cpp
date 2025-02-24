@@ -185,12 +185,13 @@ void Room::accept_from_parent(int ipc_fd, int epollfd)
 
 void Room::msg_forward()
 {
-    char * sendbuf = (char *)malloc(4 * MB);
+    //char * sendbuf = (char *)malloc(4 * MB);
+    char* sendbuf = new char[4 * MB];
     /*
      * $_msgType_ip_size_data_#
     */
 
-    for(;;)
+    while(true)
     {
         while (send_queue.isempty())
         {

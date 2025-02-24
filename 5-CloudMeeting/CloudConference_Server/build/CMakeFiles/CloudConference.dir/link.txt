@@ -1,1 +1,0 @@
-/opt/rh/devtoolset-8/root/usr/bin/g++ -g CMakeFiles/CloudConference.dir/src/main.cpp.o CMakeFiles/CloudConference.dir/src/MsgQueue/MsgQueue.cpp.o CMakeFiles/CloudConference.dir/src/MemoryPool/MemoryPool.cpp.o CMakeFiles/CloudConference.dir/src/ThreadPool/ThreadPool.cpp.o -o CloudConference  -latomic -lpthread

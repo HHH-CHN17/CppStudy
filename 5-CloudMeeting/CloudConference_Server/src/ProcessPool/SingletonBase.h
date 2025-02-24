@@ -42,14 +42,11 @@ public:
     }
 
     static T& GetInstance() {
-//        call_once(of, []() {
-//            up.reset(new T);
-//            std::cout << "init" << std::endl;
-//        });
-        if (ab)
-            return *up;
-        else
-            throw std::bad_exception();
+        call_once(of, []() {
+            up.reset(new T);
+            std::cout << "init" << std::endl;
+        });
+        return *up;
     }
 
     Singleton_Lazy_Base(const Singleton_Lazy_Base&) = delete;

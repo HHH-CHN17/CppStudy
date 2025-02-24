@@ -37,7 +37,7 @@ public:
 public:
     explicit RoomGuard (int n);
 
-    void accept_and_forward_to_child(int i);
+    void accept_and_forward_to_child(int listenfd);
 
 //  从客户端的connfd中读数据，并将相关消息和connfd下发给子进程，此函数由主进程的子线程执行，注意在下发成功后主进程会关闭connfd，之后的数据收发由子进程进行
     void parse_and_forward(int client_fd);
