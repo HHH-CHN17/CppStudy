@@ -1,2 +1,5 @@
 ./5-CloudMeeting/CloudMeeting/.vs
+./5-CloudMeeting/CloudMeeting/debug/*
+./5-CloudMeeting/CloudMeeting/release/*
 ./5-CloudMeeting/CloudConference_Server/.idea
+./5-CloudMeeting/CloudConference_Server/build/*
