@@ -81,15 +81,16 @@ void Room::fd_close(int fd, int pipefd)
 
 void Room::accept_from_parent(int ipc_fd, int epollfd)
 {
+    printf("child executing\n");
     int client_fd = -1;
-    int n;
+    int bytes;
     char ch;
     /*
         此时fd为进程间通信fd
         c为传输的信息
         tfd为客户端fd
     */
-    if((n = ipc_read(ipc_fd, &ch, 1, &client_fd)) <= 0)
+    if((bytes = ipc_read(ipc_fd, &ch, 1, &client_fd)) <= 0)
     {
         err_quit("ipc_read error");
     }
@@ -99,6 +100,7 @@ void Room::accept_from_parent(int ipc_fd, int epollfd)
         err_quit("no descriptor from ipc_read");
     }
     //add to epoll
+    printf("ch = %c\n", ch);
     if(ch == 'C') // create
     {
         {
