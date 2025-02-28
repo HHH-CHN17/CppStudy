@@ -499,7 +499,7 @@ int main(){
 ```c++
 int& f() {
     int a = 1;
-    return a;//局部变量 'a'的地址可能转义该函数
+    return a;//不要返回局部变量的引用，因为：局部变量 'a'的地址可能转义该函数
 }
 
 int& f1() {
@@ -577,7 +577,7 @@ ref_a = 6;
 // 等同于以下代码：
  
 int temp = 5;
-int &&ref_a = std::move(temp);
+int &&ref_a = std::move(temp);	// 相当于int &&ref_a = static_cast<int&&>(temp);
 ref_a = 6;
 ```
 
@@ -723,7 +723,7 @@ ref_a = 6;
     
     ```
 
-### 。。。Union关键字
+### Union关键字
 
 [【C++学习笔记】Union关键字](https://www.cnblogs.com/yyehl/p/6652928.html)
 
@@ -814,9 +814,9 @@ void main()
 
 - 判断系统的大小端序
 
-  将**低位字节存储在起始地址（低地址）**，这称为小端(little-endian)字节序；
+  将**低位字节存储在起始地址（低地址）**，这称为小端(little-endian)字节序（低位存储低字节）；
 
-  将**高位字节存储在起始地址**，这称为大端(big-endian)字节序。
+  将**高位字节存储在起始地址**，这称为大端(big-endian)字节序（低位存储高字节）。
 
   ```c++
   int main() {
@@ -950,7 +950,7 @@ public:
 
 ### 虚继承
 
-
+[#虚继承](../2-深入理解C++11/深入理解C++11.md/#虚继承实现原理)
 
 ### 虚函数，虚指针，虚函数表
 
@@ -1118,7 +1118,7 @@ int main() {
 }
 ```
 
-#### operate=：
+#### 。。。operate=：
 
 为了实现链式编程，返回值应该使用引用
 
