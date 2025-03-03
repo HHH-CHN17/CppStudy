@@ -104,9 +104,7 @@ void Room::accept_from_parent(int ipc_fd, int epollfd)
     if(ch == 'C') // create
     {
         {
-            printf("locking\n");
             std::lock_guard<std::mutex> lg{mtx_};
-            printf("locked\n");
             epollfd_ = epollfd;
             processpool::addfd(epollfd_, client_fd);
 
@@ -124,8 +122,7 @@ void Room::accept_from_parent(int ipc_fd, int epollfd)
         memcpy(msg.ptr, &roomNo, sizeof(int));
         msg.len = sizeof(int);
         send_queue.push_msg(msg);
-
-        printf("create meeting: %d\n", client_fd);
+        printf("create meeting success\n");
     }
     else if(ch == 'J') // join
     {
@@ -140,11 +137,7 @@ void Room::accept_from_parent(int ipc_fd, int epollfd)
         {
             processpool::addfd(epollfd_, client_fd);
 
-            //FD_SET(client_fd, &user_pool->fdset_);
             nHeadCount_++;
-            //user_pool->fds[user_pool->nHeadCount_++] = client_fd;
-            //user_pool->status[client_fd] = ON;
-            //maxfd = MAX(maxfd, client_fd);
             umapFdToIp_[client_fd] = getpeerip(client_fd);
             ul.unlock();
 
@@ -197,14 +190,17 @@ void Room::msg_forward()
     {
         while (send_queue.isempty())
         {
-            std::cout << "send queue empty\n";
-            this_thread::sleep_for(1s);
+            //std::cout << "send queue empty\n";
             //this_thread::yield();
+            this_thread::sleep_for(50ms);
         }
 
         memset(sendbuf, 0, 4 * MB);
         MSG msg = send_queue.pop_msg();
         int len = 0;
+        if (msg.ptr == nullptr)
+            continue;
+        printf("get msg: %s", msg.ptr);
 
         sendbuf[len++] = '$';
         short type = htons((short)msg.msgType);

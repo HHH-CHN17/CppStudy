@@ -87,8 +87,6 @@ void RoomGuard::forward_to_child(int client_fd)
             memcpy(&datasize, head + 7, 4);
             datasize = ntohl(datasize);
 
-            printf("msg type %d\n", msgtype);
-
             // 读具体的消息数据
             if(msgtype == CREATE_MEETING)
             {

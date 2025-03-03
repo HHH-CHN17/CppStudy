@@ -22,25 +22,11 @@
 // fdToIp抽空改成无锁哈希表
 #define SENDTHREADSIZE 5
 
-//typedef struct UserPool
-//{
-//    //fd_set fdset_;                                          // 当前房间分配的fdset，用于初始化客户端的fd们，并接收fd中待读取数据，也就是说一个房间对应一个select，使用子进程的主线程进行数据接收，子线程们发送
-//    int epollfd_;
-//    std::mutex mtx_;
-//    int ownerfd_;                                           // 创建者的connfd（创建者也是一个客户端）
-//    int nHeadCount_;                                        // 当前房间的总人数
-//    std::unordered_map<int, uint32_t> umapFdToIp_;               // key为客户端fd，value为客户端IP
-//
-//    UserPool();
-//
-//    void clear_room();
-//}UserPool;
-
 class Room{
 public:
     //fd_set fdset_;                                          // 当前房间分配的fdset，用于初始化客户端的fd们，并接收fd中待读取数据，也就是说一个房间对应一个select，使用子进程的主线程进行数据接收，子线程们发送
     int epollfd_;
-    std::mutex mtx_;
+    mutable std::mutex mtx_;
     int ownerfd_;                                           // 创建者的connfd（创建者也是一个客户端）
     int nHeadCount_;                                        // 当前房间的总人数
     std::unordered_map<int, uint32_t> umapFdToIp_;               // key为客户端fd，value为客户端IP
@@ -64,44 +50,6 @@ public:
 
     void parse_and_forward_to_client(int client_fd, int ipc_fd);
 };
-
-//namespace RB{
-//#define SENDTHREADSIZE 5
-//
-////主要是房间相关业务的处理，注意房间的信息定义在unpthread里面
-//    enum USER_TYPE
-//    {
-//        GUEST=2,
-//        OWNER
-//    };
-//
-//    typedef struct UserPool
-//    {
-//        //fd_set fdset_;                                          // 当前房间分配的fdset，用于初始化客户端的fd们，并接收fd中待读取数据，也就是说一个房间对应一个select，使用子进程的主线程进行数据接收，子线程们发送
-//        int epollfd_;
-//        std::mutex mtx_;
-//        int ownerfd_;                                           // 创建者的connfd（创建者也是一个客户端）
-//        int nHeadCount_;                                        // 当前房间的总人数
-//        std::unordered_map<int, uint32_t> umapFdToIp_;               // key为客户端fd，value为客户端IP
-//
-//        UserPool();
-//
-//        void clear_room();
-//    }UserPool;
-//
-//
-//
-//    //file description close
-//    void fd_close(int fd, int pipefd);
-//
-//    // ipc_fd：主进程与子进程通信的套接口socket[1]
-//    // accept fd from father
-//    void accept_from_parent(int ipc_fd, int epollfd);
-//
-//    void msg_forward();
-//
-//    void parse_and_forward_to_client(int client_fd, int ipc_fd);
-//}
 
 
 

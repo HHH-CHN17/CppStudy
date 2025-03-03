@@ -33,8 +33,8 @@ enum MSG_TYPE
     PARTNER_EXIT = 21,
     PARTNER_JOIN = 22,
     JOIN_MEETING_RESPONSE = 23,
-    PARTNER_JOIN2 = 24
-
+    PARTNER_JOIN2 = 24,
+    MAX_TYPE = 25
 };
 
 //图片格式定义
@@ -90,7 +90,9 @@ struct MSG
     uint32_t ip;        // 客户端IP（sender）
     Image_Format format;
 
-    MSG()
+    MSG(): ptr(nullptr), len(-1)
+        , targetfd(-1), msgType(MAX_TYPE)
+        ,ip(0), format(Format_Invalid)
     {
 
     }
@@ -118,9 +120,7 @@ public:
 
     void push_msg(MSG msg)
     {
-        std::cout << "pushing" << std::endl;
         lfq_.push(msg);
-        std::cout << "pushing end" << std::endl;
     }
 
     MSG pop_msg()
