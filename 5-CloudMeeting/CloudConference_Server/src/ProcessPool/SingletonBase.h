@@ -26,7 +26,7 @@ private:
     template<typename ...Args>
     static void init(Args&&... args) {
         up.reset(new T(std::forward<Args>(args)...));
-        std::cout << "init_multiArgs" << std::endl;
+        //std::cout << "init_multiArgs" << std::endl;
     }
 
     static void Destory(T* p_sgl) {
@@ -44,7 +44,7 @@ public:
     static T& GetInstance() {
         call_once(of, []() {
             up.reset(new T);
-            std::cout << "init" << std::endl;
+            //std::cout << "init" << std::endl;
         });
         return *up;
     }

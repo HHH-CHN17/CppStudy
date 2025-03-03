@@ -15,6 +15,7 @@
 #include <queue>
 #include <thread>
 #include <vector>
+#include <unistd.h>
 #include "MsgQueue.h"
 
 //namespace Lanuch{
@@ -91,8 +92,9 @@ public:
     }
 
     void set_and_start(std::size_t num_thread = default_thread_pool_size()){
-        if (stop_)
+        if (stop_.load())
         {
+            //printf("%d thread pool starting...\n", getpid());
             atnNumThread_.store(num_thread);
             stop_.store(false);
             start();

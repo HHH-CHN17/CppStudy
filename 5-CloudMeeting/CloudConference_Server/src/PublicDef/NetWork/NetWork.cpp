@@ -268,7 +268,7 @@ int Accept(int listenfd, SA * addr, socklen_t *addrlen)
         }
     }
 }
-void Socketpair(int family, int type, int protocol, int * sockfd)
+void Socketpair(int family, int type, int protocol, int* sockfd)
 {
 
     /*

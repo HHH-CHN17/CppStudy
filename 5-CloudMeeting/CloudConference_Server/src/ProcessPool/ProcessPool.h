@@ -94,6 +94,8 @@ private:
 
     void run_child();
 
+    void init_parent();
+
     void init_child();
 
     void sig_handler_in_parent(int sockfd);
@@ -125,6 +127,10 @@ private:
     int ipc_fd_;
     // 线程池，每个进程都有一份
     ThreadPool<1000> thread_pool_;
+    // 每个进程的线程数量
+    int thread_qty_;
+    // 进程标志：false表示子进程，true表示父进程
+    bool is_parent_;
 };
 
 

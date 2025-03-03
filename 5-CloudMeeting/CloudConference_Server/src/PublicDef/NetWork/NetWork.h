@@ -14,20 +14,24 @@ uint32_t getpeerip(int fd);
 /*
     从fd中读size个char并存入buf中，返回实际读到的字节数
     大于0：成功读取的数据长度（Byte）；
-    等于0：该 socket 已经关闭；
+    等于0：建议重试；
     等于-1：异常发生，
 */
 template<typename T>
-ssize_t	read_all(int fd, T* ptr, size_t size)
+ssize_t	read_all(int fd, T* ptr, ssize_t size)
 {
     ssize_t lefttoread = size, hasread = 0;
     while(lefttoread > 0)
     {
-        if((hasread = read(fd, ptr, lefttoread))<0)
+        hasread = read(fd, ptr, lefttoread);
+        if(hasread<0)
         {
-            if(errno == EINTR)
+            if(errno == EINTR || errno == EWOULDBLOCK)
             {
+                //printf("read finish\n");
+                err_msg("read error: %s", strerror(errno));
                 hasread = 0;
+                break;
             }
             else
             {

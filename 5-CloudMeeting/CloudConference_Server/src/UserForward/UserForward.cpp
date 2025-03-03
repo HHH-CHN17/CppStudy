@@ -16,7 +16,7 @@ RoomGuard::RoomGuard (int n) : n_avail_(0)
     umap_room_.reserve(n);
 }
 
-void RoomGuard::accept_and_forward_to_child(int listenfd)
+void RoomGuard::accept_client(int epollfd, int listenfd)
 {
     int client_fd;
     struct sockaddr_in clnt_addr{};
@@ -38,11 +38,12 @@ void RoomGuard::accept_and_forward_to_child(int listenfd)
 
     printf("connection from %s\n", Sock_ntop(buf, MAXSOCKADDR, (struct sockaddr*)&clnt_addr, clnt_addr_size));
 
-    parse_and_forward(client_fd); // process user
+    processpool::addfd(epollfd, client_fd);
+    //parse_and_forward(client_fd); // process user
 }
 
 // 从客户端的client_fd中读数据，并将相关消息和client_fd下发给子进程，此函数由主进程的子线程执行，注意在下发成功后主进程会关闭client_fd，之后的数据收发由子进程进行
-void RoomGuard::parse_and_forward(int client_fd)
+void RoomGuard::forward_to_child(int client_fd)
 {
     char head[15]  = {0};
     //read head
@@ -86,8 +87,6 @@ void RoomGuard::parse_and_forward(int client_fd)
             memcpy(&datasize, head + 7, 4);
             datasize = ntohl(datasize);
 
-            printf("msg type %d\n", msgtype);
-
             // 读具体的消息数据
             if(msgtype == CREATE_MEETING)
             {
@@ -102,6 +101,7 @@ void RoomGuard::parse_and_forward(int client_fd)
                     //无空闲房间
                     if(n_avail_ <= 0)
                     {
+                        printf("no more room\n");
                         MSG msg;
                         memset(&msg, 0, sizeof(msg));
                         msg.msgType = CREATE_MEETING_RESPONSE;
@@ -124,6 +124,7 @@ void RoomGuard::parse_and_forward(int client_fd)
                             }
                             if(it == umap_room_.end())
                             {
+                                printf("no more room\n");
                                 MSG msg;
                                 memset(&msg, 0, sizeof(msg));
                                 msg.msgType = CREATE_MEETING_RESPONSE;
@@ -136,16 +137,18 @@ void RoomGuard::parse_and_forward(int client_fd)
                             else                                // 有空闲房间
                             {
                                 char cmd = 'C';// create
+                                //ssize_t ret = write(client_fd, &cmd, 1);
+                                printf("send msg to %d\n", it->first);
                                 if(ipc_write(it->first, &cmd, 1, client_fd) < 0)   //通知子进程创建房间
                                 {
-                                    printf("write fd error");
+                                    err_msg("write fd error");
                                 }
                                 else
                                 {
                                     close(client_fd);
                                     printf("room %d empty\n", it->second.child_pid);
                                     it->second.child_status = 1;     // 占领空闲进程
-                                    n_avail_--;
+                                    --n_avail_;
                                     it->second.total++;
                                     return;
                                 }
