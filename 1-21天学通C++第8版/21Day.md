@@ -189,9 +189,9 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
     };
     
     int main(){
-        test t1 = {};
+        test t1 = {};		// 复制列表初始化
         cout << "---" << endl;
-        test t2 = test{};
+        test t2 = test{};	// 复制初始化
     }
     // stdc++11 -fno-elide-constructors
     // c++17后有复制消除，故体现不出差别
@@ -202,6 +202,29 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
     test&&
     */
     ```
+
+    注意：
+
+    - 复制列表初始化和复制初始化是两个不同概念
+
+      ```c++
+      struct test{
+          test(test&& t){cout << "test&&" << endl;}
+          test(int i){cout << "i" << endl;}
+      };
+      
+      int main(){
+          test t2 = 1;	// 复制初始化
+          cout << "---" << endl;
+          test t3 = {1};	// 复制列表初始化
+      }
+      /*
+      i
+      test&&
+      ---
+      i
+      */
+      ```
 
   - 聚合初始化
 
@@ -1118,7 +1141,7 @@ int main() {
 }
 ```
 
-#### 。。。operate=：
+#### operate=：
 
 为了实现链式编程，返回值应该使用引用
 
@@ -1186,7 +1209,7 @@ public:
   int main()
   {
   	Test t1;
-  	t1 = 10;  //Error 在 不使用explicit && 有参构造中有且仅有一个参数时，t1=10正确
+  	t1 = 10;  //Error 在 不使用explicit 且 有参构造中有且仅有一个参数时，t1=10正确
   	t1 = static_cast<Test>(10);    // t = Test(5);
   
   	Test r;
@@ -1262,8 +1285,8 @@ public:
   	int mValue;
   public:
   	Test(int i = 0) : mValue(1) {}
-  	int value(){ return mValue; }
-  	operator Value()		// 类型转换运算符重载
+  	int toValue(){ return mValue; }	// 推荐
+  	operator Value()		// 类型转换运算符重载，不推荐
   	{
   		Value ret;
   		cout << "operator Value()" << endl;
@@ -1416,7 +1439,7 @@ int main() {
 
 [c++ for_each 用法_c++ foreach用法-CSDN博客](https://blog.csdn.net/u014613043/article/details/50619254)
 
-### C++类型转换
+### 。。。C++类型转换
 
 [C++类型转换：隐式转换和显式转换_c++隐式转换-CSDN博客](https://blog.csdn.net/luolaihua2018/article/details/111996610)
 
