@@ -112,7 +112,10 @@ private:
     using smart_ptr = lock_free_queue<MSG, MAXSIZE>::smart_ptr;
 
 public:
-    SendQueue() = default;
+    SendQueue() : lfq_{}
+    {
+
+    }
     SendQueue(const SendQueue&) = delete;
     SendQueue(SendQueue&&) = delete;
     SendQueue& operator=(const SendQueue&) = delete;
@@ -127,6 +130,10 @@ public:
     {
         smart_ptr sp = std::move(lfq_.pop());
 
+        if (sp.get() == nullptr)
+        {
+            return MSG();
+        }
         MSG msg = *sp;
         sp.release();
         return msg;

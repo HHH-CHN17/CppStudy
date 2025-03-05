@@ -191,7 +191,7 @@ private:
 
 public:
     lock_free_queue():
-            nCurrLen_(0), atHead_(counted_node_ptr{}), atTail_(atHead_.load()), atRunFlag_(true) {
+        atHead_(counted_node_ptr{}), atTail_(atHead_.load()), atRunFlag_(true), nCurrLen_(0) {
         // 判断：是否需要保护数据初始化过程。
 
         counted_node_ptr cnpHead;

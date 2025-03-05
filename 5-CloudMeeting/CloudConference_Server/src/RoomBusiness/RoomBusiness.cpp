@@ -117,12 +117,12 @@ void Room::accept_from_parent(int ipc_fd, int epollfd)
         MSG msg;
         msg.msgType = CREATE_MEETING_RESPONSE;
         msg.targetfd = client_fd;
-        int roomNo = htonl(getpid());
-        msg.ptr = (char *) malloc(sizeof(int));
-        memcpy(msg.ptr, &roomNo, sizeof(int));
-        msg.len = sizeof(int);
+        uint32_t roomNo = htonl(getpid());
+        msg.ptr = (char *) malloc(sizeof(uint32_t));
+        memcpy(msg.ptr, &roomNo, sizeof(uint32_t));
+        msg.len = sizeof(uint32_t);
         send_queue.push_msg(msg);
-        printf("create meeting success\n");
+
     }
     else if(ch == 'J') // join
     {
@@ -186,25 +186,26 @@ void Room::msg_forward()
      * $_msgType_ip_size_data_#
     */
 
+    printf("%d: %d running...\n",getpid(), gettid());
+
     while(true)
     {
-        while (send_queue.isempty())
-        {
-            //std::cout << "send queue empty\n";
-            //this_thread::yield();
-            this_thread::sleep_for(50ms);
-        }
-
+        // while (send_queue.isempty())
+        // {
+        //     std::cout << "send queue empty\n";
+        //     //this_thread::yield();
+        //     this_thread::sleep_for(50ms);
+        // }
         memset(sendbuf, 0, 4 * MB);
         MSG msg = send_queue.pop_msg();
         int len = 0;
-        if (msg.ptr == nullptr)
+        if (msg.targetfd == -1)
             continue;
-        printf("get msg: %s", msg.ptr);
+        printf("get msg\n");
 
         sendbuf[len++] = '$';
-        short type = htons((short)msg.msgType);
-        memcpy(sendbuf + len, &type, sizeof(short)); //msgtype
+        uint16_t type = htons((uint16_t)msg.msgType);
+        memcpy(sendbuf + len, &type, sizeof(uint16_t)); //msgtype
         len+=2;
 
         if(msg.msgType == CREATE_MEETING_RESPONSE || msg.msgType == PARTNER_JOIN2)
@@ -217,8 +218,8 @@ void Room::msg_forward()
             len+=4;
         }
 
-        int msglen = htonl(msg.len);
-        memcpy(sendbuf + len, &msglen, sizeof(int));
+        uint32_t msglen = htonl(msg.len);
+        memcpy(sendbuf + len, &msglen, sizeof(uint32_t));
         len += 4;
         memcpy(sendbuf + len, msg.ptr, msg.len);
         len += msg.len;
@@ -233,6 +234,7 @@ void Room::msg_forward()
                 {
                     err_msg("write_all error");
                 }
+                printf("%d create meeting!\n", msg.ip);
             }
             else if(msg.msgType == PARTNER_EXIT || msg.msgType == IMG_RECV || msg.msgType == AUDIO_RECV || msg.msgType == TEXT_RECV || msg.msgType == CLOSE_CAMERA)
             {

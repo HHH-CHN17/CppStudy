@@ -101,6 +101,17 @@ public:
         }
     }
 
+    void stop() {
+        stop_.store(true);
+        cv_.notify_all();
+        for (auto& thread : pool_) {
+            if (thread.joinable()) {
+                thread.join();
+            }
+        }
+        pool_.clear();
+    }
+
 private:
     void start() {
         for (std::size_t i = 0; i < atnNumThread_; ++i) {
@@ -115,20 +126,10 @@ private:
                         task = std::move(tasks_.pop());
                     }
                     (*task)();
+                    printf("%d end running...\n", gettid());
                 }
             });
         }
-    }
-
-    void stop() {
-        stop_.store(true);
-        cv_.notify_all();
-        for (auto& thread : pool_) {
-            if (thread.joinable()) {
-                thread.join();
-            }
-        }
-        pool_.clear();
     }
 };
 
