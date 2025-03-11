@@ -20,7 +20,7 @@
 #include "src/PublicDef/NetWork/NetWork.h"
 
 // fdToIp抽空改成无锁哈希表
-#define SENDTHREADSIZE 5
+#define SENDTHREADSIZE 2
 
 class Room{
 public:

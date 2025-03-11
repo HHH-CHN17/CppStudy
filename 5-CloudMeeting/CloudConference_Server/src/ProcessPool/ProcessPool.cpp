@@ -30,7 +30,7 @@ processpool::processpool(int listenfd, int process_number, int thread_num_per_pr
             Close(ipc_fd[1]);                       //父进程使用sockfd[0]与子进程进行通信
 
             thread_qty_ = thread_num_per_proc;
-            thread_pool_.set_and_start(thread_num_per_proc);
+            //thread_pool_.set_and_start(thread_num_per_proc);
 
             sp_room_guard_ = make_shared<RoomGuard>(process_number);
             assert(sp_room_guard_.get());
@@ -51,7 +51,7 @@ processpool::processpool(int listenfd, int process_number, int thread_num_per_pr
             Close(ipc_fd[0]);
 
             thread_qty_ = thread_num_per_proc;
-            thread_pool_.set_and_start(thread_num_per_proc * 2 + SENDTHREADSIZE);
+            //thread_pool_.set_and_start(thread_num_per_proc * 2 + SENDTHREADSIZE);
             sp_room_ = make_shared<Room>();
             assert(sp_room_.get());
 
@@ -111,6 +111,8 @@ void processpool::run()
 
 void processpool::init_child()
 {
+    thread_pool_.set_and_start(thread_qty_ * 2 + SENDTHREADSIZE);// 线程池需要在进程正式执行的时候才启动：当设置了两个子进程的时候，执行顺序是 创建主进程==>复制主进程来创建子进程==>再复制主进程来创建子进程，在创建第二个子进程的时候，主进程的线程池中的已经启动了，所以此时第二个子进程的线程池无法运行
+
     stop_ = false;
     for (int i = 0; i < SENDTHREADSIZE; i++)
     {
@@ -121,6 +123,8 @@ void processpool::init_child()
 
 void processpool::init_parent()
 {
+    thread_pool_.set_and_start(thread_qty_);
+
     stop_ = false;
     for (auto& ele : sp_room_guard_->umap_room_)
     {
