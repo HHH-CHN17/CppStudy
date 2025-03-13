@@ -1443,12 +1443,85 @@ int main() {
 
 [C++类型转换：隐式转换和显式转换_c++隐式转换-CSDN博客](https://blog.csdn.net/luolaihua2018/article/details/111996610)
 
+[？？？先看标准文档：隐式转换 - cppreference.com](https://zh.cppreference.com/w/cpp/language/implicit_conversion)
+
 [？？？好好看，C++隐式转换](https://www.cnblogs.com/apocelipes/p/14415033.html#)
+
+- 安全bool
+
+  ```c++
+  template <typename T>
+  struct SmartPointer {
+      //...
+      T *ptr = nullptr;
+      operator bool() {
+          return ptr != nullptr;
+      }
+  };
+   
+  auto ptr = SmartPointer<int>();
+  if (ptr) {				// 1
+      // ptr 是int*的包装，现在我们想取得ptr指向的值
+      int value = ptr;	// 2
+      // ...
+  }
+  ```
+
+  - 解释：
+    1. 
+
+  - 解决办法：
+
+    通过`explicit`把它踢出转换序列：
+
+    ```c++
+    template <typename T>
+    struct SmartPointer {
+        T *ptr = nullptr;
+        explicit operator bool() {
+            return ptr != nullptr;
+        }
+    };
+    auto ptr = SmartPointer<int>();
+    if (ptr) {					// 1
+        // ptr 是int*的包装，现在我们想取得ptr指向的值
+        int value = ptr;		// 2
+        // ...
+    }
+    ```
+
+    解释：
+
+    1. 此时`bool t(ptr);` 良构，进行隐式转换
+    2. `ptr`无法隐式转换为`bool`，报错
+
+- 两步用户定义转换
+
+  ```c++
+  struct A{
+      A(const std::string &s): _s{s} {}
+      std::string _s;
+  };
+   
+  void func(const A &s)
+  {
+      std::cout << s._s << std::endl;
+  }
+   
+  int main()
+  {
+      func("two-steps-implicit-conversion");
+  }
+  ```
+
+  解释：
+
+  1. 
 
 #### 隐式转换
 
 - 基本类型之间会隐式转换
-- nullptr可以转换为任意类型指针
+- `nullptr`可以转换为任意类型指针
 - 任意类型指针可以转换为void指针
 - 子类指针可以转换为父类指针
 - 类的隐式转换<font color=red>（最容易产生风险）</font>
