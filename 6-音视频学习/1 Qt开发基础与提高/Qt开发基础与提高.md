@@ -61,3 +61,152 @@
 
 1. 首先需要注意，两个编译器`#include "ui_mainwindow.h"`的位置不同，Qt Creator是放在了.cpp文件中，而VS是放在了.h文件中。
 2. 这就导致了在创建 ui 对象时，对于VS来说，可以创建一个完整的栈对象，而对于Qt Creator来说，只能先进行前置申明，然后创建一个对应的ui指针。
+
+### 初识对象树？？？
+
+如下代码：
+
+```c++
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    m_pQlabel = new QLabel(ui->statusbar);	// 1
+    m_pQlabel->setText("hello world");
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+```
+
+解释：
+
+1. 注意在指定label父对象后，无需刻意去释放，因为对象树最后会自动释放（当然你要在`delete ui`前或后加上`delete m_pQlabel`也无伤大雅
+
+进阶实验：
+
+我们修改一下`~MainWindow()`：
+
+```c++
+MainWindow::~MainWindow()
+{
+    //delete ui->statusbar;			1
+    delete ui;
+    //delete ui->statusbar;			2
+    //m_pQlabel->setText("seeee");	3
+    delete m_pQlabel;
+    //delete m_pQlabel;				4
+    //m_pQlabel->setText("seeee");	5
+}
+```
+
+解释：
+
+- 如果你自己去一行一行取消注释，会发现：`1`可以正常运行；`2`会导致运行时错误；`3`可以正常运行；`4`导致运行时错误；`5`会导致运行时错误。（以上结果基于MSVC）
+
+- 具体原因参考下列文档：**？？？？**
+
+  [Qt源码阅读(三) 对象树管理 - 师从名剑山 - 博客园](https://www.cnblogs.com/codegb/p/17270627.html)
+
+  [Qt总结之十一：内存泄漏（汇总）_qwidget释放内存空间后程序崩溃-CSDN博客](https://blog.csdn.net/Aidam_Bo/article/details/85698862)
+
+  [Qt总结之十九：Qt中控件new之后需不需要delete的问题_qt new出来的控件,是否要显式删除-CSDN博客](https://blog.csdn.net/Aidam_Bo/article/details/86303096)
+
+### QString
+
+- 标准C++提供了两种字符串 一种以`\0`为结尾的字符数组即C风格字符串， 另外一种是 `std::string`. Qt 提供了自己实现的QString 功能更强大. 
+
+- QString 是由一系列 QChar 组成的字符串. **QString 使用两个字节16位表示一个字符**．使用的是 UTF-16 双字节编码（代码值高于 65535 的 Unicode 字符使用代理对存储，即两个连续的 QChar）。
+
+  ```c++
+  QString str{ "1234" };
+  qDebug() << str.length();	// 4
+  qDebug() << sizeof(str);	// 8
+  ```
+
+- 在底层，**QString 使用隐式共享（写时复制）来减少内存使用**，并避免不必要的数据复制。这也有助于降低存储 16 位字符而非 8 位字符所带来的固有开销。
+
+- QString采用的是 UTF16，C++ 标准采用的是 UTF8 编码，针对 C++ 标准字符串，**Qt提供了QByteArray 类来操作 UTF8 编码的传统字符串，字节数组等。**在大多数情况下使用QString。QByteArray 适用的两种主要情况是：当你需要存储原始二进制数据时，以及当内存节约至关重要时（比如在嵌入式系统中）。
+
+### QVector\<T>
+
+和vector类似，重点关注内部结构，以及动态扩容时为啥每次都是扩容1.5倍或2倍
+
+### QList\<T>
+
+> - `QVector` 通常应是你的首选。`QVector<T>` 的性能通常优于 `QList<T>`，因为 `QVector<T>` 始终在内存中顺序存储其项目，而 `QList<T>` 通常会在堆上分配项目，**除非 `sizeof(T) <= sizeof(void*)` 且已使用 `Q_DECLARE_TYPEINFO` 将 `T` 声明为 `Q_MOVABLE_TYPE` 或 `Q_PRIMITIVE_TYPE`。**
+> - `QList`是线程不安全的。
+> - 在 Qt 的应用程序编程接口（APIs）中，`QList` 常用于传递参数和返回值。若要与这些 APIs 交互，请使用 `QList`。
+> - 如果你需要一个真正的链表，该链表保证在列表中间进行插入操作的时间复杂度为常数，并使用迭代器访问项目而非索引，那么请使用 `QLinkedList`。
+> - `QVector` 和 `QVarLengthArray` 都保证具有与 C 语言兼容的数组布局。`QList` 则不保证。如果你的应用程序必须与 C 语言应用程序编程接口（API）交互，这一点可能很重要。
+> - 只要所引用的项目仍在容器中，指向 `QLinkedList` 的迭代器以及指向在堆上分配内存的 `QList` 的引用就仍然有效。但对于指向 `QVector` 和不在堆上分配内存的 `QList` 的迭代器和引用，情况并非如此。
+
+- [建议多看：Understand the Qt containers | -Wmarc](https://marcmutz.wordpress.com/effective-qt/containers/#containers-qlist)
+
+- QList 与 std::list 毫无关系。它被实现为所谓的数组列表，**实际上是一块连续的 `void*` 空间**，**前后各有一些预留空间**，以便进行前置插入（极少使用）和后置追加（极为常用）操作。这些 `void*` 槽位存放着指向各个元素的指针（这些元素通过拷贝构造到动态内存中，即使用 new 操作符），除非元素类型是可移动的或POD类型，即**被声明为 `Q_MOVABLE_TYPE ` 或 `Q_PRIMITIVE_TYPE`，并且 `sizeof(T) <= sizeof(void*)`，在这种情况下，元素会直接存放在 `void*` 槽位中。**
+
+- 优点：
+
+  1. 从生成代码量的角度来看，`QList` 确实能节省内存。这是因为 `QList` 只是对一个内部类的轻量级封装，该内部类负责管理 `void*` 的内存。这使得代码更加紧凑，因为所有内存管理代码在不同类型的 `QList` 之间是共享的（**由此也可以得出`QList`是线程不安全的**）。
+  2. `QList` 在容器中间进行插入操作时速度也比较快，并且容器扩展的效率也比较合理（只需移动指针，而无需移动数据本身，所以 `QList` 总能使用 `realloc()` 来扩展自身）。不过，这种效率并不会比 `QVector<void*>` 高太多，而且一般来说，向量在中间进行快速插入并非其强项。
+
+- 缺点：
+
+  对于大多数数据类型，QList 在内存使用上是个十足的浪费者。
+
+  1. 首先，如果元素类型是可移动且足够小（见上文条件），当元素类型的大小小于 `sizeof (void*)` 时，`QList` 会浪费内存：确切地说，浪费的内存大小为 `sizeof (void*) - sizeof (T)`。这是因为每个元素至少需要 `sizeof (void*)` 的存储空间。换句话说：一个 `QList<char>` 使用的内存是 `QVector<char>` 的 4 倍 / 8 倍（32 位 / 64 位平台）！
+  2. 其次，如果元素类型不可移动或者太大（`sizeof (T) > sizeof (void*)`），它会在堆上分配内存。所以对于每个元素，你不仅要付出堆分配的额外开销（这取决于分配器，通常在 0 到十几二十字节之间），还要加上存放指针所需的 4/8 字节。
+
+- 只有当元素类型是可移动的且大小为 `sizeof (void*)` 时，`QList` 才是一个好的容器。至少对于 Qt 中一些最重要的隐式共享类型（`QString`、`QByteArray`，还有 `QPen`、`QBrush` 等）来说是这种情况，但也有一些明显的例外。以下是在 Qt 4.6.3 中，文档记录为隐式共享的类型列表，以及它们是否适合作为 QList 的元素：
+
+  | No: Too Large                                                | No: Not Movable                                              | OK                                                           |
+  | :----------------------------------------------------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+  | QBitmap, QFont, QGradient, QImage, QPalette, QPicture, QPixmap, QSqlField, QTextBoundaryFinder, QTextFormat, QVariant**(!)** | QContiguousCache, QCursor, QDir, QFontInfo, QFontMetrics, QFontMetricsF, QGLColormap, QHash, QLinkedList, QList, QMap, QMultiHash, QMultiMap, QPainterPath, QPolygon, QPolygonF, QQueue, QRegion, QSet, QSqlQuery, QSqlRecord, QStack, QStringList, QTextCursor, QTextDocumentFragment, QVector, QX11Info | QBitArray, QBrush, QByteArray, QFileInfo, QIcon, QKeySequence, QLocale, QPen, QRegExp, QString, QUrl |
+
+  QCache 缺少必需的拷贝构造函数，所以它不能作为 QList 中的元素使用。
+
+  所有这些容器本身的大小都足够小，可以放入 QList 的槽位中，但 QTypeInfo 尚未针对它们进行部分特化，所以它们没有被标记为可移动的，尽管很可能大部分容器本可以被标记为可移动。
+
+- 你可以像这样为你自己实例化的这些类声明 `Q_DECLARE_TYPEINFO `：
+
+  `Q_DECLARE_TYPEINFO( QList<MyType>, Q_MOVABLE_TYPE );`
+
+  这样当将它们放入 `QList` 中时，效率会提高。
+
+  然而，问题在于，如果你之前忘记声明 `Q_DECLARE_TYPEINFO `，现在就不能添加了，至少不能以二进制兼容的方式添加，因为声明一个类型为可移动会改变该类型在 `QList` 中的内存布局。这可能就是 Trolltech 公司（现 Qt 公司）尚未将这些容器标记为可移动的原因。
+
+  其他一些对于 `QList` 槽位来说太大的类型包括 `QSharedPointer<T>`、大多数 `QPairs` 以及 `QModelIndex`（！），但 `QPersistentModelIndex` 不是。
+
+- 以下是一些基本类型内存效率的概述。它们都是可移动的，所以作为 QList 元素有潜在的高效性。在表格中，“Size” 是通过 sizeof 操作符得出的元素类型的大小，“Mem/Elem” 是每个元素在 32 位 / 64 位平台上使用的内存（以字节为单位），“Overhead” 是将这些类型存储在 `QList` 而非 `QVector` 中时的内存开销，忽略每个容器使用的常数级（`O (1)`）内存。
+
+  | 类型          | Size | Mem/Elem | Overhead  |
+  | ------------- | ---- | -------- | --------- |
+  | bool/char     | 1    | 4/8      | 300%/700% |
+  | qint32/float  | 4    | 4/8      | 0%/100%   |
+  | qint64/double | 8    | 16+/8    | 100%+/0%  |
+
+  特别麻烦的是，一种类型在 32 位平台上可能高效，而在 64 位平台上却低效（例如 float），反之亦然（例如 double）。
+
+  这直接引出了以下更细致的准则：
+
+- **准则：当 T 既没有被声明为 `Q_MOVABLE_TYPE` ，也没有被声明为 `Q_PRIMITIVE_TYPE` ，或者 `sizeof (T) != sizeof (void*)` 时（记得检查 32 位和 64 位平台），避免使用 `QList<T>` 。**
+
+- 所以，`QList` 并不是一个好的默认容器。但是有没有 QList 比 QVector 更可取的情况呢？遗憾的是，答案是否定的。如果到了 Qt 5，Trolltech 公司直接将所有 `QList` 的使用替换为 `QVector` 就好了。在少数几个 `QList` 性能优于 `QVector` 的基准测试中，要么在实际应用中无关紧要，要么可以通过更好地优化 `QVector` 来解决。
+
+- 话虽如此，目前在编写 `QVector<QString>` 之前你还是要三思，尽管它可能性能略好。这是因为在 Qt 中习惯上使用 `QList` 来存储 `QString` 集合，并且在 Qt API 使用 QList 的情况下，你应该避免使用 vector，至少在 `QList` 实际高效的情况下如此。就我个人而言，只要有可能，我都会尝试用 `QVector<QModelIndex>` 替换低效的 `QList<QModelIndex>` 。
+
+- **准则：对于 Qt API 习惯使用 QList 且 QList 并非低效的类型，避免使用这些类型的 vector。**
+
+- [#总结](#QList\<T>)
+
+### QLinkedList\<T>
+
+已经过时了，建议使用 `std::list<T>` 进行替代
+
