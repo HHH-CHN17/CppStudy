@@ -1,3 +1,5 @@
+start：20250309
+
 ### Qt project 文件（1）
 
 - Qt 有pro 文件来组织项目 .pro文件可以通过 qtcreator 自动添加生成, 同时也可以通过命令行的方式手动生成.
@@ -119,6 +121,10 @@ MainWindow::~MainWindow()
 
   [Qt总结之十九：Qt中控件new之后需不需要delete的问题_qt new出来的控件,是否要显式删除-CSDN博客](https://blog.csdn.net/Aidam_Bo/article/details/86303096)
 
+### Qt 容器和 STL 容器的区别？？？
+
+[论Qt容器与STL - 知乎](https://zhuanlan.zhihu.com/p/24035468)
+
 ### QString
 
 - 标准C++提供了两种字符串 一种以`\0`为结尾的字符数组即C风格字符串， 另外一种是 `std::string`. Qt 提供了自己实现的QString 功能更强大. 
@@ -210,3 +216,82 @@ MainWindow::~MainWindow()
 
 已经过时了，建议使用 `std::list<T>` 进行替代
 
+### QMap\<T>
+
+和`std::map<T>`类似，只是接口函数不同
+
+### QHash\<T>
+
+和`std::unordered_map<T>`类似
+
+### Qt元对象系统
+
+> 如果没有信号槽，该如何实现对象间的通信
+>
+> 1. 函数指针，回调。
+> 2. `std::packaged_task<T>`，不仅能对象间通信，还能保证线程安全。
+
+- Qt 的元对象系统（Meta-0bjectSystem）是 Qt 框架的一个关键特性，用于提供一种在运行时处理对象的信息的机制。元对象系统允许在编译时和运行时处理 Qt 对象的信息，包括对象的类名、属性、信号和槽等。 
+- 元对象（Meta-0Object)︰在 Qt 中，每个支持元对象系统的类都有一个关联的元对象，其中包含了关于类的信息，: 名、父类信息、属性、信号和槽等。元对象是通过Q_OBJECT 宏来声明的 
+- Q_OBJECT 宏:当一个类中包含Q_OBJECT宏时，它就能够利用元对象系统的功能。Q_OBJECT宏会在类 一些额外的代码，使得该类能够通过元对象系统提供的接口进行运行时信息的查询。 
+- 信号和槽机制:元对象系统支持 Qt 中独特的信号和槽机制，它允许对象之间进行松散合的通信。信号是一种特殊的成员 函数，用于在某些条件下发出通知。槽是接收信号的函数，用于响应信号的发出。通过元对象系统，可以在运行时动态地; 接信号和槽。信号槽支持对象间跨线程通讯。 
+- 属性系统：元对象系统还支持属性(Property）系统，允许为对象定义一组属性，这些属性可以在运行时查询和修 系统对于实现动态属性和与图形界面控件的集成非常有用。 
+- 运行时类型信息（Run-Time Type lnformation，RTTI）∶元对象系统提供了一种在运行时查询对象的类型信息的机制。 以使用 qobject_cast 和 qobject_cast 函数进行安全的向下转型，而不需要使用动态 cast
+- QMetaObject 类:QMetaObject 类是元对象系统的核心部分，它提供了一系列函数，允许在运行时查询和操作信息。通过 QMetaObject ，可以动态地获取类的属性、信号、槽等信息。 元对象系统为 ot 提供了许多强大的特性，使得 Qt 应用程序能够在运行时动态地处理对象的信息，从而实现更灵活和可扩展的设计
+
+### Q_OBJECT 与信号槽机制
+
+- Q_OBJECT 宏是 Qt 中用于启用元对象系统的关键宏。使用 Q_OBJECT 宏的类可以利用元对象系统提供的一系列功能，包括信号槽机制、运行时类型信息（RTTI）、属性系统等。
+- Q_OBJECT 宏的作用： Q_OBJECT 宏的作用是在类的声明中插入一些额外的代码，以使得该类能够利用元对象系统的功能。这包括信号槽机制、运行时类型信息和其他元对象系统提供的特性。
+- 信号和槽机制： 在具有 Q_OBJECT 宏的类中，可以声明信号和槽。信号用于在特定条件下发出通知，而槽用于响应信号的发出。信号和槽之间通过 connect 函数建立关联，使得在信号触发时能够调用相关的槽函数。
+- 在使用信号和槽的过程中，通过元对象系统，Qt 在运行时动态地建立了连接关系，从而实现了对象间的松散耦合通信。
+- moc 编译器： 包含了 Q_OBJECT 宏的类需要通过 MOC（Meta-Object Compiler）编译器进行预处理。MOC 会解析类中的元对象信息，生成与信号槽机制相关的代码。在使用 Qt 编译器时，MOC 会自动执行。对于非 Qt Creator 等集成开发环境，你可能需要手动运行 MOC。
+- 使用 Q_OBJECT 宏和信号槽机制使得 Qt 中的对象能够实现强大的通信和交互能力，使代码更加灵活和可扩展。在使用信号槽时，请确保相关的类包含 Q_OBJECT 宏，并且运行了 MOC 编译器。
+
+### Qt XML 读写
+
+在 Qt 中，你可以使用 QXmlStreamReader 和 QXmlStreamWriter 来进行 XML 的读写操作。还可以使用 DOM（文档对象模型）方式读取和写入 XML 数据。Qt 提供了 QDomDocument 类来表示 XML 文档，以及相关的类来操作 XML 元素。
+
+- DOM（Document Object Model）和 Streaming（或称为 Pull Parsing）是两种不同的 XML 解析方式，它们有一些区别：
+
+- DOM 方式（Document Object Model）：
+
+- 内存占用： DOM 方式将整个 XML 文档加载到内存中，并构建一个树形结构表示整个文档。这意味着对于大型 XML 文件，DOM 可能占用较多的内存。
+
+- 随机访问： 由于整个文档在内存中，可以轻松实现对文档的随机访问，修改和查询。
+
+- 适用场景： 适用于文档结构较小，需要在解析后频繁随机访问和修改文档的情况。
+
+- Streaming 方式（Pull Parsing）：
+
+- 内存占用： Streaming 方式以流的形式逐行读取和解析 XML 文档，不需要将整个文档加载到内存中。这使得它对于大型 XML 文件更为适用，因为它在解析时只需保持较小的缓冲区。
+
+- 逐行处理： 以事件驱动的方式逐行处理 XML 文档，只有在需要时才解析下一个元素。这使得 Streaming 方式更适合处理大型 XML 文件，而不需要一次性加载整个文档。
+
+- 适用场景： 适用于文档结构较大，但一次只需处理一部分数据的情况，例如网络流或大型日志文件。
+
+- 在实践中，选择 DOM 还是 Streaming 方式取决于应用程序的需求和数据的大小。如果你需要对整个文档进行频繁的随机访问和修改，DOM 方式可能更适合。如果你处理大型 XML 文件或只需要逐行处理数据，Streaming 方式可能更有效。在某些情况下，也可以考虑使用 Hybrid 模式，根据实际需求在两者之间进行选择。
+
+### Qt Json 读写
+
+在 Qt 中，你可以使用 QJsonDocument 和 QJsonObject 来读写 JSON 数据。
+
+- QJsonDocument：
+
+- QJsonDocument 类表示一个 JSON 文档，可以包含一个或多个 JSON 对象或数组。
+
+- 它提供了将 JSON 数据序列化为字符串（toJson()）以及从字符串解析为 JSON 数据（fromJson()）的功能。
+
+- toJson() 函数返回 JSON 文档的字节数组表示，你可以通过 toJson(QJsonDocument::Indented) 传递 QJsonDocument::Indented 选项来格式化输出。
+
+- fromJson() 函数用于从包含 JSON 数据的字节数组构建 QJsonDocument。
+
+- QJsonObject：
+
+- QJsonObject 类表示一个 JSON 对象，即一个键值对的集合。
+
+- 它提供了添加、查询和删除键值对的方法，可以通过键访问值。
+
+- 键和值的类型可以是 QString、bool、double、QJsonObject、QJsonArray 等。
+
+- 你可以使用 insert()、value()、remove() 等函数操作 QJsonObject 中的键值对。
