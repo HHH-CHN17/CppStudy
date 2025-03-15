@@ -295,3 +295,18 @@ MainWindow::~MainWindow()
 - 键和值的类型可以是 QString、bool、double、QJsonObject、QJsonArray 等。
 
 - 你可以使用 insert()、value()、remove() 等函数操作 QJsonObject 中的键值对。
+
+### Qt对象树系统
+
+- QObject::QObject(QObject\* parent = nullptr) QObject 的构造函数的默认参数 parent, 指定他的父对象 . 默认为空 . 这背后的系统在对象内存管理中起到了重要作用 . 这就是 Qt 的对象树系统。
+
+- 例如一个 QWidget 父窗体 , 里面添加了几个子窗体 , 当父窗体销毁的时候，会自动销毁父窗体下所有的子窗体。这里有几个重要的知识点：
+
+- 1 父子对象的关系
+
+- 2 对象树构造和析构的顺序
+
+- 3 对象析构的问题
+
+- 4 窗体对象的销毁
+
