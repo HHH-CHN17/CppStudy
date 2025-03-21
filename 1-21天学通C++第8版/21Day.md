@@ -1439,7 +1439,7 @@ int main() {
 
 [c++ for_each 用法_c++ foreach用法-CSDN博客](https://blog.csdn.net/u014613043/article/details/50619254)
 
-### 。。。C++类型转换
+### C++类型转换
 
 [C++类型转换：隐式转换和显式转换_c++隐式转换-CSDN博客](https://blog.csdn.net/luolaihua2018/article/details/111996610)
 
@@ -2361,9 +2361,62 @@ void dispatchMessage(int msgid) {
 
 [C++11中的智能指针shared_ptr、weak_ptr源码解析 - tomato-haha - 博客园 (cnblogs.com)](https://www.cnblogs.com/tomato-haha/p/17705504.html)
 
-#### enable_shared_from_this
+#### 。。。enable_shared_from_this
 
+要搞懂里面的weak_ptr如何赋值的
 
+为什么：
+
+[【编程技巧】深入理解 std::enable_shared_from_this 与 shared_from_this：现代 C++ 编程指南-CSDN博客](https://blog.csdn.net/qq_21438461/article/details/142532830)
+
+实现：
+
+[c++enable_shared_from_this源代码分析(from visutal studio 2017) - 个人文章 - SegmentFault 思否](https://segmentfault.com/a/1190000020861953)
+
+[万字长文全面详解现代C++智能指针：原理、应用和陷阱 - 知乎](https://zhuanlan.zhihu.com/p/672745555)
+
+```c++
+1. 友元类的作用
+friend class shared_ptr<_Yty>; 是一个 友元声明，它允许 shared_ptr 类访问 enable_shared_from_this 的 私有成员（即 _Wptr）。
+
+具体来说：
+
+enable_shared_from_this 的核心成员是 mutable weak_ptr<_Ty> _Wptr，它用于存储指向当前对象的 weak_ptr。
+当一个对象被 shared_ptr 管理时，shared_ptr 需要将自身的控制权（即 weak_ptr）传递给 enable_shared_from_this 的 _Wptr 成员，这样才能保证后续通过 shared_from_this() 创建的新 shared_ptr 能够正确引用同一个资源。
+2. 为什么需要友元？
+enable_shared_from_this 的 _Wptr 是私有成员，正常情况下外部类（如 shared_ptr）无法直接访问或修改它。通过 friend 声明，shared_ptr 获得了以下权限：
+
+初始化 _Wptr：当 shared_ptr 管理一个 enable_shared_from_this 对象时，它需要将自身的 weak_ptr 存入 _Wptr 中。
+更新 _Wptr：在 shared_ptr 的赋值或复制操作中，需要同步更新 _Wptr 的值，以确保 shared_from_this() 返回的始终是最新的 shared_ptr。
+3. 具体实现逻辑
+场景：
+假设有一个类 X 继承自 enable_shared_from_this<X>，并且被 shared_ptr<X> 管理：
+
+cpp
+std::shared_ptr<X> sp = std::make_shared<X>();
+auto sp2 = sp->shared_from_this(); // 此处调用 enable_shared_from_this::shared_from_this()
+关键步骤：
+shared_ptr 初始化时：
+
+当 std::make_shared<X>() 创建 X 对象时，shared_ptr<X> 会自动调用 X 的构造函数。
+在 X 的构造函数中，enable_shared_from_this<X> 的构造函数也会被调用。
+shared_ptr<X> 利用友元权限，将自身的 weak_ptr<X> 赋值给 X::_Wptr。
+调用 shared_from_this()：
+
+shared_from_this() 内部通过 _Wptr.lock() 将 weak_ptr 转换为 shared_ptr，从而返回与原始 shared_ptr 共享同一控制块的新 shared_ptr。
+4. 模板友元的意义
+friend class shared_ptr<_Yty>; 中的 _Yty 是一个模板参数，表示允许 任意类型的 shared_ptr 成为友元。
+
+这非常重要，因为它支持以下场景：
+
+继承关系：假设 B 继承自 A，且 A 继承自 enable_shared_from_this<A>。当 shared_ptr<B> 管理一个 B 对象时，它需要访问基类 A 中的 _Wptr。通过模板友元，shared_ptr<B> 可以合法访问 enable_shared_from_this<A> 的私有成员。
+泛型代码：无论 shared_ptr 的具体类型是什么（如 shared_ptr<Base> 或 shared_ptr<Derived>），都可以通过友元机制正确设置 _Wptr。
+5. 总结
+友元声明的作用：允许 shared_ptr 直接访问 enable_shared_from_this 的私有成员 _Wptr，从而在 shared_ptr 管理对象时，将自身的 weak_ptr 存储到 _Wptr 中。
+设计目的：确保 shared_from_this() 返回的 shared_ptr 能够正确引用原始 shared_ptr 管理的对象，避免内存泄漏或悬垂指针。
+模板友元的必要性：支持多态和继承场景，确保不同类型的 shared_ptr 都能与 enable_shared_from_this 协作。
+通过这种方式，enable_shared_from_this 和 shared_ptr 的协作实现了安全、高效的 shared_from_this() 功能。
+```
 
 ### 异常
 
