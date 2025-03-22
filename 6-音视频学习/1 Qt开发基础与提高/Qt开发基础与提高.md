@@ -113,7 +113,19 @@ MainWindow::~MainWindow()
 
 - 如果你自己去一行一行取消注释，会发现：`1`可以正常运行；`2`会导致运行时错误；`3`可以正常运行；`4`导致运行时错误；`5`会导致运行时错误。（以上结果基于MSVC）
 
-- 具体原因参考下列文档：**？？？？**
+- 这是因为"ui_mainwindow.h"中的`class Ui_MainWindow`就是一个普通的类，该类中的`void setupUi(QMainWindow *MainWindow)`的作用，就是`new`出所有的对象，并将这些对象的父亲设为传进来的`MainWindow`指针，然后就不管事了，该ui类的析构函数也只是个简单的`default`，所以它并不会释放其成员指针所指向的内存，也就是说，**在`delete ui`后，ui类的成员变量并没有被真正地释放掉，真正的释放是在`MainWindow`及其父对象`QWidget`的析构函数结束后，调用其祖父对象`QObject`的析构函数之时[#对象树系统](Qt对象树系统)**。所以这下1，2，3，4，5点都能解释得通了，如果还不信，可以用以下代码验证：
+
+  ```c++
+  MainWindow::~MainWindow()
+  {
+      QPushButton* pb = ui->pushButton;
+      delete ui;
+      pb->setText("1111");				// ok
+      ui->pushButton->setText("22222");	// 运行时错误，非法内存访问
+  }
+  ```
+
+- 还可以多看看该文档？？？：
 
   [Qt源码阅读(三) 对象树管理 - 师从名剑山 - 博客园](https://www.cnblogs.com/codegb/p/17270627.html)
 
@@ -310,3 +322,65 @@ MainWindow::~MainWindow()
 
 - 4 窗体对象的销毁
 
+### Qt 对象树界面的应用
+
+- Qt 使用对象树来组织管理所有的 QObject 类以及其子类对象。
+
+- 创建一个 QObject 对象，默认会有父对象指针一个 QObject *parent 指针作为参数 .
+
+- 每个 QObject 内部都维护一个 children 列表和一个 parent 指针 .
+
+- 当一个 QObject 对象析构的时候，如果这个对象有 parent, 就会自动从它 parent 的 children 列表中移除 . 如果它有 children, 就会 delete 它的 children 列表中的每一个子对象 .
+
+- 比如 new 一个 QWidget ，创建时指定了它的父窗口，我们就不再需要手动 delete 这个 QWidget 对象 . 当它的父窗体销毁的时候，会自动销毁这个 QWidget 对象 . 这些都是通过对象树系统来完成
+
+- `QObjectData`是`QObject`的成员，里面存储的`parent`指针表示该`QObject`的父对象，而`QObjectList`即`QList<QObject*>`，所以显然，`children`表示该`QObject`的子对象列表。
+
+  ![image-20250315133731253](./assets/image-20250315133731253.png)
+
+### 父子对象的关系及构建顺序
+
+建议回顾：[#初识对象树](#初识对象树？？？)
+
+当我们构建一个对象，可以设置它的parent 参数 . 可以在构造的时候指定，也可以构造对象后调用setParent指定。
+
+- 父对象可以查找子对象，通过函数 findChild findChildren 函数。
+
+- 子对象可以通过setParent()函数指定父对象，通过parent()参数得到父对象指针。
+
+- 1父对象创建的时候，对象树建立。
+
+- 2子对象通过setParent() 指定父对象，子对象加入对象树系统中 .
+
+- 3子对象被删除，子对象自动从当前对象树中移除。
+
+- 4父对象被删除时，父对象先被析构，父对象的对象树中维护的所有的子对象会按照加入对象树的先后顺序进行析构。（**所以父子对象间的析构顺序是：先调用父对象的析构函数，然后在父对象的析构函数中遍历子对象列表，调用子对象列表中每一个子对象的析构函数，从单线程的角度来说，有点像树的深度搜索**，注意对象树的父子关系和继承中的父子关系不一样！！！）
+
+- 5所以当父对象销毁后，再调用子对象的方法，会导致程序崩溃。
+
+课后习题：以下代码哪里有问题？该如何解决？
+
+```c++
+int main(int argc, char* argv[])
+{
+    QApplication app(argc, argv);
+    QLabel label("hello world.");
+    QMainWindow w;
+    label.setParent(&w);
+    w.show();
+    return app.exec();
+}
+```
+
+分析：
+
+1. `QLabel`先被创建，然后创建`QMainWindow`，然后将`QLabel`加入`QMainWindow`的对象树，在程序退出的时候，由于`QLabel`和`QMainWindow`都是栈对象，所以会先析构`QMainWindow`，再析构`QLabel`；当析构`QMainWindow`的时候，根据**对象树析构顺序**，调用`QMaindow`的析构函数时，会将`QLabel`一起释放掉，而在`QMainWindow`析构结束后，根据**栈对象的释放顺序**，又会调用`QLabel`的析构函数，最终重复释放导致报错。
+2. 解决办法也很简单
+   - 将`QLabel`和`QMainWindow`的创建顺序调换。
+   - 将`QLabel`创建在堆上。
+
+### Qt 事件？？？
+
+[QWidget父子事件传递源码剖析_qt 一个widget触发mousemove事件同时触发另一个widget的mousemove事件-CSDN博客](https://blog.csdn.net/kupepoem/article/details/121883121)
+
+[QT父子窗口事件传递与事件过滤器（讲了一些原理，比较清楚） - findumars - 博客园](https://www.cnblogs.com/findumars/p/6152886.html)
