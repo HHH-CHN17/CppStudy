@@ -2361,7 +2361,7 @@ void dispatchMessage(int msgid) {
 
 [C++11中的智能指针shared_ptr、weak_ptr源码解析 - tomato-haha - 博客园 (cnblogs.com)](https://www.cnblogs.com/tomato-haha/p/17705504.html)
 
-#### 。。。enable_shared_from_this
+#### enable_shared_from_this
 
 要搞懂里面的weak_ptr如何赋值的
 
@@ -2370,6 +2370,8 @@ void dispatchMessage(int msgid) {
 [【编程技巧】深入理解 std::enable_shared_from_this 与 shared_from_this：现代 C++ 编程指南-CSDN博客](https://blog.csdn.net/qq_21438461/article/details/142532830)
 
 实现：
+
+[C++内存管理：shared_ptr/weak_ptr源码（长文预警） - 知乎](https://zhuanlan.zhihu.com/p/532215950)
 
 [c++enable_shared_from_this源代码分析(from visutal studio 2017) - 个人文章 - SegmentFault 思否](https://segmentfault.com/a/1190000020861953)
 
