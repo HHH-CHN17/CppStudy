@@ -2345,6 +2345,22 @@ void dispatchMessage(int msgid) {
 }
 ```
 
+#### shared_ptr
+
+[C++内存管理：shared_ptr/weak_ptr源码（长文预警） - 知乎](https://zhuanlan.zhihu.com/p/532215950)
+
+[必看：shared_ptr代码解读](https://zhuanlan.zhihu.com/p/627041592)
+
+- 引用计数块基类`_Ref_count_base`
+
+  `_Uses`：强引用计数，表示有多少个指针（shared_ptr）指向需要管理的对象资源
+
+  `_Weaks`：弱引用计数，表示是否有shared_ptr指向需要管理的对象（当share_ptr初始化的时候设为1，当_Uses=0时-1）以及持有该引用计数块的weak_ptr的个数。
+
+  注意：
+
+  1. `_Weaks`的逻辑：如果 _Weaks初始化不为1，则weak_ptr在释放时，需要判断 _Uses 和 _Weaks 两个变量的值, 那导致需要动用线程互斥量(互斥锁, mutex).
+
 #### weak_ptr
 
 **应用场景**
