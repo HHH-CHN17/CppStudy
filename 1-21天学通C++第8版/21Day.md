@@ -2345,11 +2345,15 @@ void dispatchMessage(int msgid) {
 }
 ```
 
+### 智能指针源码分析
+
 #### shared_ptr
 
 [C++内存管理：shared_ptr/weak_ptr源码（长文预警） - 知乎](https://zhuanlan.zhihu.com/p/532215950)
 
 [必看：shared_ptr代码解读](https://zhuanlan.zhihu.com/p/627041592)
+
+[必看：从零开始写一个shared_ptr](https://zhuanlan.zhihu.com/p/386631678)
 
 - 引用计数块基类`_Ref_count_base`
 
@@ -2360,6 +2364,10 @@ void dispatchMessage(int msgid) {
   注意：
 
   1. `_Weaks`的逻辑：如果 _Weaks初始化不为1，则weak_ptr在释放时，需要判断 _Uses 和 _Weaks 两个变量的值, 那导致需要动用线程互斥量(互斥锁, mutex).
+
+#### make_shared
+
+[从零开始写一个shared_ptr-make_shared源代码解析 - 知乎](https://zhuanlan.zhihu.com/p/386631678)
 
 #### weak_ptr
 
