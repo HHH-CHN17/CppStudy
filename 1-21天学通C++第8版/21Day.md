@@ -2349,185 +2349,193 @@ void dispatchMessage(int msgid) {
 
 > 模板实现部分建议后续复习完模板编程再来看
 
-[C++内存管理：shared_ptr/weak_ptr源码（长文预警） - 知乎](https://zhuanlan.zhihu.com/p/532215950)
-
 [必看：shared_ptr代码解读](https://zhuanlan.zhihu.com/p/627041592)
 
 [必看：从零开始写一个shared_ptr](https://zhuanlan.zhihu.com/p/386631678)
 
 [C++11中的智能指针shared_ptr、weak_ptr源码解析 - tomato-haha - 博客园 (cnblogs.com)](https://www.cnblogs.com/tomato-haha/p/17705504.html)
 
-- 智能指针结构
+[浅析 shared_ptr：MSVC STL 篇 | KC的废墟堆](https://kingsamchen.github.io/2018/03/16/demystify-shared-ptr-and-weak-ptr-in-msvc-stl/)
 
-  <img src="assets/v2-da38e112769f7a92802d96168e15bf3c_1440w.jpg" alt="img"  />
+[从源码看std::weak_ptr1. 序 本篇文章来讲解一下weak_ptr, weak_ptr一般也都是和share - 掘金](https://juejin.cn/post/7112987636007960606)
 
-- **_Ref_count_base（引用计数块基类）**
+#### 智能指针结构
 
-  `_Uses`：强引用计数，初始值为1，表示有多少个指针（shared_ptr）指向需要管理的对象资源
+<img src="assets/v2-da38e112769f7a92802d96168e15bf3c_1440w.jpg" alt="img"  />
 
-  `_Weaks`：弱引用计数，初始值为1，表示是否有shared_ptr指向需要管理的对象（当share_ptr初始化的时候设为1，当_Uses=0时-1）以及持有该引用计数块的weak_ptr的个数。
+#### _Ref_count_base
 
-  注意：
+引用计数块基类
 
-  1. `_Weaks`的逻辑：如果 _Weaks初始化不为1，则weak_ptr在释放时，需要通过 _Uses 和 _Weaks 两个变量的值来判断是否释放引用计数块, 这需要使用互斥锁实现（原子操作难以同时判断，因为无法将两个原子操作缩减为一条汇编指令）
+`_Uses`：强引用计数，初始值为1，表示有多少个指针（shared_ptr）指向需要管理的对象资源
 
-  2. `_Incref_nz()`
+`_Weaks`：弱引用计数，初始值为1，表示是否有shared_ptr指向需要管理的对象（当share_ptr初始化的时候设为1，当_Uses=0时-1）以及持有该引用计数块的weak_ptr的个数。
 
-     ```c++
-     bool _Incref_nz() noexcept { // increment use count if not zero, return true if successful
-         auto& _Volatile_uses = reinterpret_cast<volatile long&>(_Uses);
-         long _Count = __iso_volatile_load32(reinterpret_cast<volatile int*>(&_Volatile_uses));
-         while (_Count != 0) {
-             const long _Old_value = _INTRIN_RELAXED(_InterlockedCompareExchange)(&_Volatile_uses, _Count + 1, _Count);
-             if (_Old_value == _Count) {
-                 return true;
-             }
-             _Count = _Old_value;
-         }
-         return false;
-     }
-     ```
+注意：
 
-     使用了一个比较/交换操作，类似于`compare_exchange_weak()`，保证`_Uses`安全增加
+1. `_Weaks`的逻辑：如果 _Weaks初始化不为1，则weak_ptr在释放时，需要通过 _Uses 和 _Weaks 两个变量的值来判断是否释放引用计数块, 这需要使用互斥锁实现（原子操作难以同时判断，因为无法将两个原子操作缩减为一条汇编指令）
 
-  3. `_Destory()`，`_Delete_this()`（纯虚函数，由子类自己实现）
+2. `_Incref_nz()`
 
-     - `_Destory()` 释放指针指向资源（对于通过`make_shared<>`构造的资源，该函数仅调用资源析构函数，不释放内存）
-     - `_Delete_this()` 释放控制块自身的资源
-
-  4. 减少引用计数的逻辑
-
-     ```c++
-     void _Decref() noexcept { // decrement use count
-         if (_MT_DECR(_Uses) == 0) {
-             _Destroy();
-             _Decwref();
-         }
-     }
-     void _Decwref() noexcept { // decrement weak reference count
-         if (_MT_DECR(_Weaks) == 0) {
-             _Delete_this();
-         }
-     }
-     ```
-
-     解释：
-
-     - 先减少`_Uses`，如果为0，则释放管理的资源；然后减少`_Weaks`，如果为0，则释放引用计数块。
-
-- **_Ptr_base（`shared_ptr`和`weak_ptr`的基类）**
-
-  `element_type* _Ptr{nullptr};`：管理对象的指针，其中`using element_type = remove_extent_t<_Ty>;`，意思是诸如`int`，`int[Nx]`，`int[]`都会被转换为`int`
-  
-  `_Ref_count_base* _Rep{nullptr};`：引用计数基类
-  
-  注意：
-  
-  1. 本身的构造函数：
-  
-     ```c++
-     _Ptr_base(const _Ptr_base&)            = delete;
-     _Ptr_base& operator=(const _Ptr_base&) = delete;
-     constexpr _Ptr_base() noexcept = default;
-     ~_Ptr_base() = default;
-     ```
-  
-  2. 提供给子类的构造函数：
-  
-     ```c++
-     // implement shared_ptr's (converting) move ctor and weak_ptr's move ctor
-     template <class _Ty2>
-     void _Move_construct_from(_Ptr_base<_Ty2>&& _Right) noexcept;
-     
-     // implement shared_ptr's (converting) copy ctor
-     template <class _Ty2>
-     void _Copy_construct_from(const shared_ptr<_Ty2>& _Other) noexcept;
-     
-     // implement shared_ptr's aliasing ctor（别名构造，用来指向一个已经被智能指针管理的对象的成员，具体见后续分析）
-     template <class _Ty2>
-     void _Alias_construct_from(const shared_ptr<_Ty2>& _Other, element_type* _Px) noexcept;
-     
-     // implement shared_ptr's aliasing move ctor
-     template <class _Ty2>
-     void _Alias_move_construct_from(shared_ptr<_Ty2>&& _Other, element_type* _Px) noexcept;
-     
-     // implement shared_ptr's ctor from weak_ptr, and weak_ptr::lock()
-     template <class _Ty2>
-     bool _Construct_from_weak(const weak_ptr<_Ty2>& _Other) noexcept;
-     
-     // implement weak_ptr's ctors
-     template <class _Ty2>
-     void _Weakly_construct_from(const _Ptr_base<_Ty2>& _Other) noexcept;
-     
-     // implement weak_ptr's copy converting ctor（用于weak_ptr，当子类虚继承父类时使用，具体见后续分析）
-     template <class _Ty2>
-     void _Weakly_convert_lvalue_avoiding_expired_conversions(const _Ptr_base<_Ty2>& _Other) noexcept;
-     
-     // implement weak_ptr's move converting ctor（用于weak_ptr，当子类虚继承父类时使用，具体见后续分析）
-     template <class _Ty2>
-     void _Weakly_convert_rvalue_avoiding_expired_conversions(_Ptr_base<_Ty2>&& _Other) noexcept;
-     ```
-     
-     解释：（仅看源码，具体分析见后续）
-     
-     - `_Alias_construct_from`
-     
-       ```c++
-       template <class _Ty2>
-       void _Alias_construct_from(const shared_ptr<_Ty2>& _Other, element_type* _Px) noexcept {
-           // implement shared_ptr's aliasing ctor
-           _Other._Incref();
-           _Ptr = _Px;
-           _Rep = _Other._Rep;
-       }
-       ```
-     
-     - `owner_before`
-     
-       [必看：owner_before/](https://cplusplus.com/reference/memory/shared_ptr/owner_before/)
-     
-       [想看就看](https://www.zhihu.com/question/24816143)
-     
-       `operator<()`，比较的是stored pointer；而`owner_before()`比较的是owner pointer，可用于排序，比如用作map的key
-     
-       ```c++
-       template <class _Ty2>
-       bool owner_before(const _Ptr_base<_Ty2>& _Right) const noexcept { // compare addresses of manager objects
-           return _Rep < _Right._Rep;
-       }
-       ```
-     
-       ```c++
-       template <class _Ty1, class _Ty2>
-       bool operator<(const shared_ptr<_Ty1>& _Left, const shared_ptr<_Ty2>& _Right) noexcept {
-           return _Left.get() < _Right.get();
-       }
-       ```
-     
-     - `_Weakly_convert_lvalue_avoiding_expired_conversions`
-     
-       ```c++
-       template <class _Ty2>
-       void _Weakly_convert_lvalue_avoiding_expired_conversions(const _Ptr_base<_Ty2>& _Other) noexcept {
-           // implement weak_ptr's copy converting ctor
-           if (_Other._Rep) {
-               _Rep = _Other._Rep; // always share ownership
-               _Rep->_Incwref();
-               if (_Rep->_Incref_nz()) {
-                   _Ptr = _Other._Ptr; // keep resource alive during conversion, handling virtual inheritance
-                   _Rep->_Decref();
-               } else {
-                   _STL_INTERNAL_CHECK(!_Ptr);
-               }
-           } else {
-               _STL_INTERNAL_CHECK(!_Ptr && !_Rep);
+   ```c++
+   bool _Incref_nz() noexcept { // increment use count if not zero, return true if successful
+       auto& _Volatile_uses = reinterpret_cast<volatile long&>(_Uses);
+       long _Count = __iso_volatile_load32(reinterpret_cast<volatile int*>(&_Volatile_uses));
+       while (_Count != 0) {
+           const long _Old_value = _INTRIN_RELAXED(_InterlockedCompareExchange)(&_Volatile_uses, _Count + 1, _Count);
+           if (_Old_value == _Count) {
+               return true;
            }
+           _Count = _Old_value;
        }
-       ```
+       return false;
+   }
+   ```
+
+   使用了一个比较/交换操作，类似于`compare_exchange_weak()`，保证`_Uses`安全增加
+
+3. `_Destory()`，`_Delete_this()`（纯虚函数，由子类自己实现）
+
+   - `_Destory()` 释放指针指向资源（对于通过`make_shared<>`构造的资源，该函数仅调用资源析构函数，不释放内存）
+   - `_Delete_this()` 释放控制块自身的资源
+
+4. 减少引用计数的逻辑
+
+   ```c++
+   void _Decref() noexcept { // decrement use count
+       if (_MT_DECR(_Uses) == 0) {
+           _Destroy();
+           _Decwref();
+       }
+   }
+   void _Decwref() noexcept { // decrement weak reference count
+       if (_MT_DECR(_Weaks) == 0) {
+           _Delete_this();
+       }
+   }
+   ```
+
+   解释：
+
+   - 先减少`_Uses`，如果为0，则释放管理的资源；然后减少`_Weaks`，如果为0，则释放引用计数块。
+
+#### _Ptr_base
+
+`shared_ptr`和`weak_ptr`的基类
+
+`element_type* _Ptr{nullptr};`：管理对象的指针，其中`using element_type = remove_extent_t<_Ty>;`，意思是诸如`int`，`int[Nx]`，`int[]`都会被转换为`int`
+
+`_Ref_count_base* _Rep{nullptr};`：引用计数基类
+
+注意：
+
+1. 本身的构造函数：
+
+   ```c++
+   _Ptr_base(const _Ptr_base&)            = delete;
+   _Ptr_base& operator=(const _Ptr_base&) = delete;
+   constexpr _Ptr_base() noexcept = default;
+   ~_Ptr_base() = default;
+   ```
+
+2. 提供给子类的构造函数：
+
+   ```c++
+   // implement shared_ptr's (converting) move ctor and weak_ptr's move ctor
+   template <class _Ty2>
+   void _Move_construct_from(_Ptr_base<_Ty2>&& _Right) noexcept;
+   
+   // implement shared_ptr's (converting) copy ctor
+   template <class _Ty2>
+   void _Copy_construct_from(const shared_ptr<_Ty2>& _Other) noexcept;
+   
+   // implement shared_ptr's aliasing ctor（别名构造，用来指向一个已经被智能指针管理的对象的成员，具体见后续分析）
+   template <class _Ty2>
+   void _Alias_construct_from(const shared_ptr<_Ty2>& _Other, element_type* _Px) noexcept;
+   
+   // implement shared_ptr's aliasing move ctor
+   template <class _Ty2>
+   void _Alias_move_construct_from(shared_ptr<_Ty2>&& _Other, element_type* _Px) noexcept;
+   
+   // implement shared_ptr's ctor from weak_ptr, and weak_ptr::lock()
+   template <class _Ty2>
+   bool _Construct_from_weak(const weak_ptr<_Ty2>& _Other) noexcept;
+   
+   // implement weak_ptr's ctors
+   template <class _Ty2>
+   void _Weakly_construct_from(const _Ptr_base<_Ty2>& _Other) noexcept;
+   
+   // implement weak_ptr's copy converting ctor（用于weak_ptr，当子类虚继承父类时使用，具体见后续分析）
+   template <class _Ty2>
+   void _Weakly_convert_lvalue_avoiding_expired_conversions(const _Ptr_base<_Ty2>& _Other) noexcept;
+   
+   // implement weak_ptr's move converting ctor（用于weak_ptr，当子类虚继承父类时使用，具体见后续分析）
+   template <class _Ty2>
+   void _Weakly_convert_rvalue_avoiding_expired_conversions(_Ptr_base<_Ty2>&& _Other) noexcept;
+   ```
+   
+   解释：（仅看源码，具体分析见后续）
+   
+   - `_Alias_construct_from`
+   
+     ```c++
+     template <class _Ty2>
+     void _Alias_construct_from(const shared_ptr<_Ty2>& _Other, element_type* _Px) noexcept {
+         // implement shared_ptr's aliasing ctor
+         _Other._Incref();
+         _Ptr = _Px;
+         _Rep = _Other._Rep;
+     }
+     ```
+   
+   - `owner_before`
+   
+     [必看：owner_before/](https://cplusplus.com/reference/memory/shared_ptr/owner_before/)
+   
+     [想看就看](https://www.zhihu.com/question/24816143)
+   
+     `operator<()`，比较的是stored pointer；而`owner_before()`比较的是owner pointer，可用于排序，比如用作map的key
+   
+     ```c++
+     template <class _Ty2>
+     bool owner_before(const _Ptr_base<_Ty2>& _Right) const noexcept { // compare addresses of manager objects
+         return _Rep < _Right._Rep;
+     }
+     ```
+   
+     ```c++
+     template <class _Ty1, class _Ty2>
+     bool operator<(const shared_ptr<_Ty1>& _Left, const shared_ptr<_Ty2>& _Right) noexcept {
+         return _Left.get() < _Right.get();
+     }
+     ```
+   
+   - `_Weakly_convert_lvalue_avoiding_expired_conversions`
+   
+     ```c++
+     template <class _Ty2>
+     void _Weakly_convert_lvalue_avoiding_expired_conversions(const _Ptr_base<_Ty2>& _Other) noexcept {
+         // implement weak_ptr's copy converting ctor
+         if (_Other._Rep) {
+             _Rep = _Other._Rep; // always share ownership
+             _Rep->_Incwref();
+             if (_Rep->_Incref_nz()) {
+                 _Ptr = _Other._Ptr; // keep resource alive during conversion, handling virtual inheritance
+                 _Rep->_Decref();
+             } else {
+                 _STL_INTERNAL_CHECK(!_Ptr);
+             }
+         } else {
+             _STL_INTERNAL_CHECK(!_Ptr && !_Rep);
+         }
+     }
+     ```
 
 #### shared_ptr<_Ty>
 
 [必看：构造函数中的模板解析](https://blog.csdn.net/qq_41824928/article/details/107227424)
+
+[这个一定一定要看：浅析 shared_ptr](https://kingsamchen.github.io/2018/03/16/demystify-shared-ptr-and-weak-ptr-in-msvc-stl/)
 
 仅分析重要函数，具体细节见源码
 
@@ -2785,10 +2793,10 @@ shared_ptr<_Ty> make_shared(_Types&&... _Args) { // make a shared_ptr to non-arr
    C++允许按任意顺序执行子表达式(arbitrary order of evaluation of subexpressions)(这个在C++17更新后就不再是问题了), 一个可能的执行顺序是:
 
    ```c++
-   1. new Lhs("foo"))
-   2. new Rhs("bar"))
-   3. std::shared_ptr<Lhs>
-   4. std::shared_ptr<Rhs>
+   new Lhs("foo"))
+   new Rhs("bar"))
+   std::shared_ptr<Lhs>
+   std::shared_ptr<Rhs>
    ```
 
    假设在第2步`new Rhs("bar"))`的时候出现了一个exception, 比如是内存耗尽(out of memory)的exception, 或者构造函数里的exception，那么第1步里分配的内存地址就没有保存在任何地方, 所以这块内存永远回收不了, 内存泄露了.
@@ -2815,25 +2823,196 @@ shared_ptr<_Ty> make_shared(_Types&&... _Args) { // make a shared_ptr to non-arr
 
 #### weak_ptr
 
-[C++ Working Draft](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/n4950.pdf)
-
-[浅析 shared_ptr：MSVC STL 篇 | KC的废墟堆](https://kingsamchen.github.io/2018/03/16/demystify-shared-ptr-and-weak-ptr-in-msvc-stl/)
-
-[从源码看std::weak_ptr1. 序 本篇文章来讲解一下weak_ptr, weak_ptr一般也都是和share - 掘金](https://juejin.cn/post/7112987636007960606)
-
 **应用场景**
 
 一切应该不具有对象所有权，又想安全访问对象的情况。
 
-**lock()实现**
+先来看看`weak_ptr<>`的部分重要实现：
 
-该函数线程安全，在该函数中通过while循环的自旋锁不断判断引用计数是否为0（为0表示对应的shared_ptr中的data_ptr已经被释放），然后还要在lock前判断是否有别的线程更改了这个引用计数，在没有更改的时候+1。从判断条件到引用计数+1这段代码通过CAS实现原子操作。
+```c++
+_EXPORT_STD template <class _Ty>
+class weak_ptr : public _Ptr_base<_Ty> {
+public:
+    // Primary template, the value is used when the substitution fails.
+    template <class _Ty2, class = const _Ty2*>
+    static constexpr bool _Must_avoid_expired_conversions_from = true;
 
+    // Template specialization, the value is used when the substitution succeeds.
+    template <class _Ty2>
+    static constexpr bool
+        _Must_avoid_expired_conversions_from<_Ty2, decltype(static_cast<const _Ty2*>(static_cast<_Ty*>(nullptr)))> = false;
 
+    constexpr weak_ptr() noexcept {}
+
+    weak_ptr(const weak_ptr& _Other) noexcept {
+    	this->_Weakly_construct_from(_Other); // same type, no conversion
+	}
+    
+    template <class _Ty2, enable_if_t<_SP_pointer_compatible<_Ty2, _Ty>::value, int> = 0>
+    weak_ptr(const weak_ptr<_Ty2>& _Other) noexcept {	
+        constexpr bool _Avoid_expired_conversions = _Must_avoid_expired_conversions_from<_Ty2>;
+        
+        if constexpr (_Avoid_expired_conversions) {
+            this->_Weakly_convert_lvalue_avoiding_expired_conversions(_Other);
+        } else {
+            this->_Weakly_construct_from(_Other);
+        }
+    }
+
+    ~weak_ptr() noexcept {
+        this->_Decwref();
+    }
+
+    bool expired() const noexcept {
+        return this->use_count() == 0;
+    }
+
+    shared_ptr<_Ty> lock() const noexcept { // convert to shared_ptr
+        shared_ptr<_Ty> _Ret;
+        (void) _Ret._Construct_from_weak(*this);
+        return _Ret;
+    }
+};
+```
+
+解释：
+
+我们主要看两个比较难的函数（其他代码自己看源码）：
+
+1. `weak_ptr(const weak_ptr<_Ty2>& _Other) noexcept`
+
+   这个函数中涉及到了`_Ptr_base`中的两个函数，实现分别是：
+
+   ```c++
+   template <class _Ty2>
+   void _Weakly_convert_lvalue_avoiding_expired_conversions(const _Ptr_base<_Ty2>& _Other) noexcept {
+       // implement weak_ptr's copy converting ctor
+       if (_Other._Rep) {
+           _Rep = _Other._Rep; // always share ownership
+           _Rep->_Incwref();
+           if (_Rep->_Incref_nz()) {
+               _Ptr = _Other._Ptr; // keep resource alive during conversion, handling virtual inheritance
+               _Rep->_Decref();
+           } else {
+               _STL_INTERNAL_CHECK(!_Ptr);
+           }
+       } else {
+           _STL_INTERNAL_CHECK(!_Ptr && !_Rep);
+       }
+   }
+   template <class _Ty2>
+   void _Weakly_construct_from(const _Ptr_base<_Ty2>& _Other) noexcept { // implement weak_ptr's ctors
+       if (_Other._Rep) {
+           _Ptr = _Other._Ptr;
+           _Rep = _Other._Rep;
+           _Rep->_Incwref();
+       } else {
+           _STL_INTERNAL_CHECK(!_Ptr && !_Rep);
+       }
+   }
+   ```
+
+   两者的区别很明显，结合该构造函数的实现，可以得出如下结论：
+
+   当`_Ty2`为子类，`_Ty`为父类（也就是使用子类的`weak_ptr`构造父类的`weak_ptr`）时，会调用该函数，如果`_Avoid_expired_conversions`为`true`，则需要保证在使用子类`weak_ptr`构造父类`weak_ptr`时，管理的资源仍然存活，这是为了处理虚继承的情况，可以参考[#虚继承下的内存布局](../2-深入理解C++11/深入理解C++11.md/#虚继承实现原理)。
+
+   - 为什么需要处理虚继承的情况：
+
+     1. **在虚继承的情况下，如果使用子类指针给父类指针赋值时，需要通过子类的虚基类指针找到父类，此时如果子类对象已被delete，会导致非法内存访问（悬空指针）**，示例如下：
+
+        ```c++
+        struct parent {
+            void f() {
+                cout << "parent f" << endl;
+            }
+        };
+        
+        struct child :virtual public parent{
+        
+        };
+        int main(){
+        	child* t = new child{};
+        	delete t;
+        	parent* t1 = t;	// error, Access violation reading location，如果改为普通继承，则可以正常打印 "parent f"
+        	t1->f();
+        }
+        ```
+
+        对应到源代码中，如果直接使用`_Ptr = _Other._Ptr;`则在虚继承的情况下很可能报错！
+
+   - 如何在编译期判断是否为虚继承，以及为什么能这么判断：
+
+     - 怎么做：
+
+       ```c++
+       // Primary template, the value is used when the substitution fails.
+       template <class _Ty2, class = const _Ty2*>
+       static constexpr bool _Must_avoid_expired_conversions_from = true;
+       // Template specialization, the value is used when the substitution succeeds.
+       template <class _Ty2>
+       static constexpr bool
+           _Must_avoid_expired_conversions_from<_Ty2, decltype(static_cast<const _Ty2*>(static_cast<_Ty*>(nullptr)))> = false;
+       ```
+
+       其中`_Ty`为基类，`_Ty2`为子类
+
+     - 为什么：
+
+       “指向 *cv1* `Base` 的指针”类型的右值(C++11 前)纯右值(C++11 起)在满足以下所有条件时可以显式转换到“指向 *cv2* `Derived` 的指针”：
+
+       - `Derived` 是完整类类型。
+       - `Base` 是 `Derived` 的基类
+       - *cv1* 是不多于 *cv2* 的 cv 限定。
+
+        如果*表达式* ﻿是[空指针值](https://zh.cppreference.com/w/cpp/language/pointer#.E7.A9.BA.E6.8C.87.E9.92.88)，那么结果是*目标类型* ﻿的空指针值。否则，结果是指向*表达式* ﻿指向的 `Base` 类型对象的外围 `Derived` 类型对象的指针。
+
+        如果满足以下任意条件，那么程序非良构：
+
+       - `Base` 是 `Derived` 的[虚基类](https://zh.cppreference.com/w/cpp/language/derived_class#.E8.99.9A.E5.9F.BA.E7.B1.BB)。
+       - `Base` 是 `Derived` 的某个虚基类的基类。
+       - 不存在从“指向 `Derived` 的指针”到“指向 `Base` 的指针”的合法[标准转换](https://zh.cppreference.com/w/cpp/language/implicit_conversion)。
+
+        如果*表达式* ﻿既不是空指针值，实际上也不指向某个 `Derived` 类型对象的基类子对象，那么行为未定义。
+
+       参考：`N4950 [expr.static.cast]/12` 或 [static_cast 转换 - cppreference.com](https://zh.cppreference.com/w/cpp/language/static_cast)
+
+2. `shared_ptr<_Ty> lock() const noexcept`
+
+   先看看相关函数实现：
+
+   ```c++
+   shared_ptr<_Ty> lock() const noexcept { // convert to shared_ptr
+       shared_ptr<_Ty> _Ret;
+       (void) _Ret._Construct_from_weak(*this);
+       return _Ret;
+   }
+   template <class _Ty2>
+   bool _Construct_from_weak(const weak_ptr<_Ty2>& _Other) noexcept {
+       // implement shared_ptr's ctor from weak_ptr, and weak_ptr::lock()
+       if (_Other._Rep && _Other._Rep->_Incref_nz()) {
+           _Ptr = _Other._Ptr;
+           _Rep = _Other._Rep;
+           return true;
+       }
+       return false;
+   }
+   bool _Incref_nz() noexcept { // increment use count if not zero, return true if successful
+       auto& _Volatile_uses = reinterpret_cast<volatile long&>(_Uses);
+       long _Count = __iso_volatile_load32(reinterpret_cast<volatile int*>(&_Volatile_uses));
+       while (_Count != 0) {
+           const long _Old_value = _INTRIN_RELAXED(_InterlockedCompareExchange)(&_Volatile_uses, _Count + 1, _Count);
+           if (_Old_value == _Count) {
+               return true;
+           }
+           _Count = _Old_value;
+       }
+       return false;
+   }
+   ```
+
+   `_Incref_nz()`具体看[#_Ref_count_base](#_Ref_count_base)，该函数线程安全，在该函数中通过while循环的自旋锁不断判断引用计数是否为0（为0表示对应的shared_ptr中的data_ptr已经被释放），然后还要在lock前判断是否有别的线程更改了这个引用计数，在没有更改的时候+1。从判断条件到引用计数+1这段代码通过CAS实现原子操作。
 
 #### enable_shared_from_this
-
-要搞懂里面的weak_ptr如何赋值的
 
 为什么：
 
@@ -2841,13 +3020,144 @@ shared_ptr<_Ty> make_shared(_Types&&... _Args) { // make a shared_ptr to non-arr
 
 实现：
 
-[C++内存管理：shared_ptr/weak_ptr源码（长文预警） - 知乎](https://zhuanlan.zhihu.com/p/532215950)
-
 [c++enable_shared_from_this源代码分析(from visutal studio 2017) - 个人文章 - SegmentFault 思否](https://segmentfault.com/a/1190000020861953)
 
-[万字长文全面详解现代C++智能指针：原理、应用和陷阱 - 知乎](https://zhuanlan.zhihu.com/p/672745555)
+用法与用途：
 
+**用于获取该对象的`shared_ptr<>`，防止同一个对象由不同的`shared_ptr<>`管理，多用于异步任务执行时保证该对象不被销毁**
 
+```c++
+class test : public enable_shared_from_this<test> {
+public:
+    shared_ptr<test> get_shared() {
+        return shared_from_this();					// _3
+        // return shared_ptr<test>{this};			_4
+    }
+    void f() {
+        // do sth...
+        this_thread::sleep_for(1s);
+        cout << "access test " << a << endl;
+        // do sth...
+    }
+    int a = 2;
+};
+
+int main(){
+    {
+        shared_ptr<test> tst = make_shared<test>();	// 此时_Wptr已被初始化
+        // thread t{&test::f, tst->get()};		   	 _1
+        thread t{&test::f, tst->get_shared()};		// _2
+        t.detach();
+    }
+    cout << "thread end" << endl;
+    this_thread::sleep_for(2s);
+}
+```
+
+解释：
+
+- 如果使用`_1`处代码替换`_2`处代码，则最终在`f()`里访问`a`的时候`tst`已被释放，属于未定义行为。
+- 如果`get_shared()`使用`_4`处代码替换`_3`处代码，则会导致多个shared_ptr管理同一个对象，造成资源重复释放
+
+看看部分重要实现：
+
+```c++
+template <class _Ty>
+class enable_shared_from_this { // provide member functions that create shared_ptr to this
+public:
+    using _Esft_type = enable_shared_from_this;
+
+    shared_ptr<_Ty> shared_from_this() {
+        return shared_ptr<_Ty>(_Wptr);
+    }
+
+    weak_ptr<_Ty> weak_from_this() noexcept {
+        return _Wptr;
+    }
+
+protected:
+    constexpr enable_shared_from_this() noexcept : _Wptr() {}
+
+    enable_shared_from_this(const enable_shared_from_this&) noexcept : _Wptr() {
+        // construct (must value-initialize _Wptr)
+    }
+
+    enable_shared_from_this& operator=(const enable_shared_from_this&) noexcept { // assign (must not change _Wptr)
+        return *this;
+    }
+
+    ~enable_shared_from_this() = default;
+
+private:
+    template <class _Yty>
+    friend class shared_ptr;
+
+    mutable weak_ptr<_Ty> _Wptr;
+};
+
+```
+
+解释：
+
+- `_Wptr`什么时候赋值的
+
+  在构造`shared_ptr<>`的时候赋值的
+
+- `_Esft_type`的作用
+
+  构造`shared_ptr<>`的时候，使用SFINAE访问`_Esft_type`，如果访问成功，说明该类继承自`enable_shared_from_this<>`，继而设置`_Wptr`指针
+
+- 看看源码，理解以上两点：
+
+  ```c++
+  template <class _Ux,
+      enable_if_t<conjunction_v<conditional_t<is_array_v<_Ty>, _Can_array_delete<_Ux>, _Can_scalar_delete<_Ux>>,
+                      _SP_convertible<_Ux, _Ty>>,
+          int> = 0>
+  explicit shared_ptr(_Ux* _Px) { // construct shared_ptr object that owns _Px
+  	_Temporary_owner<_Ux> _Owner(_Px);
+  	_Set_ptr_rep_and_enable_shared(_Owner._Ptr, new _Ref_count<_Ux>(_Owner._Ptr));	// _1
+  	_Owner._Ptr = nullptr;
+  }
+  
+  template <class _Ux>
+  void _Set_ptr_rep_and_enable_shared(_Ux* const _Px, _Ref_count_base* const _Rx) noexcept { // take ownership of _Px
+      this->_Ptr = _Px;
+      this->_Rep = _Rx;
+      if constexpr (conjunction_v<negation<is_array<_Ty>>, negation<is_volatile<_Ux>>, _Can_enable_shared<_Ux>>) {
+          if (_Px && _Px->_Wptr.expired()) {		// _2
+              _Px->_Wptr = shared_ptr<remove_cv_t<_Ux>>(*this, const_cast<remove_cv_t<_Ux>*>(_Px));
+          }
+      }
+  }
+  
+  template <class _Yty, class = void>
+  struct _Can_enable_shared : false_type {}; // detect unambiguous and accessible inheritance from enable_shared_from_this
+  
+  template <class _Yty>
+  struct _Can_enable_shared<_Yty, void_t<typename _Yty::_Esft_type>>		// _3
+      : is_convertible<remove_cv_t<_Yty>*, typename _Yty::_Esft_type*>::type { // _4
+      // is_convertible is necessary to verify unambiguous inheritance
+  };
+  ```
+
+#### 考考你
+
+[看这：浅析 shared_ptr：MSVC STL 篇 ](https://kingsamchen.github.io/2018/03/16/demystify-shared-ptr-and-weak-ptr-in-msvc-stl/)
+
+- Why Virtual Dtor is Not Necessary When Deleting From a Base Pointer
+
+  ```c++
+  //eg
+  shared_ptr<parent> sp = make_shared<child>();
+  shared_ptr<parent> sp1 = new child{};
+  ```
+
+  自己阅读源码，会发现，不论是通过`make_shared<>`还是通过`new`初始化的`shared_ptr<>`，其推导的所有者指针的类型都是`child*`，所以后续在释放的时候一定会调用正确的析构函数
+
+- 为什么`weak_ptr::lock()`要使用cas操作而不是直接将`_Uses`加1
+
+  因为`lock()`中有一个比较/交换操作，要先判断`_Uses`是否为0，再加一，这两步显然不能合成为一个原子操作，所以需要使用cas保障线程安全
 
 ### 异常
 
@@ -2855,7 +3165,7 @@ shared_ptr<_Ty> make_shared(_Types&&... _Args) { // make a shared_ptr to non-arr
 
 **异常处理工作原理**
 
-​	每当您使用 throw 引发异常时，编译器都将查找能够处理该异常的 catch(Type)。异常处理逻辑首 先检查引发异常的代码是否包含在 try 块中，如果是，则查找可处理这种异常的 catch(Type)。如果 throw 语句不在 try 块内，或者没有与引发的异常兼容的 catch( )，异常处理逻辑将继续在调用函数中寻找。 因此，异常处理逻辑沿调用栈向上逐个地在调用函数中寻找，直到找到可处理异常的 catch(Type)。在 退栈过程的每一步中，都将销毁当前函数的局部变量，因此这些局部变量的销毁顺序与创建顺序相反。（chapter28.4）
+​	每当您使用 throw 引发异常时，编译器都将查找能够处理该异常的 catch(Type)。异常处理逻辑首 先检查引发异常的代码是否包含在 try 块中，如果是，则查找可处理这种异常的 catch(Type)。如果 throw 语句不在 try 块内，或者没有与引发的异常兼容的 catch( )，异常处理逻辑将继续在调用函数中寻找。 因此，异常处理逻辑沿调用栈向上逐个地在调用函数中寻找，直到找到可处理异常的 catch(Type)。**在 退栈过程的每一步中，都将销毁当前函数的局部变量，因此这些局部变量的销毁顺序与创建顺序相反。**（chapter28.4）
 
 **std::exception 类**
 
@@ -2935,7 +3245,7 @@ int main()
 }
 ```
 
-### noexcept修饰符
+### noexcept修饰符（说明符）
 
 noexcept 表示其修饰的函数不会抛出异常。在 C++11 中如果 noexcept 修饰的函数抛出了异常，编译器会直接调用 std::terminate () 函数来终止程序的运行。这比基于异常机制的 throw 在效率上会高一些。
 
