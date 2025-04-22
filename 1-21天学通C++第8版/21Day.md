@@ -1447,6 +1447,14 @@ int main() {
 
 [？？？好好看，C++隐式转换](https://www.cnblogs.com/apocelipes/p/14415033.html#)
 
+- 引用绑定
+
+  ```c++
+  int a = 10;
+  int& a1 = a;	// OK
+  long &b = a;	//
+  ```
+
 - 安全bool
 
   ```c++
@@ -1458,7 +1466,7 @@ int main() {
           return ptr != nullptr;
       }
   };
-   
+  
   auto ptr = SmartPointer<int>();
   if (ptr) {				// 1
       // ptr 是int*的包装，现在我们想取得ptr指向的值
@@ -1468,8 +1476,19 @@ int main() {
   ```
 
   - 解释：
-    1. 
+    1. 表达式`ptr`可以按语境隐式转换到`bool`类型
 
+    2. 表达式`ptr`可以按语境隐式转换到`bool`类型，`bool`类型通过标准转换序列转化为`int`
+    
+    3. 按语境隐式转换：
+    
+       以第一点为例，在`if`语境中，期待类型`bool`，在满足以下条件：
+    
+       - `SmartPointer<int>`拥有单个转换到`bool`类型的用户自定义转换函数，且
+       - `ptr`可隐式转换到`bool`
+    
+       时，可以使用具有类类型`SmartPointer<int>`的表达式`ptr`，且我们称表达式 `ptr` *按语境隐式转换* ﻿到指定的类型 `bool`（**注意，其中不考虑显式转换函数，虽然在按语境转换到 bool 时会考虑它们。**），第二点同理。
+    
   - 解决办法：
 
     通过`explicit`把它踢出转换序列：
@@ -1492,7 +1511,7 @@ int main() {
 
     解释：
 
-    1. 此时`bool t(ptr);` 良构，进行隐式转换
+    1. ptr通过用户自定义转换函数，**按语境转换到bool**（在if语境中，期待类型`bool`，且声明`bool t(ptr)`良构，所以可以进行隐式转换，我们称表达式`ptr`按语境转换到`bool`）
     2. `ptr`无法隐式转换为`bool`，报错
 
 - 两步用户定义转换
