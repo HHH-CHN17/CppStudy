@@ -359,6 +359,10 @@ GLEW是一个跨平台的C++扩展库，基于OpenGL图形接口。使用OpenGL�
   - [VAO，VBO和EBO（顶点相关缓存）](https://zhuanlan.zhihu.com/p/12103352946)
 
     VBO在显存中开辟一块区域，这样可以在初始化的时候将所有顶点数据一次性传输到GPU显存中，渲染静态场景时，不需要将每一帧的数据都传给GPU
+    
+  - [VAO，VBO，EBO（2）](https://blog.csdn.net/TechNomad/article/details/146130030)
+
+- 还有是用`glBegin()`，`glEnd()`这种方式画图的，但最好不要用这种
 
 - 画三角形的三种方式
 
