@@ -41,7 +41,7 @@ int main() {
 - 函数模板如果没有被使用，或者没有被实例化，就不会生成实际的函数代码。
 - 模板是静态的，也就是说**模板实例化的过程位于编译期，没有运行时开销**
 
-### 模板参数推导？？？重写笔记
+### 模板参数推导
 
 [先看此链接—— 理解模板参数推导规则 - 知乎？？？](https://zhuanlan.zhihu.com/p/338788455)
 
@@ -86,7 +86,7 @@ int main() {
   - line19：当模板参数为一个指针/引用，但非万能引用时，会根据情况忽略表达式的cv限制符和&，不会忽略*，这点和decltype类似
   - line20：模板在实例化时，会忽略掉多余的cv限制符和多余的&（如果模板参数是&&的话则不会忽略）
 
-？？？分析
+分析
 
 ```c++
 template<typename T>
@@ -98,73 +98,30 @@ T max(T&& a, T b)
 int main() {
 	int a = 1;
 	const int& b = a;
-	max(a, b);				// 编译错误？？？
+	max(a, b);				// 编译错误
 	max<const int&>(a, b);	// T被指明为const int&，但是a的类型仍然为 const int&
 
 	return 1;
 }
 ```
 
-#### 引用折叠
+**如果万能引用T&&被一个左值初始化，则T被推导为T&的形式，此时T&&是一个左值引用；如果被一个右值初始化，T被推导为T的形式，此时T&&就是一个右值引用。**所以`max(a,b)`会报错，因为对a而言，T被推导为int&，对b而言，T被推导为int。
 
-```c++
-typedef const int T;
-typedef T& TR;
-TR& v = 1;			// 该申明再C++98中导致编译错误
-```
-
-其中`TR& v=1`这样的表达式会被编译器认为是不合法的表达式，而在C++11中，一 旦出现了这样的表达式，就会发生引用折叠，即将复杂的未知表达式折叠为已知的简单表达式，具体如下图。
-
-![image-20240922100117950](./assets/image-20240922100117950.png)
-
-**右值引用的右值引用折叠成右值引用，所有其他组合均折叠成左值引用**。而模板对类型的推导规则就比较简单，当转发函数的实参是类型的一个左值引用，那么模板参数被推导为X&类型，而转发函数的实参是类型X的一个右值引用的话，那 么模板的参数被推导为X&& 类型。结合以上的引用折叠规则，就能确定出参数的实际类型。 进一步，我们可以把转发函数写成如下形式
-
-```c++
-template <class Ty>
-constexpr Ty&& forward(Ty& Arg) noexcept {
-    return static_cast<Ty&&>(Arg);
-}
-
-int a = 10;            // 不重要
-// 如果Arg类型也定义为Ty&&，则为万能引用，Ty被推断为int&，Ty&&为int&（万能引用）
-// 正因为模板参数类型中有一个为Ty&而非Ty&&，所以在推断时不会用到万能引用，而是如同普通情况一样，被推断为int
-::forward(a);
-::forward<int>(a);     // 返回 int&& 因为 Ty 是 int，Ty&& 就是 int&&，未发生引用折叠
-::forward<int&>(a);    // 返回 int& 因为 Ty 是 int&，Ty&& 就是 int&，Ty&被折叠成int&
-::forward<int&&>(a);   // 返回 int&& 因为 Ty 是 int&&，Ty&& 就是 int&&,Ty&被折叠成int&
-```
-
-#### 万能引用
-
-万能引用（universal reference），用在模板中，表现形式通常为`T&&`（`T&`也可以，不过`T&`接收不了右值，所以称不上万能引用，但依然会有引用折叠，所以说引用折叠和万能引用还是有点区别的）。表示**接受左值表达式那形参类型就推导为左值引用，接受右值表达式，形参类型就推导为右值引用**。
-
-比如：
-
-```c++
-template<typename T>
-void func(T&& a)
-{
-	
-}
-
-int main() {
-	int na = 1;
-	const int cnb = na;
-	int& clref = na;
-	int&& drref = 1;
-	func(na);	// 推导为void func<int&>(int& a);	左值推导为int&
-	func(cnb);	// 推导为void func<const int&>(const int& a);	万能引用推导时会带上cv限制符
-	func(clref);	// 推导为void func<int&>(int& a);	引用折叠
-	func(10);	// 推导为void func<int>(int&& a);	右值推导为int，模板形参被推导为int&&
-	func(drref);	// 推导为void func<int&>(int& a);	有名字的右值引用算左值
-
-	return 1;
-}
-```
+[#万能引用](../2-深入理解C++11/深入理解C++11.md/#万能引用（引用折叠）)
 
 ### 有默认实参的函数模板形参
 
 [详情看这里：函数模板 | 现代 C++ 模板教程](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/01函数模板#有默认实参的模板类型形参)
+
+对于一个（函数/类）模板而言：
+
+- `<>`中的参数叫做（函数/类）模板形参。
+
+  - （函数/类）模板形参分为**类型模板形参**和**非类型模板形参**以及**模板模板形参**
+
+  - 在（函数/类）模板形参中，可以指定具体（函数/类）模板形参的默认值
+
+- `()`中的参数叫做函数形参（类的定义中显然没有这东西）
 
 ```c++
 using namespace std::string_literals;
@@ -284,11 +241,11 @@ test("1");      // 匹配到模板
 void f(const char*, int, double) { puts("值"); }
 void f(const char**, int*, double*) { puts("&"); }
 
-template<typename... Args>//  1. 表示形参包，类型形参包，传入的类型全部存入Args中
+template<typename... Args>//  1. 表示类型模板形参包，传入的类型全部存入Args中
 // 2. 形参包，参数形参包const char * args0, int args1, double args2
-// 2. Args... args 表示展开类型形参包，并将接收到的参数存入args中
+// 2. Args... args 表示展开类型模板形参包Args，并将接收到的参数存入args中
 void sum(Args... args){	
-    f(args...);   // 3. 相当于 f(args0, args1, args2)
+    f(args...);   // 3. 表示展开形参包args，相当于 f(args0, args1, args2)
     f(&args...);  // 3. 相当于 f(&args0, &args1, &args2)
 }
 
@@ -365,7 +322,7 @@ int main() {
 
    - 模板函数通用分析步骤：
 
-     1. **先看函数名的返回值和形参列表（根据列表中的逗号区分不同参数），不要先看模板部分。**
+     1. **先看函数名的返回值和函数形参列表（根据列表中的逗号区分不同参数），不要先看模板部分。**
 
         `void func(const T(&arr)[N], Args... index)`：返回值为void，形参列表中一共有一个逗号，也就是两个参数，第一个参数是`const T(&arr)[N]`，第二个参数是`Args... index`
 
@@ -373,15 +330,15 @@ int main() {
 
         第0个参数：`const T(&arr)[N]`，其中T是类型模板形参，N是非类型模板形参，我们假定`T=int`，`N=5`，显然该函数形参为一个数组引用。
 
-        第1个参数：`Args... index`，其中`Args...`为类型形参包，说明该参数可以接收任意个函数形参
+        第1个参数：`Args... index`，其中`Args...`为类型模板形参包，说明`index`可以接收任意个函数形参
 
    - 显然根据上面的规则，结合模式的相关知识分析可得：
 
      `Args`是一个类型形参包，`Args...`表示形参包展开，结果为：`int, int, int`
 
-     `index`是一个函数参数形参包，`arr[index]...`表示形参包展开，结果为：`arr[1], arr[3], arr[5]`
+     `index`是一个函数形参包，`arr[index]...`表示形参包展开，结果为：`arr[1], arr[3], arr[5]`
 
-     **（分析形参包的时候，先粗略了解类型形参包中的大致类型，然后重点关注函数体中 函数参数形参包 的作用，以及展开后的结果）**
+     **（分析形参包的时候，先粗略了解类型形参包中的大致类型，然后重点关注函数体中 函数形参包 的作用，以及展开后的结果）**
 
 2. 实现一个函数`sum`，支持`sum(1,2,3,4.5,'1'...)`，即`sum`支持任意类型，任意个数的参数进行调用。
 
@@ -397,7 +354,7 @@ int main() {
      	return num;
      }
      // 参数递归，common_type_t<Args...>表示求形参包中的公共类型，和之前的decltype差不多功能，但更正规。
-     template<typename T, typename... Args, typename RT = common_type_t<Args...>>
+     template<typename T, typename... Args, typename RT = common_type_t<T,Args...>>
      RT sum(T num, Args... args)
      {
      	RT res = 0;
@@ -439,7 +396,7 @@ int main() {
                return num;
            }
        	RT res = 0;
-       // 	m_sum()依然会被调用，被实例化，但显然无法推导，编译失败
+       // 	m_sum()依然会被调用，被实例化，但显然此时函数形参列表为空，无法推导，编译失败
        	res = num + m_sum();
        	return res;
        }
@@ -659,6 +616,8 @@ int main(){
 
 ### 成员函数模板
 
+成员函数模板和函数模板一样，只有“用”了，才会实例化。
+
 - 类模板中的成员函数模板
 
   ```c++
@@ -678,7 +637,7 @@ int main(){
   };
   ```
 
-### 可变参数类模板
+### 。。。可变参数类模板
 
 和可变参数函数模板一样的
 
