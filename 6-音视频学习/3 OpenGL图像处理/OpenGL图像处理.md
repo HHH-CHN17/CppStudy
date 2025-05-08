@@ -483,6 +483,28 @@ GLEW是一个跨平台的C++扩展库，基于OpenGL图形接口。使用OpenGL�
 
 #### 坐标系统
 
+- Model矩阵推导
+
+  我们首先会通过旋转(R)，缩放(S)，平移(T)，将物体变换到全局坐标系下，`R*S*T`组合生成的矩阵即Model矩阵
+
+- View矩阵推导
+
+  [通俗易懂：基变换和坐标变换 - 知乎](https://zhuanlan.zhihu.com/p/683873038)
+
+  [图形学：观察矩阵/LookUp矩阵的推导 - 知乎](https://zhuanlan.zhihu.com/p/552252893)
+
+  [3-5-3 过渡矩阵与坐标变换（仅数一）_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1d541117HP/?vd_source=54c100b5cef5d27f46b1b7de9dcaa4de)
+
+- Projection矩阵推导
+
+  - 正交投影矩阵
+
+  - 透视投影矩阵
+
+    [webgl投影矩阵推导（正射投影、透视投影）_正射投影矩阵-CSDN博客](https://blog.csdn.net/qq_37987033/article/details/129110785)
+
+    可以看glm::perspective的源码，不过需要注意glm中的第一列，代表的是数学中矩阵的第一行
+
 ### OpenGL显示列表
 
 [#例子参考](D:\1_Code\QtCreator\QtOpenGL2020\11\CCOpenGL)
