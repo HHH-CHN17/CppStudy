@@ -314,6 +314,10 @@ GLEW是一个跨平台的C++扩展库，基于OpenGL图形接口。使用OpenGL�
 
 [参考文档：OpenGL 简介 - Win32 apps | Microsoft Learn](https://learn.microsoft.com/zh-cn/windows/win32/opengl/introduction-to-opengl)
 
+<img src="assets/image-20250513171916933.png" alt="image-20250513171916933" style="zoom:67%;" />
+
+<img src="assets/260105454586992.png" alt="img" style="zoom:150%;" />
+
 #### 初识OpenGL
 
 参考文档：
@@ -541,3 +545,32 @@ GLEW是一个跨平台的C++扩展库，基于OpenGL图形接口。使用OpenGL�
 
     即可将定义的图案放在显示列表中。
 
+#### 模板测试
+
+[OpengGL学习笔记：彻底搞懂模板测试(模板测试(Stencil Test) - 知乎](https://zhuanlan.zhihu.com/p/612811622)
+
+[Learn openGL CN 模板测试 详细图文讲解 - 哔哩哔哩](https://www.bilibili.com/opus/506333853446298079)
+
+#### 帧缓冲
+
+[帧缓冲 - LearnOpenGL CN](https://learnopengl-cn.github.io/04 Advanced OpenGL/05 Framebuffers/)
+
+[有错误，可以参考：OpenGL(五)各种缓冲区介绍(1) - 知乎](https://zhuanlan.zhihu.com/p/109107531)
+
+[OpenGL基础33：帧缓冲（上）之离屏渲染_opengl离屏渲染glxpixmap-CSDN博客](https://blog.csdn.net/Jaihk662/article/details/107320904)
+
+[OpenGL基础34：帧缓冲（中）之附件_opengl中附件是什么-CSDN博客](https://blog.csdn.net/Jaihk662/article/details/107356789?spm=1001.2014.3001.5502)
+
+[OpenGL基础35：帧缓冲（下）之简单图像处理_opengl图像处理-CSDN博客](https://blog.csdn.net/Jaihk662/article/details/107362720?spm=1001.2014.3001.5502)
+
+
+
+> 1.  与VAO类似，FBO，RBO是一个用于管理其他缓冲区的缓冲区。
+>
+> 2. 根据下图来理解帧缓冲：
+>
+>    <img src="assets/260105454586992.png" alt="img" style="zoom:150%;" />
+
+这一章相对之前要复杂一些，但是用一句简单的话来表达这个过程就是：想办法把当前的场景作为一张纹理存起来，然后再去全屏渲染这张“纹理”，在这种情况下，我们只需要给这张“纹理”编写一个独一无二的着色器就可以了
+
+建议结合#代码来理解
