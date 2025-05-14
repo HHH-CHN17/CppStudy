@@ -565,14 +565,61 @@ GLEW是一个跨平台的C++扩展库，基于OpenGL图形接口。使用OpenGL�
 
 [OpenGL基础35：帧缓冲（下）之简单图像处理_opengl图像处理-CSDN博客](https://blog.csdn.net/Jaihk662/article/details/107362720?spm=1001.2014.3001.5502)
 
-
-
-> 1.  与VAO类似，FBO，RBO是一个用于管理其他缓冲区的缓冲区。
+> 1.  与VAO类似，FBO，RBO两者都是缓冲，具体介绍如下：
+>
+>    - **FBO（Frame Buffer Object）即帧缓冲区对象，实际上是一个可添加缓冲区的容器，[不是缓冲区对象](https://www.khronos.org/opengl/wiki/Pixel_Buffer_Object)，可以为其添加纹理或渲染缓冲区对象（RBO）。**
+>
+>      **FBO 本身不能用于渲染，只有添加了纹理或者渲染缓冲区之后才能作为渲染目标，它仅且提供了 3 个附着（Attachment），分别是颜色附着、深度附着和模板附着。**
+>
+>    - RBO（Render Buffer Object）即渲染缓冲区对象，是一个由应用程序分配的 2D 图像缓冲区。渲染缓冲区可以用于分配和存储颜色、深度或者模板值，可以用作 FBO 中的颜色、深度或者模板附着。
+>
+>    - 纹理附件与RBO类似，不过RBO是是一个真正的缓冲，而纹理附件是一个纹理图像（texture）
 >
 > 2. 根据下图来理解帧缓冲：
 >
->    <img src="assets/260105454586992.png" alt="img" style="zoom:150%;" />
+>    <img src="assets/eb435fbd8686fbe7789c6310aaf1d994.jpeg" alt="img" style="zoom: 67%;" />
 
 这一章相对之前要复杂一些，但是用一句简单的话来表达这个过程就是：想办法把当前的场景作为一张纹理存起来，然后再去全屏渲染这张“纹理”，在这种情况下，我们只需要给这张“纹理”编写一个独一无二的着色器就可以了
 
+
+
 建议结合#代码来理解
+
+
+
+#### PBO
+
+[OpenGL 像素缓冲区对象 （PBO）](https://www.songho.ca/opengl/gl_pbo.html)
+
+[像素缓冲区对象 - OpenGL Wiki](https://www.khronos.org/opengl/wiki/Pixel_Buffer_Object)
+
+[熟悉 OpenGL VAO、VBO、FBO、PBO 等对象，看这一篇就够了-腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1893989)
+
+[写的非常好：OpenGLPBO：提升图像数据传输效率的技术详解-CSDN博客](https://blog.csdn.net/weixin_41967328/article/details/129355233)
+
+<img src="assets/260105454586992.png" alt="img" style="zoom:150%;" />
+
+- 定义：
+
+  A [Buffer Object](https://www.khronos.org/opengl/wiki/Buffer_Object) that is used for asynchronous [pixel transfer operations](https://www.khronos.org/opengl/wiki/Pixel_Transfer) is called a **Pixel Buffer Object.**
+
+  用于 异步像素传输操作 的缓冲区对象被称为**像素缓冲区对象** 。
+
+- 理解：
+
+  - **PBO 类似于 VBO，PBO 开辟的也是 GPU 缓存，而存储的是图像数据。**所以说如果一个缓冲区对象存储的是**顶点数组数据**，则该缓冲区对象是VBO；如果该缓冲区对象存储的是**像素数据**，则该缓冲区对象是PBO。
+  - PBO 与 [Framebuffer Object](https://www.khronos.org/opengl/wiki/Framebuffer_Object) 无关。注意大小写;“framebuffer” 是一个词。FBO 不是缓冲区对象，PBO 是。FBO 是关于渲染到屏幕外的图像；PBO 是关于用户与 OpenGL 中的图像之间的像素传输。他们并不相同。
+
+- 应用：
+
+- 补充：
+
+  [高级数据 - LearnOpenGL CN](https://learnopengl-cn.github.io/04 Advanced OpenGL/07 Advanced Data/)
+
+  [glMapBuffer-CSDN博客](https://blog.csdn.net/csxiaoshui/article/details/45894289)
+
+  [OpenGL中位图的操作(glReadPixels，glDrawPixels等） - 夏天/isummer - 博客园](https://www.cnblogs.com/icmzn/p/5067069.html)
+
+  [glReadPixels 函数 (Gl.h) - Win32 apps | Microsoft Learn](https://learn.microsoft.com/zh-cn/windows/win32/opengl/glreadpixels)
+
+  
