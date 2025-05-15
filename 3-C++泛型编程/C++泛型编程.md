@@ -910,11 +910,11 @@ int main() {
 
 #### static关键字
 
-[C++ 关键词：static - cppreference.com](https://zh.cppreference.com/w/cpp/keyword/static)
+[必看：C++ 关键词：static - cppreference.com](https://zh.cppreference.com/w/cpp/keyword/static)
 
 [C/C++ static关键字详解 -CSDN博客](https://blog.csdn.net/weixin_45031801/article/details/134215425)
 
-- 作用一：[声明具有静态存储期和内部链接的命名空间成员（**修饰全局变量，也称为静态全局变量**）](https://zh.cppreference.com/w/cpp/language/storage_duration)
+- 作用一：[声明具有*静态存储期*和*内部链接*的*命名空间成员*（**修饰全局变量，也称为静态全局变量**）](https://zh.cppreference.com/w/cpp/language/storage_duration)
 
   **在全局和/或命名空间范围 (在单个文件范围内声明变量或函数时) static 关键字指定变量或函数为内部链接，即外部文件无法引用该变量或函数。**
 
@@ -922,15 +922,15 @@ int main() {
 
     具有静态存储期的实体在程序运行期间持续存在。
 
-  - 静态块变量
+  - [非局部变量](https://zh.cppreference.com/w/cpp/language/initialization#.E9.9D.9E.E5.B1.80.E9.83.A8.E5.8F.98.E9.87.8F)
 
-    
+    所有具有静态[存储期](https://zh.cppreference.com/w/cpp/language/storage_duration)的非局部变量的初始化，会作为程序启动的一部分在 [main 函数](https://zh.cppreference.com/w/cpp/language/main_function)的执行之前进行（除非被延迟，见下文）。所有具有线程局部存储期的非局部变量的初始化，会作为线程启动的一部分进行，并按顺序早于线程函数的执行开始。对于这两种变量，会先发生静态初始化，后发生动态初始化，或者看情况发生提早动态初始化或者延迟动态初始化。
 
   - 内部链接
 
     如果一个名称对于它的编译单元来说是局部的，并且在连接时不会与其它编译单元中的同样的名称相冲突，那么这个名称有内部连接(注：有时也将声明看作是无连接的，这里我们统一看成是内部连接的)。名字具有内部链接的实体可以在同一翻译单元的其他作用域重声明。
 
-- 作用二：定义具有静态存储期且仅初始化一次的块作用域变量（**修饰局部变量，也称为静态局部变量**）
+- 作用二：定义具有*静态存储期*且*仅初始化一次*的*块作用域变量*（**修饰局部变量，也称为静态局部变量**）
 
   **在函数（块作用域）中声明变量时， static 关键字指定变量只初始化一次，并在之后调用该函数（块作用域）时保留其状态。**
 
@@ -938,33 +938,157 @@ int main() {
 
     具有静态存储期的实体在程序运行期间持续存在。
 
-  - 静态块变量
+  - [静态块变量（即静态局部变量）](https://zh.cppreference.com/w/cpp/language/storage_duration#.E9.9D.99.E6.80.81.E5.9D.97.E5.8F.98.E9.87.8F)
 
-    
+    具有静态或线程(C++11 起)存储期的块变量在控制首次经过它的声明时才会被初始化（除非它被[零初始化](https://zh.cppreference.com/w/cpp/language/zero_initialization)或[常量初始化](https://zh.cppreference.com/w/cpp/language/constant_initialization)，这可以在首次进入块前进行）。在其后所有的调用中，声明都会被跳过。
+
+    这里的块，是指块作用域，即局部的意思
 
   - [块作用域](https://zh.cppreference.com/w/cpp/language/scope)
 
-    代码块内部声明的变量拥有块作用域，只在该代码块内可见，包括循环、条件语句等。
+    代码块内部声明的变量拥有块作用域，只在该代码块内可见，包括循环、条件语句等（就是局部的意思）。
 
-- 作用三：声明不绑定到特定实例的类成员（**修饰类成员，包括成员函数和成员变量**）
+- 作用三：[声明*不绑定到特定实例*的*类成员*（**修饰类成员，包括成员函数和成员变量**）](https://zh.cppreference.com/w/cpp/language/static)
+
+  - 类的静态成员不与类的对象关联：它们是具有静态或线程(C++11 起)[存储期](https://zh.cppreference.com/w/cpp/language/storage_duration)的独立变量，或者常规函数。
+
+  - static 关键词只会用于静态成员在类定义中的声明，而不用于该静态成员的定义
+
+    ```c++
+    class X { static int n; }; // 声明（用 'static'）
+    int X::n = 1;              // 定义（不用 'static'）
+    ```
+
+  - 类体内的声明不是定义，且可以将成员声明为（除 void 之外的）[不完整类型](https://zh.cppreference.com/w/cpp/language/incomplete_type)，包括该成员的声明所在的类型：
+
+    ```c++
+    struct Foo;
+     
+    struct S
+    {
+        static int a[]; // 声明，不完整类型
+        static Foo x;   // 声明，不完整类型
+        static S s;     // 声明，不完整类型（在其自身定义中）
+    };
+     
+    int S::a[10]; // 定义，完整类型
+    struct Foo {};
+    Foo S::x;     // 定义，完整类型
+    S S::s;       // 定义，完整类型
+    ```
+
+    **然而，如果声明使用了 [`constexpr`](https://zh.cppreference.com/w/cpp/language/constexpr) 或 [`inline`](https://zh.cppreference.com/w/cpp/language/inline)(C++17 起) 说明符，那么该成员必须声明为拥有完整类型。  (C++11 起)**
+
+- 注意：
+
+  如[非局部初始化](https://zh.cppreference.com/w/cpp/language/initialization#.E9.9D.9E.E5.B1.80.E9.83.A8.E5.8F.98.E9.87.8F)中所述，在进行任何其他初始化前，**零初始化所有未被常量初始化的静态【和线程局部(C++11 起)】变量**。如果非类类型非局部变量的定义没有初始化式，那么默认初始化不做任何事，不修改先前零初始化的结果。
+
+  零初始化的指针是其类型的空指针值，即使空指针的值并非整数零。
 
 #### constexpr
 
+[constexpr (C++) | Microsoft Learn](https://learn.microsoft.com/zh-cn/cpp/cpp/constexpr-cpp?view=msvc-170)
 
+[C++ constexpr详解 | 编译期计算与优化 | C++ 编程指南](https://chengxumiaodaren.com/docs/cpp-new-feature/cpp-constexpr/)
 
-#### ODR规则？？？
+- 文本类型（literal types）
 
-[先看：C++ inline 的更进一步理解_odr inline-CSDN博客](https://blog.csdn.net/weixin_44328568/article/details/142799581)
+  文本类型是可在编译时确定其布局的类型。 以下均为文本类型：
 
-[再看：C++中static关键字作用总结 - sold_out - 博客园](https://www.cnblogs.com/songdanzju/p/7422380.html)
+  - void
+  - 标量类型
+  - 引用
+  - Void、标量类型或引用的数组
+  - 具有普通析构函数以及一个或多个 constexpr 构造函数且不移动或复制构造函数的类。 此外，其所有非静态数据成员和基类必须是文本类型且不可变。
 
-> - 当在.h文件中定义了一个全局变量时，每一个引用了该头文件的翻译单元都会有一个该全局变量的定义，这违反了ODR规则，使用static变量之后，如果有多个翻译单元都引用了该头文件，则每个翻译单元中的该static变量都被视为不同的变量（有待考究？？？），因为static修饰全局变量时表示内部链接。
+- constexpr 变量
+
+  **`const`和 `constexpr`变量之间的主要区别在于，`const`变量的初始化可以推迟到运行时。 `constexpr` 变量必须在编译时进行初始化。 所有的 `constexpr` 变量都是 `const`**。
+
+  - 如果一个变量具有文本类型并且已初始化，则可以使用 **`constexpr`** 声明该变量。 如果初始化是由构造函数执行的，则必须将构造函数声明为 **`constexpr`**。
+  - 当满足以下两个条件时，可以将引用声明为 **`constexpr`**：引用的对象由常量表达式初始化，并且在初始化期间所调用的任何隐式转换也均是常数表达式。
+  - **`constexpr`** 变量或函数的所有声明都必须具有 **`constexpr`** 说明符。
+
+  ```c++
+  constexpr float x = 42.0;
+  constexpr float y{108};
+  constexpr float z = exp(5, 3);
+  constexpr int i; // Error! Not initialized
+  int j = 0;
+  constexpr int k = j + 1; //Error! j not a constant expression
+  ```
+
+- constexpr 函数
+
+  > - `constexpr` 函数或构造函数是隐式 `inline`。
+  > - `constexpr` 函数可以在编译时返回其值，也可以在运行时返回值，取决于函数形参。
+
+  **`constexpr`** 函数是在使用需要它的代码时，可在编译时计算其返回值的函数。 使用代码需要编译时的返回值来初始化 **`constexpr`** 变量，或者用于提供非类型模板自变量。 当其参数是 **`constexpr`** 值时，**`constexpr`** 函数会生成编译时常量。 使用非 **`constexpr`** 自变量调用时，或者编译时不需要其值时，它将与正则函数一样，在运行时生成一个值。 （此双重行为使你无需编写同一函数的 **`constexpr`** 和非 **`constexpr`** 版本。）
+
+  `constexpr` 函数或构造函数是隐式 `inline`。
+
+  以下规则适用于 constexpr 函数：
+
+  - **`constexpr`** 函数必须只接受并返回[文本类型](https://learn.microsoft.com/zh-cn/cpp/cpp/trivial-standard-layout-and-pod-types?view=msvc-170#literal_types)。
+  - **`constexpr`** 函数可以是递归的。
+  - 在 C++20 之前，**`constexpr`** 函数不能是[虚拟](https://learn.microsoft.com/zh-cn/cpp/cpp/virtual-cpp?view=msvc-170)函数，并且当封闭类具有任何虚拟基类时，不能将构造函数定义为 **`constexpr`**。 在 C++20 及更高版本中，**`constexpr`** 函数可以是虚函数。 当您指定 **`constexpr`** 或更高版本编译器选项时，Visual Studio 2019 版本 16.10 及更高版本支持 [`/std:c++20`](https://learn.microsoft.com/zh-cn/cpp/build/reference/std-specify-language-standard-version?view=msvc-170) 虚拟函数。
+  - 主体可以定义为 `= default` 或 `= delete`。
+  - 正文不能包含如何 **`goto`** 语句或 **`try`** 块。
+  - 可以将非 **`constexpr`** 模板的显式专用化声明为 **`constexpr`**：
+  - **`constexpr`** 模板的显式专用化不需要同时也是 **`constexpr`**：
+
+  以下规则适用于 Visual Studio 2017 及更高版本中的 **`constexpr`** 函数：
+
+  - 它可以包含 **`if`** 和 **`switch`** 语句，以及所有循环语句，包括 **`for`**、基于范围的 **`for`**、**`while`**、和 do-while。
+  - 它可能包含局部变量声明，但必须初始化该变量。 它必须是文本类型，不能是 **`static`** 或线程本地的。 本地声明的变量不需要是 **`const`**，并且可以变化。
+  - **`constexpr`** 非 **`static`** 成员函数不需要通过隐式方式 **`const`**。
+
+  ```c++
+  constexpr float exp(float x, int n)
+  {
+      return n == 0 ? 1 :
+          n % 2 == 0 ? exp(x * x, n / 2) :
+          exp(x * x, (n - 1) / 2) * x;
+  }
+  ```
+
+#### 。。。ODR规则与使用
+
+[定义与 ODR (单一定义规则) - cppreference.cn - C++参考手册](https://cppreference.cn/w/cpp/language/definition)
 
 [C/C++编程：单一定义规则ODR（不理解）_c++ ord-CSDN博客](https://blog.csdn.net/zhizhengguan/article/details/114988629)
 
-[ODR规则](https://blog.csdn.net/m0_51165837/article/details/141463073#)
+> - 当在.h文件中定义了一个全局变量时，每一个引用了该头文件的翻译单元都会有一个该全局变量的定义，这违反了ODR规则，使用static变量之后，如果有多个翻译单元都引用了该头文件，则每个翻译单元中的该static变量都被视为不同的变量，因为static修饰全局变量时表示内部链接。
 
-[定义与 ODR （单一定义规则） - C++中文 - API参考文档](https://www.apiref.com/cpp-zh/cpp/language/definition.html)
+- ODR规则
+
+  - **任何变量、函数、类类型、枚举类型、概念 (C++20 起)或模板，在每个翻译单元中都只允许有一个定义**(其中部分可以有多个声明，但是只允许有一个定义)
+  - **在整个程序中，被*ODR式使用*非`inline`函数或变量只允许有且仅有一个定义。**编译器不要求对这条规则的违反进行诊断，但违法它的行为是未定义的
+  - 对于`inline函数`【或`inline 变量 (C++17 起)`】来说，在**ODR式**使用了它的每个翻译单元中都需要一个定义
+  - 在以需要将类作为**完整类型**的方式给予的每个翻译单元中，要求有且仅有该类的一个定义。
+
+- ODR使用（非正式定义）
+
+  - 如果对象的值被读取（除非它是编译时常量）或写入，或者它的地址被获取，或者引用绑定到它，则该对象是 odr-使用的。
+
+  - 如果引用被使用，并且它的指示对象在编译时未知，则该引用是 odr-使用的。
+
+  - 如果对函数的函数调用被执行，或者它的地址被获取，则该函数是 odr-使用的。
+
+  - **如果一个实体是 odr-使用的，则它的定义必须存在于程序中的某个地方；违反这一点通常会导致链接时错误。**
+
+  ```c++
+  struct S
+  {
+      static const int x = 0; // static data member
+      // a definition outside of class is required if it is odr-used
+  };
+   
+  const int& f(const int& r);
+  
+  int n = b ? (1, S::x) // S::x is not odr-used here
+            : f(S::x);  // S::x is odr-used here: a definition is required
+  ```
 
 #### 类的静态成员
 
