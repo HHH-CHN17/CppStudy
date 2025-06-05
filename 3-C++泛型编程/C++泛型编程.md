@@ -253,10 +253,10 @@ test("1");      // 匹配到模板
 void f(const char*, int, double) { puts("值"); }
 void f(const char**, int*, double*) { puts("&"); }
 
-template<typename... Args>//  1. Args表示类型模板形参包，传入的类型全部存入Args中
+template<typename ...Args>//  1. ...Args表示需要接收一个类型模板形参包，传入的类型全部存入Args中
 // 2. 形参包，参数形参包const char * args0, int args1, double args2
-// 2. Args... args 表示展开类型模板形参包Args，并将接收到的参数存入args中
-void sum(Args... args){	
+// 2. Args ...args Args表示一个类型模板形参包，...args表示需要接收一个参数形参包，并将接收到的参数存入args中
+void sum(Args ...args){	
     f(args...);   // 3. 表示展开形参包args，相当于 f(args0, args1, args2)
     f(&args...);  // 3. 相当于 f(&args0, &args1, &args2)
 }
@@ -2776,10 +2776,25 @@ int main(){
   `B<T>` 显然是对代换后的类型求值导致了副作用，结合本例也就是实例化`B<int>`的时候导致了副作用，实例化失败自然被当做硬错误。
 
   > 注意，你应当关注 `B<T>` 而非 `B<T>::type`，因为是直接在实例化模板 B 的时候就失败了，被当成硬错误；如果 `B<T>` 实例化成功，而没有 `::type`，则被当成**代换失败**（不过这里是不可能）
+  
+- 如果把`void foo(V)`改成这样：
+
+  ```c++
+  template<
+      class T,
+      class V = typename B<T>>	// 去掉了::type
+  void foo(V) { puts("SFINAE T::type B<T>::type"); }
+  ```
+
+  则不会出错，因为”部分实例化“[见C++-Templates P226]
+
+  **如果引用类模板的实例，而不需要该实例是完整类型，编译器不执行该类模板实例的完整实例化。**（也就是如果此时我只有类模板B的前置声明，也是可以的）
 
 总结：
 
-综上，我们可以很容易得知，SFINAE发生在重载决议阶段，硬错误发生在实例化阶段。
+综上，我们可以很容易得知，**如果该错误发生在模板重载决议的上下文中，叫SFINAE；如果该错误发生在模板实例化上下文中，叫硬错误**。
+
+同样的问题，见[#CRTP 奇特重现模板模式？？？](#CRTP 奇特重现模板模式？？？)的补充知识
 
 ### 基础使用示例
 
@@ -2826,7 +2841,7 @@ C++ 的模板，很多时候就像拼图一样，我们带入进去想，很多�
 
   解释：
 
-  - 在[重载决议]([重载决议 - cppreference.com](https://zh.cppreference.com/w/cpp/language/overload_resolution))阶段，显然在立即语境中（也就是进行参数代换生成重载集时），会推导函数的返回值，在推导时，显然t1+t2错误，所以抛弃该特化版本，且不会对该特化版本进行实例化
+  - 在[重载决议](https://zh.cppreference.com/w/cpp/language/overload_resolution)阶段，显然在立即语境中（也就是进行参数代换生成重载集时），会推导函数的返回值，在推导时，显然t1+t2错误，所以抛弃该特化版本，且不会对该特化版本进行实例化
 
     ![image-20241109122910931](./assets/image-20241109122910931.png)
 
@@ -3176,7 +3191,7 @@ C++ 的模板，很多时候就像拼图一样，我们带入进去想，很多�
     
     ```
 
-### 。。。偏特化中的SFINAE
+### 偏特化中的SFINAE
 
 > - **函数模板无法进行偏特化，只有类模板，变量模板可以**
 > - 偏特化中不仅可以要求类型，还能要求类型中的类型别名，成员变量，成员函数（也就是SFINAE）等
@@ -3260,6 +3275,34 @@ C++ 的模板，很多时候就像拼图一样，我们带入进去想，很多�
           template<typename T>		// 偏特化版本2
           struct test<T, enable_if_t<is_same_v<T, int>>>
           ```
+  
+  总结：
+  
+  在替换的过程中，编译器会先将推导/指定的模板实参进行替换，根据重载决议选择最匹配的泛化模板；然后对该泛化模板及该泛化模板的特化模板们，将推导/指定的模板实参带入每一个特化模板的特征中，对于带入后的结果，如果能找到一个特化模板，使得模板实参能完美满足特化模板所指定的特征，那么就选择该特化模板，否则选择泛化模板。
+  
+  特化模板所指定的特征：
+  
+  ```c++
+  template<typename T, typename SFINAE = void> struct test{ };
+  
+  // 对于以下偏特化模板而言：
+  template<typename T1>
+  struct test<T1, void_t<typename T1::type>>
+  {
+  	void test1() { cout << "偏特化：void_t" << endl; }
+  };
+  // test后面跟着的<T, void_t<typename T::type>>就是该 特化模板所指定的特征
+  // 如果将推导/指定的模板实参带入该特征，不发生SFINAE或者硬错误，且对于该部分内容计算后的结果 与推导/指定的模板实参保持一致，则称完美满足特化模板所指定的特征
+  ```
+  
+  保持一致是指：
+  
+  对于上面哪个例子而言，如果我代码中写的是 `test<A> t;`，那么推导/指定的模板实参是 `[T=A, SFINAE=void]`，等编译器选择到test的泛化模板后，将推导/指定的模板实参带入每一个特化模板的特征中，检验是否满足该特化模板指定的特征。
+  
+  显然该特化模板的特征是 `<T1, void_t<typename T1::type>>`， 将模板实参带入，显然有 `[T=A=T1, SFINAE=void=void_t<typename T1::type>]`，我们将该语句中的未知量`T1`替换成`A`，然后计算结果，
+  
+  - 如果`T1`和`void_t<typename T1::type>`的结果中不会有SFINAE错误，那么就是满足该特化模板所指定的特征
+  - 如果计算后的结果使得`[T=A=T1, SFINAE=void=void_t<typename T1::type>]`中的等号成立，那么就是“该部分内容计算后的结果 与推导/指定的模板实参保持一致”
 
 ### SFINAE总结
 
@@ -3323,7 +3366,7 @@ SFINAE，即代换失败不是错误，指的是在编译时的重载决议时�
 
     另外最开始的概念中还说过：
 
-    > 每个概念都是一个**谓词**（即返回值为`bool`的一元？？？函数/函数对象），它在**编译时求值**，并在将之用作约束时成为模板接口的一部分。
+    > 每个概念都是一个**谓词**（即返回值为`bool`的一元函数/函数对象），它在**编译时求值**，并在将之用作约束时成为模板接口的一部分。
 
     也就是说我们其实可以这样：
 
@@ -3861,11 +3904,13 @@ int main() {
 
 ## make_index_sequence与tuple？？？
 
-[tuple基础](https://blog.csdn.net/sevenjoin/article/details/88420885)
+[C++中神奇的tuple：详解使用技巧和实例解析 - 知乎](https://zhuanlan.zhihu.com/p/676431516)
 
 [tuple进阶](https://zhuanlan.zhihu.com/p/71929922)
 
 [tuple应用](https://blog.csdn.net/Long_xu/article/details/135429561)
+
+[C++ 黑魔法术 | std::make_index_sequence - 知乎](https://zhuanlan.zhihu.com/p/627712738)
 
 该章节展示了访问tuple所有成员的一般方法
 
@@ -3892,7 +3937,7 @@ int main() {
   ```c++
   template<typename... Args>
   void print(const tuple<Args...>& tup) {     // 这里无法使用万能引用，因为万能引用得是最直接的T&&形式，得是一个整体，整体可以被推导与折叠
-      auto print_single = [&]<size_t... N>(index_sequence<N...>) {
+      auto print_single = [&]<size_t ...N>(index_sequence<N...>) {	// c++20
           //cout << (...<<(get<N>(tup)<<' ')) << endl;     该方法由于展开后括号的存在，会导致 << 先算
           (cout << ... << (get<N>(tup) << ' ')) << endl;  // 这种方式也会导致get<>的结果左移，修改方法见 折叠表达式
           ((cout << get<N>(tup) << ' '), ...);	// OK
@@ -3910,6 +3955,29 @@ int main() {
   解释：
 
   代码中写的很明白了，自己复制到IDE中看，如果用不了lambda模板，加个类就好了；如果用不了折叠表达式，参考链接中的写法
+  
+  ```c++
+  template <typename Tuple, typename Func, size_t ... N>
+  void func_call_tuple(Func&& print, const Tuple& tup, std::index_sequence<N...>) {
+      (print(get<N>(tup)),...);
+  }
+  
+  template <typename ... Args, typename Func>
+  void travel_tuple(const std::tuple<Args...>& tup, Func&& func) {
+      func_call_tuple(std::forward<Func>(func), tup, std::make_index_sequence<sizeof...(Args)>{});
+  }
+  
+  int main() {
+      auto tup = std::make_tuple(1, 4.56, "happen lee");
+      travel_tuple(tup, [](auto&& item) {
+          std::cout << item << ",";
+      });
+      return 1;
+  }
+  
+  ```
+  
+  这个也行
 
 ## 使用模板包装C风格API进行调用？？？
 
@@ -3978,7 +4046,7 @@ void f(T t) {
   class Base {
   public:
       // 公开的接口函数 供外部调用
-      void addWater(){
+      void addWater(){		// 进一步，我们可以实现一个模板，然后通过static_assert在父类中检测子类是否具有某个成员函数
           // 调用子类的实现函数。要求子类必须实现名为 impl() 的函数
           // 这个函数会被调用来执行具体的操作
           static_cast<Dervied*>(this)->impl();
@@ -3997,8 +4065,8 @@ void f(T t) {
   注意：
 
   1. 如果该段代码看不懂，可以看[这里](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/扩展知识/CRTP的原理与使用#crtp-奇特重现模板模式)
-  1. 之所以子类定义在父类的后面，而父类却可以访问子类的成员函数而不报错，是因为[两阶段名称查找](#查找规则)
-
+  1. 之所以子类定义在父类的后面，而父类却可以访问子类的成员函数而不报错，是因为类的完整定义不包括成员函数的定义，类的实例化时机和类的成员函数的实例化时机不一样，我们在通过父类成员函数访问子类成员函数时，子类已经被实例化了，也就是说这个时候
+  
 - 编译分发
 
   建议直接把这段代码复制到IDE上，好好看看里面的注释
@@ -4128,10 +4196,177 @@ void f(T t) {
 
 类模板的实例化不会实例化其任何成员函数，除非它们也被使用。在链接时，不同翻译单元生成的相同实例被合并。
 
+- 补充知识：如何在父类中检测子类中是否具有某个成员
+
+  拿我们一开始的代码举例：
+
+  ```c++
+  /****************************************************/			// #1
+  template <class T, class = std::void_t<>>
+  struct has_impl : false_type {};
+  
+  template <class T>
+  struct has_impl<T, std::void_t<decltype(declval<T>().impl())>> : true_type {};
+  /****************************************************/
+  
+  template <class Dervied>
+  class Base {
+  public:
+      void addWater(){
+          static_assert(has_impl<Dervied>::value, "error");		// #2
+          static_cast<Dervied*>(this)->impl();
+      }
+  };
+  
+  class X : public Base<X> {
+  public:
+      // 子类实现了父类接口
+      void impl() const{
+          std::cout<< "X 设备加了 50 毫升水\n";
+      }
+  };
+  
+  int main(){
+      X x;
+      x.addWater();
+  }
+  ```
+
+  解释：
+
+  - 先解释一下`#2`，为什么要用static_assert而不是把addWater定义为一个函数模板：
+
+    1. 我们先来了解一下**上下文** [见C++-Templates P258]
+
+       先看第18行，此时我们碰到了一个名字`Base<X>`，位于类模板`Base<X>`的实例化点，对于这个名字`Base<X>`而言，我们会先进入**类模板X的推导上下文**，然后进入**类模板X的重载决议上下文**，最后进入**类模板X的实例化上下文**（这三个上下文都发生在语义分析阶段）。在这三个上下文环境里，类`X`和`Base<X>`都是不完整类型，因为`Base<X>`的实例化还没结束
+
+       再看第28行，此时我们调用`x.addWater()`，对于这个名字`x.addWater()`而言，在该函数的调用语境（上下文）中，显然该函数非模板，且X此时拥有完整定义，所以显然该名字是“非待决名”，“限定名”，直接查找并绑定到`X::addWater`函数。
+
+    2. 当类模板隐式 (完全) 实例化时，**其成员的声明也会尽可能的实例化**，但相应的定义不会 (即成员部分实例化)。[见C++-Templates P227]
+    
+       所以如果addWater写成如下形式：
+    
+       ```c++
+       template<
+       	enable_if_t<has_impl<Dervied>::value, int> = 0
+       >
+       void addWater(){
+           static_cast<Dervied*>(this)->impl();
+       }
+       ```
+
+       则在`Base<X>`的推导上下文中，显然`[Dervied = X]`；在`Base<X>`的实例化上下文中，由于`[Dervied = X]`，所以此时会对该函数模板的声明进行部分实例化，但是此时类`X`还是个不完整类型，所以自然会在编译时报错了。**此时的错误，叫硬错误**，因为我们是在`Base<X>`的实例化上下文中发生的错误。
+    
+       注意，就算在类模板实例化上下文中`addWater()`实例化成功，此时的`addWater()`依然还是个函数模板，因为编译器只实例化了`enable_if_t<has_impl<Dervied>::value, int>`这一部分，声明的完全实例化要等到该函数模板“被调用”之时
+    
+       综上，如果一定要写成函数模板的形式，我们应该让该*函数模板声明*在*调用该成员函数的上下文*中实例化，所以我们可以写成：
+    
+       ```c++
+       template<
+       	typename D = Dervied,
+       	enable_if_t<has_impl<D>::value, int> = 0
+       >
+       void addWater(){
+           static_cast<Dervied*>(this)->impl();
+       }
+       ```
+    
+       那么我们在执行语句`x.addWater();`时，对于名字`x.addWater()`，位于成员函数模板`X::addWater<D,int>`的实例化点，此时类`X`是完整类型，对于该名字而言：
+    
+       1. 首先进入**该成员函数模板的推导上下文**，显然得到推导结果`[D=X,int=0]`，没有问题；
+       2. 然后进入**该成员函数模板的重载决议上下文**，将推导结果替换掉模板形参进行重载决议，选择最合适的那个模板声明（不检查定义），显然不报错；
+       3. 最后进入**该成员函数模板的实例化上下文**。在实例化上下文中，我们进行两阶段名称查找，实例化出该函数模板的定义。
+    
+       注意：以上三个上下文都发生在语义分析阶段
+    
+       由于模板形参D的值依赖于调用`addWater()`的上下文语境，所以在`Base<X>`实例化时不会实例化该函数模板的声明，该函数模板的声明会在 *调用`addWater()`的上下文* 中实例化，此时类X拥有完整定义。
+    
+       但是并不推荐这么写，因为要是手动指定模板形参D，SFINAE就失效了
+    
+       显然如果改成这种形式：
+    
+       ```c++
+       template<
+       	typename D = Dervied,
+       	enable_if_t<has_impl<Dervied>::value, int> = 0	// error，原因见上
+       >
+       void addWater(){
+           static_cast<Dervied*>(this)->impl();
+       }
+       ```
+    
+       也是不行的
+    
+  - 再解释一下`#1`，为什么要定义一个类模板（变量模板也可以其实）
+  
+    首先我们已经确定了要用static_assert，所以我们判断的结果要用true或者false表示，所以自然能联想到使用偏特化来实现类模板/变量模板，用于判断类中是否含有某成员，以下给出变量模板实现：
+  
+    ```c++
+    template <class T, class = std::void_t<>>
+    constexpr bool has_impl_v = false;
+    
+    template <class T>
+    constexpr bool has_impl_v<T, std::void_t<decltype(declval<T>().impl())>> = true;
+    ```
+  
+    更简单，更直观
+    
+    那你说，我用类模板和变量模板都实现了，那函数模板能不能实现同样的功能呢？
+    
+    应该是可以吧，我也不知道，此处用变量（类）模板是因为：
+    
+    ```text
+    在确定一个类或变量 (C++14 起)模板的特化是由部分特化还是主模板生成的时候也会出现推导与替换。在这种确定期间，部分特化的替换失败不会被当作硬错误，而是像函数模板一样代换失败不是错误，只是忽略这个部分特化。
+    ```
+    
+    如果使用函数模板的话，由于函数模板没有偏特化，所以需要定义不同类型模板形参/非类型模板形参的函数模板，不一定可以
+
 ## 项目要求？？？
 
 学完模板编程后，针对云会议项目中的消息队列，完成以下需求：
 
 1. 消息队列中的容器改为循环队列
+
 2. 尝试运用空基类优化
+
 3. 使用crtp优化日志类[【C++奇技淫巧】CRTP（奇特重现模板模式）](https://blog.csdn.net/LeoLei8060/article/details/139355345)
+
+4. crtp中，通过父类调用子类函数的时候，可以模板检测子类是否具有某个成员函数，或参考[(53 封私信 / 2 条消息) C++如何在编译期检测一个类是否有成员函数？ - 知乎](https://www.zhihu.com/question/406663736)，具体见下：
+
+   ```c++
+   /****************************************************/
+   template <class T, class = std::void_t<>>
+   struct has_impl : false_type {};
+   
+   template <class T>
+   struct has_impl<T, std::void_t<decltype(declval<T>().impl())>> : true_type {};
+   /****************************************************/
+   
+   template <class Dervied>
+   class Base {
+   public:
+       // 公开的接口函数 供外部调用
+       void addWater(){
+           static_assert(has_impl<Dervied>::value, "error");
+           static_cast<Dervied*>(this)->impl();
+       }
+   };
+   
+   class X : public Base<X> {
+   public:
+       // 子类实现了父类接口
+       void impl1() const{
+           std::cout<< "X 设备加了 50 毫升水\n";
+       }
+   };
+   
+   int main(){
+       X x;
+       x.addWater();
+   }
+   // 类X中没有impl()函数，所以静态断言报错，同时这种方式还支持函数重载检测，很方便。
+   ```
+
+   注意：
+
+   - 在父类中检测子类是否具有某个函数时，必须用static_assert来检测
