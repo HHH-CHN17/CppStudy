@@ -1,0 +1,10 @@
+{
+	"id": "obsidian-editor-math",
+	"name": "Obsidian editor math",
+	"version": "1.0.0",
+	"minAppVersion": "0.12.0",
+	"description": "Show math preview in editor",
+	"author": "Rain Sia",
+	"authorUrl": "",
+	"isDesktopOnly": false
+}
