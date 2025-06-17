@@ -1033,7 +1033,7 @@ void foo(){
 
 > `process_data` 的确算是没问题，用户非要做这些事情也是防不住的，我们只是告诉各位可能的情况。
 
-## 。。。死锁：问题与解决
+## 死锁：问题与解决
 
 > - 从表现形式上来说，死锁是由**多个线程**（多个线程执行的可能是同一个函数，也可以是不同的函数）使用多个互斥锁时，尝试给该资源的互斥锁上锁的顺序，时间不一致导致的。
 > - 解决方法：让两个互斥量使用相同顺序上锁，或者使用`lock()`一次性锁住多个互斥量
@@ -1277,7 +1277,7 @@ void foo(){
 
     解释：
 
-    - `_Owns`：表示成员`_Pmtx`是否已经被**当前线程**拥有（`_Owns`为`true`时，表示`_Pmtx`已经被上锁了，也可以理解成已经有线程持有`_Pmtx`；`_Owns`为`false`时，表示`_Pmtx`还没有被当前线程所拥有。
+    - `_Owns`：表示成员`_Pmtx`是否已经被**当前线程**拥有（`_Owns`为`true`时，表示`_Pmtx`已经被上锁了，也可以理解成当前块（在本节里，我们也可以把块看成一个线程）已经拥有了`_Pmtx`的上锁状态；`_Owns`为`false`时，表示`_Pmtx`的上锁状态还没有被当前块所拥有）。
 
   - 构造函数：
 
@@ -1330,7 +1330,7 @@ void foo(){
 
     - 其他的构造函数自己看
 
-  - `_Validate()`
+  - `_Validate()`验证
 
     ```c++
     void _Validate() const { // check if the mutex can be locked
@@ -1449,7 +1449,7 @@ void foo(){
 
 - `std::lock_guard<>`
 
-  使用 RAII 思想的锁的管理类，仅能通过构造函数传递锁，自动`unlock()`。
+  使用 RAII 思想的锁的管理类，仅能通过构造函数传递一个锁，自动`unlock()`。
 
   ```c++
   template <class _Mutex>
@@ -1478,7 +1478,7 @@ void foo(){
 
 - `std::unique_lock<>`
 
-  `std::lock_guard<>`的加强版，多了一个`_Owns`表示该对象是否持有锁，更加灵活，可以手动`lock()`，`unlock()`，也可以像`std::lock_guard<>`一样使用RAII自动`lock()`，`unlock()`
+  `std::lock_guard<>`的加强版，多了一个`_Owns`表示该对象是否持有锁的上锁状态，更加灵活，可以手动`lock()`，`unlock()`，也可以像`std::lock_guard<>`一样使用RAII自动`lock()`，`unlock()`
 
 - `std::lock<>()`
 
@@ -1562,7 +1562,7 @@ void foo(){
 
   解释：
 
-  - 在不同作用域之间传递`mutex`指针/引用时，**要特别注意互斥量的[生存期](https://zh.cppreference.com/w/cpp/language/lifetime)**。
+  - **`std::unique_lock`仅仅只是存储了`mutex`的指针**，所以在不同作用域之间传递`mutex`指针/引用时，**要特别注意互斥量的[生存期](https://zh.cppreference.com/w/cpp/language/lifetime)**。
 
     > extern 说明符只能搭配变量声明和函数声明（除了类成员或函数形参）。*它指定外部链接，而且技术上不影响存储期，但它不能用来定义自动存储期的对象，故所有 extern 对象都具有**静态或线程[存储期](https://zh.cppreference.com/w/cpp/language/storage_duration)。***
 
@@ -1571,8 +1571,64 @@ void foo(){
     > 举一个使用 `extern std::mutex` 的完整[运行示例](https://godbolt.org/z/z47x1Es5z)。当然，其实理论上你 `new std::mutex` 也是完全可行...... 🤣🤣
 
   - 对于`unique_lock`而言，关闭rvo/nrvo的情况下，一共经历了三次构造（一元有参，移动，移动）
+  
   - 在本例中，锁保护的范围从`std::unique_lock<std::mutex> lk{ some_mutex };`开始，到`process_data()`结束时结束。
+  
   - `std::unique_lock` 是灵活的，同样允许在对象销毁之前就解锁互斥量，调用 `unlock()` 成员函数即可，不再强调。
+  
+- 总结：
+
+  注意本节标题“在不同作用域中传递互斥量”而不是“在不同线程中传递互斥量”，因为互斥量本身就是可以让多线程访问的，所以这里的讲的”不同作用域“指的是同一个线程下的不同作用域，所以我们也可以看到`std::unique_lock`中的数据是非线程安全的。
+
+  所以我们一定要清楚一点：**我们使用`std::unique_lock`进行`lock()`操作时，当前块便持有了该锁的上锁状态，受该锁的保护；当进行移动，或者`unlock()`操作时，当前块便失去了该锁的上锁状态，不受该锁的保护**
+
+  我们在使用时，主要有两种用法：
+
+  - 用法一：
+
+    ```c++
+    mutex mtx_;
+    
+    void funcB(unique_lock<mutex>& ulk){
+        // do sth 2...
+    }
+    
+    void funcA(){
+        unique_lock ulk{ mtx_ };
+        // do sth 1...
+        B(ulk);
+        // do sth 3...
+    }
+    ```
+
+    解释：
+
+    1. 在`do sth 1,2,3...`时，都受到了`mtx_`的保护，也可以说，在A块和B块中，都受到了`mtx_`的保护
+
+  - 用法二：
+
+    ```c++
+    mutex mtx_;
+    
+    void funcB(unique_lock<mutex>&& ulk){
+        // do sth 2...
+    }
+    
+    void funcA(){
+        unique_lock ulk{ mtx_ };
+        // do sth 1...
+        B(move(ulk));
+        // do sth 3...
+    }
+    ```
+
+    解释：
+
+    1. 在`do sth 1,2...`时，受到了`mtx_`的保护；在`do sth 3...`时，没有受到`mtx_`的保护
+
+    2. 原因还是那句话：
+
+       我们使用`std::unique_lock`进行`lock()`操作时，**当前块**便持有了该锁的上锁状态，受该锁的保护；当进行移动，或者`unlock()`操作时，当前块便失去了该锁的上锁状态，不受该锁的保护
 
 ## 保护共享数据的初始化过程
 
@@ -1751,7 +1807,7 @@ mutex Singleton::m_mtx;
   };
   ```
 
-### 线程安全的单例模式
+### 。。。线程安全的单例模式
 
 - 饿汉式
 
@@ -1786,38 +1842,47 @@ mutex Singleton::m_mtx;
   // 简单版本，建议拿到IDE上看
   class Singleton {
   private:
-      static unique_ptr<Singleton, void(*)(Singleton*)> up;
-  public:
-      static Singleton& GetInstance() {
-          static once_flag of;
-          call_once(of, []() {
-              up.reset(new Singleton);
-              cout << "111" << endl;
-          });
-          return *up;
-      }
-  
+      using Singleton_type = unique_ptr<Singleton, void(*)(Singleton*)>;
+      friend Singleton_type;
       static void Destory(Singleton* p_sgl) {
           //p_sgl->~Singleton();  别犯蠢，指针的释放要使用delete才能释放干净。
           delete p_sgl;
           cout << "Destory" << endl;
       }
+      
+  public:
+      static Singleton_type& GetInstance() {
+          static once_flag of;
+          call_once(of, []() {
+              // 对于非局部变量，或是具有静态或者线程局部存储器的变量，无需捕获（也不可以被捕获），即可直接访问
+              up.reset(new Singleton);
+              cout << "111" << endl;
+          });
+          return up;
+      }
   
       void f(){ cout << "f" << endl;}
+      
+  private:
+      inline static Singleton_type up{nullptr, Destory};
+      
   private:
       Singleton() = default;
+      ~Singleton(){ cout << "~Singleton" << endl;}
+      
+  public:
       Singleton(const Singleton&) = delete;
       Singleton(Singleton&&) = delete;
       Singleton& operator=(const Singleton&) = delete;
-      ~Singleton(){ cout << "~Singleton" << endl;}
+      Singleton&& operator=(Singleton&&) = delete;
   };
-  unique_ptr<Singleton, void(*)(Singleton*)> Singleton::up(nullptr, Singleton::Destory);
   ```
-
+  
   解释：
-
-  - 注意看16行的注释
-
+  
+  - 注意看15行的注释
+  - 关于inline的用法，见：[#inline说明符](../3-C++泛型编程/C++泛型编程.md/#inline说明符)
+  
   ```c++
   // 复杂版本，建议放到IDE中看
   
