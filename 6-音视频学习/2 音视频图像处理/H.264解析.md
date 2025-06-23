@@ -89,3 +89,11 @@ GOP:两个I帧之间是一个图像序列，在一个图像序列中只有一个
 太累了。。。。。
 
 你就这么看吧：先看David老师的ppt，然后看David老师的markdown文件，然后看《新一代视频压缩编码标准-H.264_AVC(第二版)》5，6，7章，遇到不会的名词就去《H.264官方中文版》里面找，最后看ima里的问题进行查漏补缺
+
+这几篇文章也能看看：
+
+[【H264】码流结构详解 - fengMisaka - 博客园](https://www.cnblogs.com/linuxAndMcu/p/14533228.html)
+
+[【音视频 | H.264】H.264视频编码及NALU详解_h264 nalu-CSDN博客](https://blog.csdn.net/wkd_007/article/details/134966687)
+
+[视音频数据处理入门：H.264视频码流解析_视频码流分析-CSDN博客](https://blog.csdn.net/leixiaohua1020/article/details/50534369)
