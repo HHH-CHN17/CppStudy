@@ -936,7 +936,9 @@ int main() {
 
   - [非局部变量](https://zh.cppreference.com/w/cpp/language/initialization#.E9.9D.9E.E5.B1.80.E9.83.A8.E5.8F.98.E9.87.8F)
 
-    所有具有静态[存储期](https://zh.cppreference.com/w/cpp/language/storage_duration)的非局部变量的初始化，会作为程序启动的一部分在 [main 函数](https://zh.cppreference.com/w/cpp/language/main_function)的执行之前进行（除非被延迟，见下文）。所有具有线程局部存储期的非局部变量的初始化，会作为线程启动的一部分进行，并按顺序早于线程函数的执行开始。对于这两种变量，会先发生静态初始化，后发生动态初始化，或者看情况发生提早动态初始化或者延迟动态初始化。
+    所有具有静态[存储期](https://zh.cppreference.com/w/cpp/language/storage_duration)的非局部变量的初始化，会作为程序启动的一部分在 [main 函数](https://zh.cppreference.com/w/cpp/language/main_function)的执行之前进行（除非被延迟，见下文）。所有具有线程局部存储期的非局部变量的初始化，会作为线程启动的一部分进行，并按顺序早于线程函数的执行开始。
+
+    对于上面两种变量，会**先发生静态初始化，后发生动态初始化**，或者看情况发生提早动态初始化或者延迟动态初始化。
 
   - 内部链接
 
