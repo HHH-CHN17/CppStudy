@@ -3012,7 +3012,7 @@ public:
 
   则第一行能过编译，第二行显然会报错（运行时报错，不是编译时报错，很奇怪）。
 
-### 。。。使用std::promise
+### 使用std::promise
 
 - 概念：
 
@@ -3098,6 +3098,8 @@ public:
     - 注意`set_exception()`和`set_value()`不能同时使用，也就是说**共享状态中要么存储函数返回值，要么存储抛出的异常**，这很符合常理，毕竟函数执行之后要么抛出异常，要么返回结果。
 
 ### future，packaged_task，promise总结
+
+必看：[MSVC异步机制源码解读](https://aistudio.google.com/app/prompts?state=%7B%22ids%22%3A%5B%221miHbj3uV5269YEhE_qJnu1FS3PQagvO3%22%5D%2C%22action%22%3A%22open%22%2C%22userId%22%3A%22109999983649662450065%22%2C%22resourceKeys%22%3A%7B%7D%7D&usp=drive_link)
 
 `future`（`_State_manager<>`的子类），`packaged_task`，`promise`只能通过他们自己的类成员（`_Promise`对象）访问共享状态，且他们均只能移动，不可复制。其中：
 
@@ -3732,7 +3734,7 @@ public:
 
 [初始化顺序问题，值得一看](https://github.com/Mq-b/ModernCpp-ConcurrentProgramming-Tutorial/issues/27)
 
-# 内存模型与原子操作
+# 。。。内存模型与原子操作
 
 - 内存模型定义了多线程程序中，读写操作如何在不同线程之间可见，以及这些操作在何种顺序下执行。内存模型确保程序的行为在并发环境下是可预测的。
 - 原子操作即**不可分割的操作**。系统的所有线程，不可能观察到原子操作完成了一半。
@@ -4525,6 +4527,7 @@ void wake_up(){
 1. 线程池改成[#此形式](#线程池)，同时参考asio中的线程库以及[GitHub - anda522/ThreadPool](https://github.com/anda522/ThreadPool?tab=readme-ov-file)和[设计与实现支持优先级任务的C++线程池](https://zhuanlan.zhihu.com/p/681425628)中涉及到的优先级队列，加一个线程池的`join()`，保证能执行完所有任务队列中的任务；同时搭配上新的单例模式；同时参考`std::future<>`，补充一个`static_assert<>`进行检测；同时自己测试，如果函数参数传递时，会调用几次构造函数（关闭nrvo）；同时进行异常处理；同时进行模板参数检测；同时更换掉`shared_ptr`。
 1. 初始化顺序当作项目问题：[总结-勘误初始化顺序](#总结-勘误初始化顺序)
 1. spdlog优化：①无锁队列②mmap③使用多生产者-单消费者，日志信息先提交给thread_local的vector，随后由专门的线程写日志
+1. 参考这里面的线程池与无锁队列实现：[CGraph/src/UtilsCtrl/ThreadPool at main · ChunelFeng/CGraph](https://github.com/ChunelFeng/CGraph/tree/main/src/UtilsCtrl/ThreadPool)
 
 
 
