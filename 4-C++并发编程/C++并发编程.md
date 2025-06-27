@@ -3101,6 +3101,11 @@ public:
 
 必看：[MSVC异步机制源码解读](https://aistudio.google.com/app/prompts?state=%7B%22ids%22%3A%5B%221miHbj3uV5269YEhE_qJnu1FS3PQagvO3%22%5D%2C%22action%22%3A%22open%22%2C%22userId%22%3A%22109999983649662450065%22%2C%22resourceKeys%22%3A%7B%7D%7D&usp=drive_link)
 
+注意`_State_manager<>`和`_Packaged_state<>`这两个类：
+
+1. `_State_manager<>`是`_Associated_state<>`的RAII管理类，所以显然`_Associated_state<>`是一个堆对象，其次`_State_manager<>`还使用了`_Get_only_once`来判断继承该类的是`shared_future`还是`future`；
+2. 而`_Packaged_state<>`继承于`_Associated_state<>`，其额外拥有一个我们传入的一个可调用对象类型`_Function_type`，该类可以用于存储我们传入的函数并通过`_Call_immediate()`调用函数，讲结果存储于其基类`_Associated_state<>`中。由于其与`_Associated_state<>`是基类与子类的关系，所以`_State_manager<>`中管理的`_Associated_state<>`指针也可能是`_Packaged_state<>`指针（比如`packaged_task<>`的实现中就是这么做的）
+
 `future`（`_State_manager<>`的子类），`packaged_task`，`promise`只能通过他们自己的类成员（`_Promise`对象）访问共享状态，且他们均只能移动，不可复制。其中：
 
 - `_Associated_state<>`是一个类，这个类就叫共享状态。
