@@ -501,7 +501,15 @@ GLEW是一个跨平台的C++扩展库，基于OpenGL图形接口。使用OpenGL�
 
 #### 坐标系统
 
-写代码的时候其实你会发现，我们有时候代码里的坐标并非标准化设备坐标（NDC），但最后还是能让只接收NDC的OpenGL接收并转换到屏幕上，这是为什么呢？是因为我们会在**顶点着色器**中用坐标左乘一个mvp矩阵，将其转换为NDC，随后OpenGL处理完NDC的各种属性后，在**光栅化阶段**，通过`glViewport()`中指定的值将NDC转换为**屏幕空间坐标**
+写代码的时候其实你会发现，我们有时候代码里的坐标并非标准化设备坐标（NDC），但最后还是能让只接收NDC的OpenGL接收并转换到屏幕上，这是为什么呢？是因为我们会在**顶点着色器**的最后用坐标左乘一个mvp矩阵，将其转换为NDC，随后OpenGL处理完NDC的各种属性后，在**光栅化阶段**，通过`glViewport()`中指定的值将NDC转换为**屏幕空间坐标**，详细如下图（建议用白主题看）：
+
+![coordinate_systems](./assets/coordinate_systems.png)
+
+一旦所有顶点被变换到裁剪空间，最终的操作——透视除法(Perspective Division)将会执行，在这个过程中我们将位置向量的x，y，z分量分别除以向量的齐次w分量；透视除法是将4D裁剪空间坐标变换为3D标准化设备坐标的过程。这一步会在每一个顶点着色器运行的最后被自动执行。
+
+在这一阶段之后，最终的坐标将会被映射到屏幕空间中（使用glViewport中的设定），并被变换成片段。
+
+将观察坐标变换为裁剪坐标的投影矩阵可以为两种不同的形式，每种形式都定义了不同的平截头体。我们可以选择创建一个正射投影矩阵(Orthographic Projection Matrix)或一个透视投影矩阵(Perspective Projection Matrix)。
 
 - Model矩阵推导
 
@@ -530,6 +538,10 @@ GLEW是一个跨平台的C++扩展库，基于OpenGL图形接口。使用OpenGL�
 [OpengGL学习笔记：彻底搞懂模板测试(模板测试(Stencil Test) - 知乎](https://zhuanlan.zhihu.com/p/612811622)
 
 [Learn openGL CN 模板测试 详细图文讲解 - 哔哩哔哩](https://www.bilibili.com/opus/506333853446298079)
+
+#### α测试和混合
+
+[混合 - LearnOpenGL CN](https://learnopengl-cn.github.io/04 Advanced OpenGL/03 Blending/)
 
 #### 帧缓冲FBO
 
