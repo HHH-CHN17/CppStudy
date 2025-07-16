@@ -577,6 +577,8 @@ GLEW是一个跨平台的C++扩展库，基于OpenGL图形接口。使用OpenGL�
 
 #### PBO
 
+[ai问答环节，必看](https://aistudio.google.com/app/prompts?state=%7B%22ids%22:%5B%221O1yUyZTvSxQB1PgR8s4NgIA6OomXJIJg%22%5D,%22action%22:%22open%22,%22userId%22:%22109999983649662450065%22,%22resourceKeys%22:%7B%7D%7D&usp=sharing)
+
 [写的非常好，先看这个：OpenGLPBO：提升图像数据传输效率的技术详解-CSDN博客](https://blog.csdn.net/weixin_41967328/article/details/129355233)
 
 [OpenGL 像素缓冲区对象 （PBO）](https://www.songho.ca/opengl/gl_pbo.html)
@@ -633,7 +635,7 @@ GLEW是一个跨平台的C++扩展库，基于OpenGL图形接口。使用OpenGL�
     这里使用双PBO进行操作，先使用`glBindTexture()`绑定待操作纹理，随后，
 
     1. 通过`PBO[n]`通过`glTexSubImage2D()`将像素从 PBO 传给 当前绑定的纹理
-    2. 通过`glMapBufferRange()` 获取`PBO[n+1]`映射的内存地址，通过该内存地址直接修改`PBO[n+1]`的像素数据
+    2. **通过`glMapBufferRange()` 获取`PBO[n+1]`映射的内存地址，通过该内存地址直接修改`PBO[n+1]`的像素数据，我们也可以将提前加载好的图像数据传给该pbo，这样gpu可以在下一次渲染循环中用pbo的数据生成纹理**
     3. `n += 1;`
 
     注意：
