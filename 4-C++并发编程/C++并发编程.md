@@ -4506,15 +4506,64 @@ void wake_up(){
 
 [？？？谈谈 C++ 中的内存顺序 (Memory Order) - Luyu Huang's Blog](https://luyuhuang.tech/2022/06/25/cpp-memory-order.html#总结)
 
+#### 先行发生
 
+#### 同步发生
 
+#### 可见
 
+#### 顺序一致性内存模型
 
+[std::memory_order - cppreference.com](https://cn.cppreference.com/w/cpp/atomic/memory_order.html)
 
+- 定义
 
+  标记为 `memory_order_seq_cst` 的原子操作不仅像释放 / 获取序那样对内存进行排序（在一个线程中 *先行发生* 于`store()`的所有操作，在进行`load()`的线程中都成为 *可见* 的副作用），而且还为所有如此标记的原子操作建立一个单一的总修改顺序。
 
+- memory_order_seq_cst
 
+  具有此内存序的`load()`表现形如 *acquire操作*，而`store()`表现形如 *release操作* ，而读 - 改 - 写操作表现形如同时执行 *release操作* 和 *acquire操作* 。此外，存在一个单一的总顺序，在该顺序中，所有线程都以相同的顺序观察到所有修改（见上文的定义）
 
+#### 自由序内存模型
+
+#### 释放-获取序内存模型
+
+注意，对于以下代码：
+
+```c++
+std::atomic<int> x = 0;
+std::atomic<bool> y;
+std::atomic<int> z;
+void write_x_then_y()
+{
+    x.store(1,std::memory_order_relaxed); // 1
+    y.store(true,std::memory_order_release); // 2
+}
+void read_y_then_x()
+{
+    while(!y.load(std::memory_order_acquire)); // 3 自旋，等待y被设置为true
+    if(x.load(std::memory_order_relaxed)) // 4
+        ++z;
+}
+int main()
+{
+    x=false;
+    y=false;
+    z=0;
+    std::thread a(write_x_then_y);
+    std::thread b(read_y_then_x);
+    a.join();
+    b.join();
+    assert(z.load()!=0); // 5
+}
+```
+
+如果把x的类型从atomic_int改为int，则对x的读写是数据竞争，行为未定义
+
+原因：
+
+- 阅读自由序内存模型可知：当x为atomic_bool时，如果设置memory_order_relaxed序，则c++保证对x的修改顺序的一致性。也就是说如果x的修改顺序形如：0->1->2->3，那么其他线程读取x的值的时候，可能看到其修改顺序形如：`0->1->1->1->3`，`1->2->3`，`0->1->2->3`，但是绝对不可能是：`3->2->1`
+- 如果把x的类型从atomic_int改为int，由于编译器可能会将这个变量缓存到寄存器中，可能造成永远无法读取到线程a对x的改变
 
 
 
