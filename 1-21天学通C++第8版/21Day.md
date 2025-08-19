@@ -97,7 +97,7 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
   foo f1;           // 默认初始化
   foo f2(42, 1.2);
   foo f3(42);
-  foo f4();         // 识别为函数申明
+  foo f4();         // 识别为函数声明
   ```
 
 - 聚合类可以使用列表初始化
@@ -115,7 +115,7 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
 - 除了以上初始化方式之外，对于标准容器来说，都是先声明一个对象，然后通过插入的方式进行初始化，不过，std::vector是个例外，其可以从先前使用了聚合初始化的数组分配，如下：
 
   ```c++
-  nt arr[] = {1, 2, 3, 4, 5}; // 使用聚合初始化初始化的数组
+  int arr[] = {1, 2, 3, 4, 5}; // 使用聚合初始化初始化的数组
   
   std::vector<int> vec(std::begin(arr), std::end(arr)); // 使用数组的值初始化 std::vector
   ```
@@ -295,6 +295,8 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
           return t2;
       }
       ```
+      
+      注意当使用t2构造返回值的临时对象时，是调用的移动构造，因为标准规定return时，需要把t2当成右值来看待
 
 #### 列表初始化的细节
 
@@ -363,7 +365,7 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
 
   - 如果匹配不上 参数为`initlizer_list<>`的构造函数，则会拆分`initializer_list<>`，去匹配有相同参数个数，相同参数类型的构造函数。
 
-  - 如果构造函数被explicit修饰，不论时直接列表初始化还是拷贝列表初始化，都会忽略explicit进行重载决议；如果最终绑定的是explicit修饰的构造函数，则使用拷贝列表初始化编译失败
+  - 如果构造函数被explicit修饰，不论时直接列表初始化还是拷贝列表初始化，都会忽略explicit进行重载决议；如果最终绑定的是explicit修饰的构造函数，则使用**拷贝列表初始化**编译失败
 
     ```c++
     struct test{
@@ -386,8 +388,8 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
   template<typename T>
   struct Test {
       Test() {}
-      Test(std::initializer_list<T>) { puts("被调用"); }
-      Test(const Test<T>&) { puts("复制构造"); }
+      Test(std::initializer_list<T> il) { cout << "被调用: " << typeid(T).name() << endl; }
+      Test(const Test<T>& t) { cout << "复制构造"  << typeid(T).name() << endl; }
   };
   
   template<typename T>
@@ -395,11 +397,11 @@ C++11 引入的新功能 auto 让您能够定义这样的变量，即编译器�
   
   int main() {
       Test<int> a;
-      Test t{ a,a };		//被调用         会推导为Test<Test<int>>
-      Test t2{ a };		//复制构造       会推导为Test<int>
+      Test t{ a,a };		//被调用         T会推导为Test<int>
+      Test t2{ a };		//复制构造       T会推导为int
       
-  //	如果希望 Test t2{ a }; 中Test类型被推导为 Test<Test<int>>, 需要以下做法
-      Test t3({ a });		//被调用         会推导为Test<Test<int>>
+  //	如果希望 Test t2{ a }; 中T被推导为Test<int>, 需要以下做法
+      Test t3({ a });		//被调用         T会推导为Test<int>
   }
 
 #### 类型收窄
@@ -458,11 +460,15 @@ int main()
 
 ### 左值引用和右值引用
 
+[引用声明 - cppreference.cn - C++参考手册](https://cppreference.cn/w/cpp/language/reference)
+
 左值与右值这两个概念是从 C 中传承而来的，左值指既能够出现在等号左边，也能出现在等号右边的变量；右值则是只能出现在等号右边的变量。
 
 使用场景：**当函数返回了一个函数内部定义的临时变量时，可以用右值引用接收**
 
 - **左值引用只能绑定左值**
+
+  作用：左值引用可以用于别名现有对象（可以使用不同的 cv 限定）
 
 ```c++
 int a1 = 10;
@@ -479,9 +485,11 @@ int& a2 = a1;//编译正确，左值引用可以接受左值
 	//常量左值引用可以绑定右值是一条非常棒的特性，但是也存在一个缺点————常量性，一旦使用常量左值引用，表示我们无法在函数内修改该对象的内容（强制类型转换除外），所以需要另一个特性帮助我们完成工作，即右值引用。
 ```
 
-- **右值引用只能绑定右值，或者通过std::move()绑定左值**，能够有效**延长右值的生命周期，减少对象复制，提升程序性能**；在语法方面，右值引用在类型后加&&
+- **右值引用只能绑定右值，或者通过std::move()绑定左值**
 
-  右值引用既可以作为左值，也可以作为右值，当右值引用有名字的时候为左值：`int&& a = 3;`此时a为左值；右值引用没名字的时候为右值：`move()`的返回值为右值引用，此时右值引用为右值，因为该返回值只能被右值引用接收；
+  作用：右值引用可以用于[延长临时对象的生命周期](https://cppreference.cn/w/cpp/language/reference_initialization#Lifetime_of_a_temporary)（请注意，常量左值引用也可以延长临时对象的生命周期，但不能通过它们进行修改）
+  
+  右值引用既可以作为左值，也可以作为右值，当右值引用有名字的时候为左值：`int&& a = 3;`此时a为左值；右值引用没名字的时候为右值：`move()`的返回值为右值引用，此时右值引用为右值，因此该返回值只能被右值引用接收；
 
 ```c++
 	int i = 0;
@@ -496,8 +504,8 @@ public:
     X(){}
     X(const X& x){}
     ~X(){}
-    show(){cout<<"show"<<endl;}
-}
+    void show(){cout<<"show"<<endl;}
+};
 X make_x(){
     X x1;
     return x1;
@@ -505,17 +513,161 @@ X make_x(){
 int main(){
 #ifdef 0
     //对于该段代码，一共发生了三次拷贝构造
-    //第一次是函数中创建x1临时变量，第二次是返回临时变量，第三次是创建x2
+    //第一次是函数中创建x1，第二次是通过x1创建返回值临时对象，第三次是通过返回值临时对象创建x2
     X x2(make_x());
     x2.show();					//此处是通过make_x()的返回值又构建了一个x2，调用了x2的拷贝构造函数
 #endif
     //使用右值引用，只需2次拷贝构造即可实现同样功能
-    //第一次是构造x1，第二次是构造x2
-    //这里就很好体现出“延长生命周期，减少对象复制”的特点
+    //第一次是通过默认构造来构造x1，第二次是通过x1移动构造返回值临时对象，然后被x2引用该返回值临时对象，没有发生构造
     X&& x2 = make_x();
     x2.show();					// 此时x2就是make_x()的返回值，x2延长了返回值的生命周期。
 }
 ```
+
+特别强调：
+
+1. 在开启NRVO或者c++17及以上时，只有一次构造
+
+2. x2绑定的不是x1，而是`X make_x()`的返回值，也就是说x2延长的是返回值的生命周期（不考虑NRVO）。
+
+### 引用与临时对象的生命周期
+
+[引用初始化 - cppreference.cn - C++参考手册](https://cppreference.cn/w/cpp/language/reference_initialization)
+
+- 通用规则：
+
+  当一个引用（const T& 或 T&&）**直接绑定**到一个临时对象上时，这个临时对象的生命周期会被延长，直到该引用离开其作用域。
+
+- 例外一：函数的返回值
+
+  > 绑定到 return 语句中函数的返回值的临时对象不会延长：它会在返回表达式的末尾立即销毁。 这样的 return 语句始终返回悬空引用。
+
+  **释义**: 函数体内的任何局部对象的生命周期都严格限制在函数的作用域内。当函数执行完毕后，其栈帧上的所有内容都会被销毁。
+
+  ```c++
+  const std::string& get_error_string() {
+      return std::string("Error");
+  } // 临时对象在此处被销毁
+  
+  int main() {
+      const std::string& ref = get_error_string();
+  
+      std::cout << ref << std::endl;	// UB!
+  }
+  ```
+
+  解释：
+
+  - ref是返回值的引用，但是返回值也是一个引用，它引用的是一个局部变量
+
+  - 正确做法如下：
+
+    ```c++
+    std::string get_correct_string() {
+        return std::string("OK"); 
+    }
+    ```
+
+- 例外二：函数调用的实参
+
+  >绑定到函数调用中引用参数的临时对象存在到包含该函数调用的完整表达式的末尾：如果函数返回的引用比完整表达式寿命更长，它将变成悬空引用。
+
+  解释：在函数调用中，为函数形参绑定的临时对象，其生命周期只持续到包含该函数调用的**完整表达式**结束为止，而不会被函数内部的引用参数延长。
+
+  ```c++
+  #include <string>
+  #include <iostream>
+  
+  void print_and_store(const std::string& s, const std::string** storage) {
+      std::cout << "Inside function: " << s << std::endl;
+      // 危险操作：在函数外部存储一个指向参数 s 的指针
+      *storage = &s; 
+  }
+  
+  int main() {
+      const std::string* dangling_ptr = nullptr;
+  
+      // 完整表达式是 print_and_store(...) 这一整句
+      print_and_store(std::string("Temporary"), &dangling_ptr);
+  
+      // 未定义行为！dangling_ptr 指向的内存已经无效
+      std::cout << "Outside function: " << *dangling_ptr << std::endl; 
+  }
+  ```
+
+- 例外三：构造函数初始化列表
+
+  > 在 [CWG 问题 1696](https://cplusplus.github.io/CWG/issues/1696.html) 解决之前，允许临时对象绑定到构造函数[初始化列表](https://cppreference.cn/w/cpp/language/initializer_list)中的引用成员，并且它仅持续到构造函数退出，而不是与对象存在的时间一样长。 自 [CWG 1696](https://cplusplus.github.io/CWG/issues/1696.html) 以来，这种初始化是非良构的，尽管许多编译器仍然支持它（一个值得注意的例外是 clang）。
+
+  解释：在构造函数的成员初始化列表中，如果一个引用成员绑定到了一个临时对象，该临时对象的生命周期**只持续到构造函数执行完毕**，而不会延长到和新创建的对象生命周期一样长。
+
+  ```c++
+  #include <string>
+  #include <iostream>
+  
+  struct Widget {
+      const int& ref; // 引用成员
+  
+      // 构造函数：ref 绑定到了参数 r
+      Widget(const int& r) : ref(r) {
+          std::cout << "Constructor: ref is '" << ref << "'" << std::endl;
+      }
+  };
+  
+  int main() {
+      Widget w(10);
+  
+      // 未定义行为！w.ref 现在是一个悬垂引用
+      std::cout << "After construction: ref is '" << w.ref << "'" << std::endl;
+  }
+  ```
+
+  解释：
+
+  - 在构造函数执行期间，ref 是有效的，但是当构造函数结束后，临时对象被销毁，也就是说临时对象的生命周期只被r延长了，没有被ref延长。
+
+- 例外四：绑定到临时对象的成员
+
+  解释：当一个引用绑定到临时对象的成员（子对象）时，**生命周期延长规则只适用于引用直接绑定到临时对象或子对象本身**。
+
+  ```c++
+  #include <string>
+  #include <utility>
+  #include <iostream>
+  
+  class Widget {
+  public:
+      std::string name;
+      std::string&& get_name() { return std::move(name); }
+  };
+  Widget create_widget() { return Widget{"MyWidget"}; }
+  
+  int main() {
+      std::string&& n1 = Widget{"MyWidget"}.name;			// ok
+      std::string&& n2 = create_widget().name;			// ok
+      std::string&& n3 = create_widget().get_name();		// 悬空引用
+      std::string&& n4 = Widget{"MyWidget"}.get_name();	// 悬空引用
+  }
+  ```
+
+  解释：
+
+  - 根据文档，临时对象的子对象是：
+
+    形式为 e.m 的[类成员访问表达式](https://cppreference.cn/w/cpp/language/operator_member_access#Built-in_member_access_operators)，其中 e 是这些表达式之一，并且 m 指定对象类型的非静态数据成员
+
+    其他的先不谈，不重要。
+
+  - 对于 n1 和 n2 而言，`Widget{"MyWidget"}.name` 和 `create_widget().name`都满足临时对象的子对象的形式，所以适用于生命周期延长规则
+  - 对于 n3 和 n4 而言，不满足e.m的格式，所以参考例外一。
+
+- 总结一下：
+
+  > **临时对象**（仅考虑const T&，T&&，不考虑T&）的生命周期不能通过 “传递” 来进一步延长：从临时对象绑定的引用变量或数据成员初始化的第二个引用不会影响其生命周期。
+
+  解释：通常情况下，一个临时对象的生命周期不能通过“传递”它来进一步延长。如果一个临时对象已经绑定到了一个引用上（我们称之为ref_1），那么你再用ref_1去初始化第二个引用（ref_2），这个临时对象的生命周期**不会**因为ref_2的存在而有任何改变。它的生命周期仍然只和**第一个**引用ref_1绑定。
+
+  举个例子：对于上面例外四中的n3和n4，我们可以把`get_name()`的返回值类型改为`std::string`，这样n3和n4就会作为接收name的第一个引用，从而根据例外一的规则正确延长name的生命周期
 
 ### 返回值中的左值/右值引用
 
@@ -532,7 +684,7 @@ int& f1() {
 
 int&& f2() {
     int a = 1;
-    return move(a);	// 返回值为右值引用时，只能返回一个右值
+    return move(a);	// 返回值为右值引用时，只能返回一个右值，但此处代码造成了悬空引用
 }
 
 int f3() {
@@ -543,13 +695,46 @@ int f3() {
 
 注意：
 
+- **当返回值为左值引用时，仅能返回左值；当返回值为右值引用时，仅能返回右值**
 
+- 左值引用是引用，右值引用也是引用（**引用本质上是一个对象的别名。它不拥有自己的内存，而是绑定到另一个已经存在的对象上**）。所以他们作为返回值类型时返回的是我们指定的返回值的别名，所以都需要小心悬空引用（`f2()`就是一个经典的悬空引用）
 
-### 值类别
+- 对于`int& f()`：返回了局部变量的引用，显然这是一个悬空引用
+
+- 对于`int& f1()`：使用该函数显然没问题，但调用者显然无法知道该引用需要delete，所以会造成内存泄漏
+
+- 对于`int&& f2()`：同样，返回了局部变量的引用，是一个悬空引用
+
+- 当函数返回值为左值引用时，可以访问或修改对象的内部状态，或者可以实现链式调用
+
+  ```c++
+  class MyArray {
+  private:
+      int data[10];
+  public:
+      int& at(size_t index) {
+          return data[index];
+      }
+  
+      const int& at(size_t index) const {
+          return data[index];
+      }
+  };
+  
+  int main() {
+      MyArray arr;
+      arr.at(5) = 100; // 正确：通过返回的引用修改了内部成员 data[5]
+      const MyArray carr;
+      int value = carr.at(5); // 正确：通过返回的引用读取内部成员
+      // carr.at(5) = 200; // 编译错误！不能修改 const 对象
+  }
+  ```
+
+- 当函数返回值为右值引用时，通常是调用`std::move()`，进行资源的移动。
 
 [C++表达式的类型与值类别详解-CSDN博客](https://blog.csdn.net/m0_62327743/article/details/134178090)
 
-### std::move
+### 。。。std::move
 
 [一文读懂C++右值引用和std::move - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/335994370)
 
