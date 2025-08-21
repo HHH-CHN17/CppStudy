@@ -42,21 +42,279 @@ void log_print(const char *, const char *, int, const char *, ...){
 // 应用
 ```
 
+### #error，static_assert和assert
+
+用于排除逻辑上不可能存在的状态
+
+- **#error** 
+
+  - 语法格式：`#error error-message`
+
+  - 预编译期断言，编译程序时，只要遇到`#error`就会生成一个编译错误提示消息，并停止编译。
+
+- **assert**
+
+  - 语法格式：`assert( expression );`
+
+  - 运行期断言，计算表达式，如果结果为 **`false`**，则打印诊断消息并中止程序。
+
+  - 由于NDEBUG宏的存在，`assert()`在release模式下被禁用，因此它仅在debug模式下显示错误消息，如想在release模式下输出，**应使用`#undef NDEBUG`，同时该预编译指令必须放在`#include<cassert>`前面**。
+
+    ```c++
+    // 禁用assert()的简要实现
+    #ifdef NDEBUG
+    #define assert(expr)			(static_cast<void> (0))
+    #else
+    ......
+    #endif
+    // 显然，在定义了NDEBUG宏后，assert()被展开为一条无意义的语句，然后被编译器优化掉
+    ```
+
+    所以对于对应用程序正确运行至关重要的检查（如检查 `dynamic_cast()` 的返回值）时，为了确保它们在debug模式下也会执行，应使用 if 语句
+
+- **static_assert**
+
+  - 语法格式：`static_assert(constant-expression, string-literal);`（注意只能是**常量表达式**和**常量字符串**）
+
+  - 编译期断言， 如果指定的常数表达式为 **`false`**，则编译器显示指定的消息，并且编译失败
+
+    ```c++
+    // static_assert()简要实现
+    #define assert_static(e) \
+    	do { \
+    		enum { assert_static__ = 1 / (e) }; \
+    	} while(0)
+    ```
+
+    `do {} while(0)`的妙用：
+
+    [代码使用do...while(0)的好处_do while 0 的好处-CSDN博客](https://blog.csdn.net/m0_60069998/article/details/128971920)
+
+### 异常
+
+异常用于处理逻辑上可能发生的错误
+
+**异常处理工作原理**
+
+​	每当您使用 throw 引发异常时，编译器都将查找能够处理该异常的 catch(Type)。异常处理逻辑首 先检查引发异常的代码是否包含在 try 块中，如果是，则查找可处理这种异常的 catch(Type)。如果 throw 语句不在 try 块内，或者没有与引发的异常兼容的 catch( )，异常处理逻辑将继续在调用函数中寻找。 因此，异常处理逻辑沿调用栈向上逐个地在调用函数中寻找，直到找到可处理异常的 catch(Type)。**在退栈过程的每一步中，都将销毁当前函数的局部变量，因此这些局部变量的销毁顺序与创建顺序相反。**（chapter28.4）
+
+**std::exception 类**
+
+​	捕获 std::bad_alloc 时，实际上是捕获 new 引发的 std::bad_alloc 对象。std::bad_alloc 继承了 C++标准类 std::exception，而 std::exception 是在头文件`<exception>`中声明的。
+下述重要异常类都是从 std::exception 派生而来的。
+
+- bad_alloc：使用 new 请求内存失败时引发。
+- bad_cast：试图使用 dynamic_cast 转换错误类型（没有继承关系的类型）时引发。
+- ios_base::failure：由 iostream 库中的函数和方法引发。
+
+std::exception 类是异常基类，它定义了虚方法 what( )；这个方法很有用且非常重要，详细地描述 了导致异常的原因。在程序清单 28.2 中，第 18 行的` exp.what( )`提供了信息 bad array new length，让用 户知道什么地方出了问题。由于 std::exception 是众多异常类型的基类，因此可使用 `catch(const exception&)`捕获所有将 `std::exception` 作为基类的异常：
+
+```c++
+void SomeFunc() 
+{ 
+   try 
+   { 
+      // code made exception safe 
+   } 
+   catch (const std::exception& exp) // catch bad_alloc, bad_cast, etc    { 
+      cout << "Exception encountered: " << exp.what() << endl;    } 
+}
+```
+
+**从 std::exception 派生出自定义异常类**
+
+​	可以引发所需的任何异常。然而，让自定义异常继承 std::exception 的好处在于，现有的异常处理 程序 catch(const std::exception&)不但能捕获 bad_alloc、bad_cast 等异常，还能捕获自定义异常，因为它 们的基类都是 exception。
+
+```c++
+#include <exception> 
+#include <iostream> 
+#include <string> 
+using namespace std;
+
+class CustomException : public std::exception
+{
+	string reason;
+public:
+	// constructor, needs reason 
+	CustomException(const char* why) :reason(why) {}
+
+	// 重写父类what()虚函数
+    // 注意noexcept关键字，可避免在what()引发异常
+	virtual const char* what() const noexcept
+	{
+		return reason.c_str();
+	}
+};
+
+double Divide(double dividend, double divisor)
+{
+	if (divisor == 0)
+		throw CustomException("CustomException: Dividing by 0 is a crime");
+
+	return (dividend / divisor);
+}
+
+int main()
+{
+	cout << "Enter dividend: ";
+	double dividend = 0;
+	cin >> dividend;
+	cout << "Enter divisor: ";
+	double divisor = 0;
+	cin >> divisor;
+	try
+	{
+		cout << "Result is: " << Divide(dividend, divisor);
+	}
+	catch (exception& exp)// catch CustomException, bad_alloc, etc 
+	{
+		cout << exp.what() << endl; 474
+			cout << "Sorry, can't continue!" << endl;
+	}
+
+	return 0;
+}
+```
+
+### noexcept修饰符（说明符）
+
+- `noexcept()`修饰符中只能存放常量表达式
+- `noexcept()`操作符中是不求值语境，所以该操作符的返回值显然是个编译期的bool常量
+
+`noexcept` 表示其修饰的函数不会抛出异常。在 C++11 中如果 `noexcept` 修饰的函数抛出了异常，编译器会直接调用 `std::terminate ()` 函数来终止程序的运行。这比基于异常机制的 throw 在效率上会高一些。
+
+语法（两种表达形式）：
+
+```c++
+void excpt_func() noexcept;
+void excpt_func() noexcept(constant_expression);// 只能是常量表达式
+```
+
+常量表达式的结果会被转换成一个 bool 类型的值。该值为 true，表示函数不会抛出异常；反之，则有可能抛出异常。这里，不带常量表达式的 noexcept 相当于声明了 noexcept (true)，即不会抛出异常。
+
+```c++
+#include <iostream>
+#include <exception>
+using namespace std;
+
+void Throw() { throw 1; }						// 该函数唯一作用是抛出异常
+void NoBlockThrow() { Throw(); }		// 该函数会让throw()中抛出的异常继续抛出
+void BlockThrow() noexcept {Throw(); }	// 该函数不允许让throw()抛出的异常继续抛出，而是调用terminate()中断程序
+
+int main() {
+	try {
+		Throw();
+	}
+	catch (...) {
+		cout << "Found throw." << endl; // Found throw.
+	}
+	try {
+		NoBlockThrow();
+	}
+	catch (...) {
+		cout << "Throw is not blocked." << endl; // Throw is not blocked.
+	}
+	try {
+		BlockThrow();					// terminate() called after throwing an instance of 'int'
+	}
+	catch (...) {
+		cout << "Found throw 1." << endl;
+	}
+	// 编译选项: g++ -std=c++11 2-6-1.cpp
+}
+```
+
+### noexcept操作符
+
+noexcept作为操作符时，通常用于模板
+
+语法：
+
+```c++
+template <class T>
+    void fun() noexcept(noexcept(T())) {}
+```
+
+这里，fun 函数是否是一个 noexcept 的函数，将由 T () 表达式是否会抛出异常所决定。这里的第二个 noexcept 就是一个 noexcept 操作符。当其参数是一个有可能抛出异常的表达式的时候，其返回值为 false，反之为 true。
+
+```c++
+#include <iostream>
+using namespace std;
+
+bool judge(int i) noexcept
+{
+	bool bj = static_cast<bool>(i);
+	return true;
+}
+
+template<typename Type>
+void mswap(Type& x, Type& y) noexcept(noexcept(judge(x)))    //此处先判断judge(x))是否被noexcept修饰，如果是，则mswap也被noexcept修饰。此处noexcept(judge(x))相当于一个一元谓词
+{
+	throw 1;
+	cout << "throw" << endl;
+}
+
+int main() {
+	int x = 0;
+	x++;
+	int y = 4;
+    
+	try {
+		mswap(x, y);
+	}
+	catch (...) {
+		cout << "Found throw." << endl; // Found throw.
+	}
+	// 编译选项: g++ -std=c++11 2-6-1.cpp
+}
+```
+
+应用场景：
+
+- 移动构造函数（move constructor）
+- 析构函数（destructor）。这里提一句，在新版本的编译器中，析构函数是默认加上关键字noexcept的。下面代码可以检测编译器是否给析构函数加上关键字noexcept。
+
+```scss
+    struct X
+    {
+        ~X() { };
+    };
+    
+    int main()
+    {
+        X x;
+        // explicitly marked as noexcept(true)
+        static_assert(noexcept(x.~X()), "Ouch!");
+    }
+```
+
 ### 数据溢出计算
 
 以char为例，当char取最大值时，bit位：0111 1111，此时为127；当char取最小值时，bit位：1000 0000，此时为-128
 
 综上，有符号数char为正数时，正常计算，为负数时，结果 = -(2^7 - 后七位数的正数值)，其他有符号整数同理
 
-### C++11初始化列表？？？
+### 存储类别，存储期，存储区？？？
+
+[C++变量的存储类别（动态存储、静态存储、自动变量、寄存器变量、外部变量） - DoLittleDo - 博客园](https://www.cnblogs.com/DoLittleDo/p/5805742.html)
+
+Linux进程空间：
+
+自动变量，静态变量存放在进程空间的哪里？
+
+自动变量，静态变量等的初始化方式？
+
+### C++11初始化列表
 
 > - 初始化列表的初始化方式总是先于构造函数完成的（实际在编译完成时就已经决定了)。
 
-### 聚合类
+### 聚合类型和POD类型？？？
+
+[C++变量的存储类别（动态存储、静态存储、自动变量、寄存器变量、外部变量） - DoLittleDo - 博客园](https://www.cnblogs.com/DoLittleDo/p/5805742.html)
 
 [聚合类型与POD类型 - Jerry_SJTU - 博客园](https://www.cnblogs.com/jerry-fuyi/p/12854248.html)
 
-> - 聚合类，可以简单当成 成员变量为public的POD类型
+> - 聚合类，可以简单当成成员变量为public的POD类型
 > - 不过聚合类的成员可以是非聚合类型。
 
 ### C++11列表初始化
@@ -109,7 +367,7 @@ void log_print(const char *, const char *, int, const char *, ...){
   foo f4();         // 识别为函数声明
   ```
 
-- 聚合类可以使用列表初始化
+- 聚合类可以使用列表初始化[（聚合体，聚合初始化）](https://zh.cppreference.com/w/cpp/language/aggregate_initialization#.E5.AE.9A.E4.B9.89)
 
   ```c++
   struct bar{
@@ -235,7 +493,7 @@ void log_print(const char *, const char *, int, const char *, ...){
       */
       ```
 
-  - 聚合初始化
+  - 聚合初始化[（聚合体，聚合初始化）](https://zh.cppreference.com/w/cpp/language/aggregate_initialization#.E5.AE.9A.E4.B9.89)
 
     列表初始化的一种形式，当该类为聚合体时，就是聚合初始化
 
@@ -289,7 +547,7 @@ void log_print(const char *, const char *, int, const char *, ...){
 
     解释：
 
-    - 之所以此处只发生一次移动构造，是因为`return {1, 2};`时，返回值的临时对象由*拷贝列表初始化*调用有参构造函数进行初始化，而不是由局部变量初始化。
+    - 之所以此处只发生一次移动构造，是因为`return {1, 2};`时，在以花括号包围的初始化器列表作为返回表达式的 return 语句中，以*拷贝列表初始化*对返回值的临时对象进行初始化，而不是由局部变量初始化。
 
     - 在`func()`定义如下时，发生两次有参构造，两次移动构造
 
@@ -309,6 +567,11 @@ void log_print(const char *, const char *, int, const char *, ...){
       注意当使用t2构造返回值的临时对象时，是调用的移动构造，因为标准规定return时，需要把t2当成右值来看待
 
 #### 列表初始化的细节
+
+>- `{}`与`initializer_list<>`的联系
+>  1. 两者之间其实没啥关系
+>  2. 当使用**复制列表初始化**（不是复制初始化）时，`auto`会将`{}`推导为`initializer_list`
+>  3. 在构造函数中，使用`{}`会优先和参数为`initializer_list`的构造函数进行匹配
 
 - `{param_list}`的名字，类型：
 
@@ -373,7 +636,7 @@ void log_print(const char *, const char *, int, const char *, ...){
 
   - 重载决议会优先匹配 参数为`initlizer_list<>`的构造函数
 
-  - 如果匹配不上 参数为`initlizer_list<>`的构造函数，则会拆分`initializer_list<>`，去匹配有相同参数个数，相同参数类型的构造函数。
+  - 如果匹配不上 参数为`initlizer_list<>`的构造函数，则会拆分`initializer_list<>`，去匹配有相同参数个数，相同参数类型的 *构造函数*。
 
   - 如果构造函数被explicit修饰，不论时直接列表初始化还是拷贝列表初始化，都会忽略explicit进行重载决议；如果最终绑定的是explicit修饰的构造函数，则使用**拷贝列表初始化**编译失败
 
@@ -402,9 +665,6 @@ void log_print(const char *, const char *, int, const char *, ...){
       Test(const Test<T>& t) { cout << "复制构造"  << typeid(T).name() << endl; }
   };
   
-  template<typename T>
-  Test(std::initializer_list<T>) -> Test<T>;
-  
   int main() {
       Test<int> a;
       Test t{ a,a };		//被调用         T会推导为Test<int>
@@ -417,17 +677,7 @@ void log_print(const char *, const char *, int, const char *, ...){
 
 #### 类型收窄
 
-![image-20240827215725158](./assets/image-20240827215725158.png)
-
-类型收窄一般是指一些可以使得数据变化或者精度丢失的隐式类型转换。可能导致类型收窄的典型情况 如下:
-
-- 从浮点数隐式地转化为整型数。比如:int a=1.2，这里a实际保存的值为整数1，可以视为类型收窄。
-
-- 从高精度的浮点数转为低精度的浮点数，比如从 long double 隐式地转化为double，或 从double 转为float。如果这些转换导致精度降低，都可以视为类型收窄。
-
-- 从整型（或者非强类型的枚举）转化为浮点型，如果整型数大到浮点数无法精确表示，则也可以视为类型收窄。 
-
-- 从整型（或者非强类型的枚举）转化为较低长度的整型，比如:unsigned char=1024， 1024明显不能被一般长度为8位的unsigned char所容纳，所以也可以视为类型收窄。
+类型收窄一般是指一些可以使得数据变化或者精度丢失的隐式类型转换。
 
 C++11中，使用初始化列表进行初始化的数据编译器是会检查其是否发生类型收窄的
 
@@ -457,13 +707,960 @@ int main()
 
 - 只有进行常量初始化的时候发生收窄，才会编译报错，这很好理解
 
-### decltype
+### 成员变量的就地初始化
 
-[C++11特性：decltype关键字 - melonstreet - 博客园 (cnblogs.com)](https://www.cnblogs.com/QG-whz/p/4952980.html)
+[C++11 快速初始化成员变量 - kaizenly - 博客园 (cnblogs.com)](https://www.cnblogs.com/Braveliu/p/12227564.html)
 
-[C++ decltype用法详解-CSDN博客](https://blog.csdn.net/qq_38196982/article/details/118578967)
+> - C++11中，允许就地地使用 `=` 或者 `{}` 对**非静态成员变量**进行列表初始化。
+> - 对于**非常量的静态成员变量**而言，需类内申明，类外初始化。（或者使用`inline`修饰，保证编译时，类静态成员的定义最后只存在于一个目标文件中）
+> - 对于**常量的静态成员变量**而言，需就地初始化。
+> - 初始化列表的效果总是优先于就地初始化。
 
-### 左值引用和右值引用
+```c++
+struct C
+{
+    C(int i, int j) :c(i), d(j){};
+
+    int c;
+    int d;
+};
+
+struct init
+{
+    // 对成员变量就地使用列表初始化
+    int a = 1;
+    string b{ "hello" };
+    C c{ 1, 3 };
+};
+```
+
+### define/const？？？
+
+[？？？#define 宏定义看这一篇文章就够了-CSDN博客](https://blog.csdn.net/m0_69519887/article/details/133960037)
+
+deﬁne是在编译的**预处理阶段**起作用；而const是在**编译、运行**的时候起作用
+
+宏不检查类型，一般来说加上一个大括号；const会检查数据类型
+
+- `do { } while(0)`的技巧
+- `#`的作用
+- `##`的作用
+- `##__VA_ARGS`的作用
+
+### const/static？？？
+
+- **static**
+
+  [C/C++之static函数与普通函数](https://www.cnblogs.com/ht-927/p/4726574.html)
+
+  - static修饰普通全局变量/函数
+    隐藏。所有不加static的全局变量和函数具有全局可见性，可以在其他文件中使用，**加了之后只会初始化一次，且只能在该文件所在的编译模块（即申明该函数/变量的文件）中使用（所以静态全局变量在.cpp文件中声明，定义）**
+
+  - static修饰普通局部变量
+
+    改变了局部变量的存储位置，从原来的栈中存放改为静态存储区。但是作用域仍为局部作用域，局部静态变量在离开作用域之后，并没有被销毁，而是仍然驻留在内存当中，直到程序结束，只不过我们不能再对他进行访问。
+
+  - static修饰类的成员变量/成员函数
+    static成员变量：只与类关联，不与类的对象关联。定义时要分配空间，可以被非static成员函数任意访问。
+    static成员函数：不具有this指针，无法访问类对象的普通成员变量和普通成员函数； 不能被声明为const、虚函数和volatile；可以被非static成员函数任意访问
+
+- **const**
+
+  [C++ const？？？](https://www.runoob.com/w3cnote/cpp-const-keyword.html)
+
+  - 不考虑类的情况
+    const常量在定义时必须初始化，之后无法更改，成为以一个**编译期常量**；const形参可以接收const和非const类型的实参
+
+  - 考虑类的情况
+    const成员变量：只能通过构造函数初始化列表进行初始化，并且必须有构造函数；
+
+    const成员函数：const对象只能调用const成员函数；且只有mutable修饰的数据的值可以改变
+
+- 补充知识：
+
+  ```c++
+  #include<iostream>
+   
+  using namespace std;
+   
+  int main(void)
+  {
+      const int a = 7;
+      int *p = (int*)&a;
+      *p = 8;
+      cout << a << endl;		// 7
+      cout << p << " " << &a << endl;	// 0x5ffe54 0x5ffe54
+  }
+  ```
+
+  解释：
+
+  - 两者值不同，地址相同，这与`const_cast<>`中的那个例子很相似
+  - 将`const int`改为`volatile const int`之后，`a`的值变为8；但是同样的操作放在`const_cast<>`中不成立。且在使用`volatile`修饰后，`*p`和`a`两个变量的地址不一样
+
+### inline/static
+
+[#inline说明符](../3-C++泛型编程/C++泛型编程.md/####inline说明符)
+
+[#static关键字](../3-C++泛型编程/C++泛型编程.md/####inline说明符)
+
+### 虚函数
+
+- 虚函数表（Virtual Function Table，VFT）位于C++内存模型中的**常量区**，可将虚函数表视为一个包含函数指针的静态数组，其中每个指针都指向相应的虚函数；而虚函数则位于C++内存模型中的**代码区**。
+
+- 动态多态：
+
+  通过**基类指针或引用**调用**虚函数**时，能够根据对象的**实际类型**在**运行时**决定调用哪个版本的函数。
+
+  简单来说，就是**同一个接口，多种实现**。你发出同一个指令，不同的对象会根据自己的类型执行不同的行为。
+
+[？？？C++虚函数的底层实现原理详解_虚函数底层实现原理-CSDN博客](https://blog.csdn.net/lewele001/article/details/120198316)
+
+```c++
+class A {
+public:
+	virtual void test() { }
+	virtual void test1() { }
+	double a = 1;
+};
+
+class B : public A {
+public:
+	void test() override { }
+	void test1() override { }
+	int b;
+};
+
+int main() {
+	B b;
+	cout << &b << endl;
+	cout << &(b.a) << endl;
+	cout << &(b.b) << endl;
+}
+```
+
+解释：
+
+- 对于B的对象模型而言，虚函数指针位于内存布局的开头，该指针属于子类中的基类对象，内存布局如下：
+
+  ```c++
+  class B size(24):
+          +---
+   0      | +--- (base class A)
+   0      | | {vfptr}
+   8      | | a
+          | +---
+  16      | b
+          | <alignment member> (size=4)
+          +---
+  
+  B::$vftable@:
+          | &B_meta	// 指向 RTTI 信息的指针，包含了运行期类型信息，用于 dynamic_cast 和 typeid。
+          |  0		// 0表示vfptr到完整对象顶部的偏移量（Offset-to-top）
+   0      | &B::test	// 虚函数 B::test() 的地址 (vftable 索引 0)
+   1      | &B::test1
+  // 左侧的 0 表示的是虚函数的序号，并不是和上面的类的内存布局左侧的数字 8 一样表示的是相较于起始内存地址的偏移量，所以对于多个虚函数而言，序号将依次为0，1，2...
+  ```
+
+  解释：
+
+  - Offset-to-top的作用
+
+    用于在涉及**多重继承**或**虚继承**的复杂继承体系中，正确地执行 dynamic_cast，考虑以下例子：
+
+    ```c++
+    struct Base1 { virtual void func1(); };
+    struct Base2 { virtual void func2(); };
+    struct Derived : Base1, Base2 {};
+    ```
+
+    ```c++
+    Derived 对象的内存布局:
+    +------------------------+ 0
+    | Base1 subobject        |
+    |  (vfptr for Base1)     |
+    |  ...                   |
+    +------------------------+ sizeof(Base1)
+    | Base2 subobject        |
+    |  (vfptr for Base2)     |
+    |  ...                   |
+    +------------------------+
+    | Derived members        |
+    | ...                    |
+    +------------------------+
+    ```
+
+    - Derived 对象内部会有两个 vfptr，一个用于 Base1 部分，一个用于 Base2 部分。
+    - Base1 部分的 vftable，其 offset-to-top 会是 **0**。
+    - Base2 部分的 vftable，其 offset-to-top 会是一个**非零值**（等于 sizeof(Base1)）。因为从 Base2 的 vfptr 位置，需要回退 sizeof(Base1) 字节才能到达整个 Derived 对象的顶部。
+
+    当在一个 Base2* 指针上执行 dynamic_cast 时，运行时就会查看 vftable，读取这个非零的 offset-to-top，从而正确地计算出完整 Derived 对象的起始地址，进而完成安全的类型转换。
+
+#### 考考你
+
+- 以下代码的输出是：
+
+  ```c++
+  class Base {
+  public:
+  	int a = 1;
+  	virtual void print(int n = 2) {
+  		cout << "base: " << a + n << endl;
+  	}
+  };
+  
+  class derive: public Base {
+  public:
+  	int b = 3;
+  	virtual void print(int n = 10) {
+  		cout << "derive: " << b + n << endl;
+  	}
+  };
+  
+  int main() {
+  	Base* arr = new derive[10];
+  	arr[7].print();		// #1
+  
+  	Base* ptr = new derive{};
+  	ptr->print();		// #2
+  
+      return 0;
+  }
+  ```
+
+  答案：
+
+  ```c++
+  // 答案一：
+  derive: 5
+  derive: 5
+  // 答案二：
+      未定义行为，可能造成运行时错误
+  ```
+
+  解析：
+
+  ```c++
+  Base* arr = new derive[10];
+  // 未定义行为，
+  // 在msvc的derive类布局中，会先给Base做内存对齐，再给derive做内存对齐，所以sizeof(Base)==16，sizeof(derive)==24
+  //		sizeof(Base)*3 == sizeof(derive)*2。arr[6].print()能正常输出
+  // 但是在gcc中，sizeof(Base)==sizeof(derive)==16。arr[7].print();	正常输出
+  // 所以在derive的内存空间里加上sizeof(Base)，本身就是未定义行为，
+  // 需要学完内存序之后再来看
+  arr[7].print();		// #1
+  
+  Base* ptr = new derive{};
+  // 先看这个吧：
+  // 编译器走到print()这个函数时，会对print()这个名字进行名字查找并绑定
+  // 由于该名字左边是成员访问符->，所以会进行限定名字查找，绑定到Base类的print函数中。
+  // 然后再在运行期通过虚函数指针访问print()的定义
+  ptr->print();		// #2
+  ```
+
+### 虚继承
+
+> 空类的大小为1，为的是区分不同的类对象。
+
+[C++虚继承原理与类布局分析 - 千松 - 博客园](https://www.cnblogs.com/ThousandPine/p/18111381)
+
+#### 普通继承
+
+```c++
+class A{
+public:
+	int a1;
+	int a2;
+};
+
+class B{
+public:
+	int b1;
+	int b2;
+};
+
+class C : public B, public A{
+public:
+	int d1;
+	int d2;
+};
+```
+
+解释：
+
+- 内存布局：
+
+  ```c++
+  class C size(24):
+          +---
+   0      | +--- (base class A)
+   0      | | a1
+   4      | | a2
+          | +---
+   8      | +--- (base class B)
+   8      | | b1
+  12      | | b2
+          | +---
+  16      | c1
+  20      | c2
+          +---
+  ```
+
+- 由上内存布局可得，`C*`转换为`A*`和`B*`时的操作出现了差异，以下判断语句均为`true`
+
+  ```c++
+  C c;
+  (void *)(A *)&c == (void *)&c;
+  (void *)(B *)&c > (void *)&c;
+  (void *)(B *)&c == (void*)(sizeof (A) + (char *)&c);
+  // 对于普通继承而言，子类对象转换为父类对象时，只要知道子类地址即可，不需要访问子类对象。
+  ```
+
+  解释：
+
+  - 在C的对象c中：
+    1. C的地址就是A的地址
+    2. B的地址比C的地址大
+    3. B的地址比C的地址大`sizeof(A)`个字节
+
+#### 虚继承
+
+> - 用于解决菱形继承问题
+> - 对于普通继承而言，子类对象的地址转换为父类对象的地址时，只要知道子类地址即可，**不需要访问子类对象**，即可获取到父类对象地址，**普通继承时，父类与子类地址的相对位置由对象模型决定**（注意这里讲的是子类->基类，不是基类->子类）。
+> - 显然对于虚继承而言，子类对象的地址转换为父类对象的地址时，不仅需要知道子类地址，**而且需要访问子类对象**才能得到父类对象地址，**虚继承时，父类与子类地址的相对位置由子类对象中的虚基类表决定**（这个在子类`weak_ptr`转换为父类`weak_ptr`时有坑，详情见对应的构造函数）。
+> - 哪个子类使用了虚继承，那这个vbptr就属于哪个子类，和虚函数指针不同，虚函数指针属于对应的父类。
+
+```c++
+class A
+{
+public:
+	int a1;
+	int a2;
+};
+
+class B : virtual public A
+{
+public:
+	int b1;
+	int b2;
+};
+
+```
+
+解释：
+
+- 内存布局：
+
+  ```c++
+  class B size(24):
+          +---
+   0      | {vbptr}
+   8      | b1
+  12      | b2
+          +---
+          +--- (virtual base A)
+  16      | a1
+  20      | a2
+          +---
+  
+  B::$vbtable@:
+   0      | 0
+   1      | 16 (Bd(B+0)A)
+  vbi:       class  offset o.vbptr  o.vbte fVtorDisp
+                 A      16       0       4 0
+  ```
+
+  解释：
+
+  - 只要出现**子类虚继承基类**，则必定发生两种行为（==很重要==）：
+    1. 子类布局的起始位置增加了`vbptr`指针，该指针指向`vbtable`（哪个子类使用了虚继承，那这个vbptr就属于哪个子类）
+    2. 哪个类被虚继承，那么那个类的实例数据副本放在子类末尾
+  - 对于虚表`vbtable`而言：
+    - 首先需要知道，对于`OF (Xd(Y+n)Z)`表示的是：在`X`类中，`Y`类的地址+`n`个偏移字节可以得到`Y`的`vbptr`，`Y`的`vbptr`到Z类的入口的偏移量为`OF`个字节
+    - ` 0      | 0`表示：该虚基类表对应的`vbptr` + 0个偏移字节即可得到持有该表的类的首地址（由`B::$vbtable@:`可知：@后面为空，即该`vbtable`属于B）
+    - ` 1      | 16 (Bd(B+0)A)`表示：B类中，B的地址+0个偏移字节即可获取到B的`vbptr`，B的`vbptr`到A类入口的偏移量为16
+
+#### 菱形继承
+
+```c++
+class A{
+public:
+	int a1;
+	int a2;
+};
+
+class B : public A{
+public:
+	int b1;
+	int b2;
+};
+
+class C : public A{
+public:
+	int c1;
+	int c2;
+};
+
+class D : public B, public C{
+public:
+	int d1;
+	int d2;
+};
+
+```
+
+解释：
+
+- 内存布局：
+
+  ```c++
+  class D size(40):
+          +---
+   0      | +--- (base class B)
+   0      | | +--- (base class A)
+   0      | | | a1
+   4      | | | a2
+          | | +---
+   8      | | b1
+  12      | | b2
+          | +---
+  16      | +--- (base class C)
+  16      | | +--- (base class A)
+  16      | | | a1
+  20      | | | a2
+          | | +---
+  24      | | c1
+  28      | | c2
+          | +---
+  32      | d1
+  36      | d2
+          +---
+  ```
+
+  解释：
+
+  - 显然，在C类中，有两份A类的副本，有问题
+
+#### 虚继承解决菱形继承
+
+```c++
+class A{
+public:
+	int a1;
+	int a2;
+};
+
+class B : virtual public A{
+public:
+	int b1;
+	int b2;
+};
+
+class C : virtual public A{
+public:
+	int c1;
+	int c2;
+};
+
+class D : public B, public C{	
+public:
+	int d1;
+	int d2;
+};
+```
+
+解释：
+
+- 内存布局：
+
+  ```c++
+  class D size(48):
+          +---
+   0      | +--- (base class B)
+   0      | | {vbptr}
+   8      | | b1
+  12      | | b2
+          | +---
+  16      | +--- (base class C)
+  16      | | {vbptr}
+  24      | | c1
+  28      | | c2
+          | +---
+  32      | d1
+  36      | d2
+          +---
+          +--- (virtual base A)
+  40      | a1
+  44      | a2
+          +---
+  
+  D::$vbtable@B@:
+   0      | 0
+   1      | 40 (Dd(B+0)A)
+  
+  D::$vbtable@C@:
+   0      | 0
+   1      | 24 (Dd(C+0)A)
+  vbi:       class  offset o.vbptr  o.vbte fVtorDisp
+                 A      40       0       4 0
+  ```
+
+  解释：
+
+  - 请结合[#虚继承](#虚继承)理解
+  - 按照先前的分析，B类和C类中应当各有一份A的实例化数据副本，但由于这两个类的虚基类是同一个，所以两者的虚基类副本发生合并，一起放在了A类中的末尾
+
+#### 共用虚基类表
+
+```c++
+class A{
+public:
+	int a1;
+	int a2;
+};
+
+class B : virtual public A{
+public:
+	int b1;
+	int b2;
+};
+
+class C : virtual public A, public B {
+public:
+	int c1;
+	int c2;
+};
+```
+
+解释：
+
+- 内存布局：
+
+  ```c++
+  class C size(32):
+          +---
+   0      | +--- (base class B)
+   0      | | {vbptr}
+   8      | | b1
+  12      | | b2
+          | +---
+  16      | c1
+  20      | c2
+          +---
+          +--- (virtual base A)
+  24      | a1
+  28      | a2
+          +---
+  
+  C::$vbtable@:
+   0      | 0
+   1      | 24 (Cd(B+0)A)
+  vbi:       class  offset o.vbptr  o.vbte fVtorDisp
+                 A      24       0       4 0
+  ```
+
+  解释：
+
+  - 请结合[#虚继承](#虚继承)理解
+  - 在继承完之后，B类和C类中`vbptr`发生了合并，`vbptr`指向C类生成的虚基类表
+  - 也就是说，不仅虚基类会合并，如果有两个`vbptr`存放的地址相等且虚继承同一个基类，则`vbptr`和`vbtable`也会合并，`vbptr` 会指向一个由最派生类生成的、统一的 `vbtable`（最派生类是一个对象被创建时其完整、最终的类型。）
+
+
+#### 练习题：
+
+画出D类的内存布局：
+
+```c++
+class A{
+public:
+	int a1;
+	int a2;
+};
+
+class B : virtual public A{
+public:
+	int b1;
+	int b2;
+};
+
+class C : virtual public A{
+public:
+	int c1;
+	int c2;
+};
+
+class D : virtual public B, public C{
+public:
+	int d1;
+	int d2;
+};
+```
+
+答案：
+
+```c++
+class D size(48):
+        +---
+ 0      | +--- (base class C)
+ 0      | | {vbptr}
+ 8      | | c1
+12      | | c2
+        | +---
+16      | d1
+20      | d2
+        +---
+        +--- (virtual base A)		// 好像继承的逻辑是先普通继承，后虚继承
+24      | a1
+28      | a2
+        +---
+        +--- (virtual base B)
+32      | {vbptr}
+40      | b1
+44      | b2
+        +---
+
+D::$vbtable@C@:
+ 0      | 0
+ 1      | 24 (Dd(C+0)A)
+ 2      | 32 (Dd(D+0)B)	// 发现没有，C类和D类的vbptr和vbtable合并了
+
+D::$vbtable@B@:
+ 0      | 0
+ 1      | -8 (Dd(B+0)A)
+vbi:       class  offset o.vbptr  o.vbte fVtorDisp
+               A      24       0       4 0
+               B      32       0       8 0
+```
+
+### 虚继承+虚函数
+
+```c++
+class A{
+public:
+	virtual void test(){}
+	int a1;
+	int a2;
+};
+
+class B : virtual public A{
+public:
+	virtual void test() {}
+	int b1;
+	int b2;
+};
+```
+
+解释：
+
+- 内存布局：
+
+  ```c++
+  class B size(32):
+          +---
+   0      | {vbptr}
+   8      | b1
+  12      | b2
+          +---
+          +--- (virtual base A)
+  16      | {vfptr}
+  24      | a1
+  28      | a2
+          +---
+  
+  B::$vbtable@:
+   0      | 0
+   1      | 16 (Bd(B+0)A)
+  
+  B::$vftable@:
+          | -16
+   0      | &B::test
+  ```
+
+  解释：
+
+  - 结合前两章看
+
+### 指针的定义
+
+- 一级指针：是一个指针变量，该指针指向的地址保存着一个普通变量；
+
+- 二级指针：是一个指针变量，该指针指向的地址保存着一级指针的地址；
+
+- 例如：
+
+  ```c++
+  int a1[5] = {1, 2, 3, 4, 5};
+  int a2[5] = { 10, 20, 30, 40, 50 };
+  int a3[5] = { 100, 200, 300, 400, 500 };
+  int a4[5] = { 1000, 2000, 3000, 4000, 5000 };
+  int a5[5] = { 10000, 20000, 30000, 40000, 50000 };
+  int* p[5] = { a1, a2, a3, a4, a5 };
+    
+  int** pp = p;
+  cout << *(*(pp + 1) + 4) << endl;	// 50
+  ```
+
+  解释：
+
+  - 进行`operator + ()`时，加的是`sizeof(指针所指向类型的大小)`
+
+  - `pp + 1`时加的是`sizeof(int*)`，因为pp指向的的地址中存放的是`int*`，会加8个字节
+  - `*pp + 1`时加的是`sizeof(int)`，理由同上。
+
+### 继承构造函数
+
+page75
+
+> - 为了避免二义性，尽量不要在构造函数中使用默认参数，且继承构造函数不会继承默认参数
+> - ` using Base::Base`是**隐式声明继承的**。即假设一个继承构造函数不被相关的代码使用，编译器不会为之产生真正的函数代码，这样比透传基类各种构造函数更加节省目标代码空间。
+> - 继承构造函数只会初始化基类中的成员变量，如果想初始化子类独有的成员变量，通过**就地初始化**解决。
+> - 基类的构造函数被声明为**私有**或者派生类是从基类**虚继承**的，那么就不能在派生类中声明继承构造函数。
+> - 一旦使用了继承构造函数，编译器就不会为派生类生成默认构造函数。
+> - 派生类继承了多个基类的时候。多个基类中的部分构造函数可能导致派生类中的继承构造函数的函数名、参数相同，解决办法就是**显式的继承类的冲突构造函数**。
+
+```c++
+class Base {
+public:
+    Base(int x) {
+        // 基类构造函数
+    }
+};
+class Derived : public Base {
+public:
+    using Base::Base; // 继承基类的所有构造函数，也就是继承构造函数
+};
+int main() {
+    Derived d(10); // 直接使用继承来的基类构造函数
+    return 0;
+}
+```
+
+注意：
+
+- 对于我目前的Derived类而言，不应该写自定义的构造函数，所以使用继承构造函数时，Derived的作用主要时拓展Base类的功能，自身没有或很少有需要构造函数参数来初始化的数据成员。
+
+```c++
+struct A
+{
+	A(int) {}
+};
+struct B
+{
+	B(int) {}
+};
+struct C :A, B
+{
+	using A::A;
+	using B::B;
+	C(int i) :A(i), B(i) {}		// 显式的继承类的冲突构造函数解决冲突
+};
+
+int main() {
+	C c(1);
+}
+```
+
+`Derived`类通过`using Base::Base;`语句继承了`Base`类的所有构造函数。因此，在创建`Derived`类的实例时，我们可以直接使用`Base`类的构造函数来初始化`Derived`对象。
+
+[#总结](#继承构造函数)
+
+### 委派构造函数
+
+[C++11之委派构造函数](https://blog.csdn.net/qq_45254369/article/details/126771257)
+
+page80
+
+#### 使用方法
+
+> - 用于减少构造函数中的重复代码
+> - 概念：**将构造的任务分派给一个目标构造函数来完成**。（eg1）
+> - **委派构造函数**：初始化列表中调用“基准版本”的构造函数就是委派构造函数。
+>   **目标构造函数**：被调用“基准版本”构造函数就是目标构造函数。
+> - 委派构造函数不能使用 初始化列表 初始化成员变量（eg1）
+> - 目标构造函数的执行总是**先于**委派构造函数。因此需要避免目标构造函数和委托构造函数体中初始化同样的成员。（eg1）
+
+```c++
+// eg1
+class Info
+{
+public:
+	Info() :Info(1, 'a') {}				// 委派构造函数，使用目标构造函数完成委派构造函数的初始化
+    
+	Info(int i) : Info(i, 'a') { type = i; }		// 可能出错，委派构造函数中应避免对同样的成员变量进行多次初始化
+	Info(char ch) : Info(1, ch) {} 					// 正确，委派构造函数
+    
+    // 错误，构造函数中不能同时使用委托构造函数和初始化列表，不过可以用链式委托完成相似的功能
+    Info(int i, char ch, int j)
+        : Info(i, ch)
+        , typej(j)
+    {}
+
+private:
+	Info(int i, char ch) :type(i), name(ch) { type += 1 }	// 目标构造函数
+	int type{ 1 };
+	char name{ 'a' };
+    int typej{ 0 };
+};
+int main()
+{
+    Info info(5);
+    cout << info.type << endl;	// 此时输出的值为5：首先会调用目标构造函数，此时type=6；然后调用委托构造函数体，此时type=5，显然这并不符合我们的预期
+    return 0;
+}
+```
+
+#### 链式委托
+
+`Info()`委派`Info(int)`进行构造工作，然后`Info(int)`委派`Info(int， char)`。这就是**链式委托**。
+
+```c++
+// 链状委派构造函数
+class Info
+{
+public:
+	Info() :Info(1) {}
+	Info(int i) : Info(i, 'a') {}	// Info(int i) 既是目标构造函数，也是委派构造函数
+
+private:
+	Info(int i, char ch) :type(i), name(ch) {}
+
+public:
+	int type{ 1 };
+	char name{ 'a' };
+};
+```
+
+#### 委托环
+
+链状委派没有任何问题，但是形成环形链状委派也叫**委派环**（delegation cycle）就会导致**构造死循环**
+
+```c++
+// 委派环
+class Info
+{
+public:
+    // 编译错误
+	Info(int i) : Info('c') {}
+	Info(char ch) : Info(2) {}
+
+private:
+	int type{ 1 };
+	char name{ 'a' };
+};
+
+```
+
+#### 使用场景
+
+##### 构造模板函数
+
+使用构造模板函数作为目标函数，分别使用vector，deque来初始化list容器
+
+```c++
+class Test
+{
+private:
+	template<class T>
+	Test(T first, T last) :m_list(first, last) {}
+
+public:
+	Test(vector<int>& v) :Test(v.begin(), v.end()) {}
+	Test(deque<int>& d) : Test(d.begin(), d.end()) {}
+
+private:
+	list<int> m_list;
+};
+```
+
+##### 异常处理
+
+[构造函数与函数try块_构造函数里用trycatch](https://blog.csdn.net/laixingjun/article/details/9152487)
+
+```c++
+class Test
+{
+public:
+	Test(double d)
+		try : Test(1, d)			// 函数try块不仅可以用于初始化列表，还可以用于委派构造函数
+	{
+		cout << "Run the body" << endl;
+	}
+	catch (...)
+	{
+		cout << "caught exception." << endl;
+	}
+
+private:
+	Test(int i, double d)
+	{
+		cout << "going to throw" << endl;
+		throw 0;
+	}
+	int type;
+	double data;
+};
+
+int main()
+{
+	Test info(5);
+	return 0;
+}
+
+```
+
+### new/delete，malloc/free
+
+- new的实现过程是：
+
+  首先调用名为**operator new**的标准库函数，分配足够大的原始为类型化的内存，以保存指定类型的一个对象；接下来运行该类型的一个**构造函数**，用指定初始化构造对象；最 后返回指向新分配并构造后的的对象的指针
+
+  ![image-20241021224431316](./assets/image-20241021224431316.png)
+
+  new的注意事项：
+
+  ![image-20241110160825422](./assets/image-20241110160825422.png)
+
+  ```text
+  这些是可替换的签名：
+  	普通的单个对象的new和delete（无参数，出错时抛出bad_alloc异常）
+  	普通的数组new和delete（同上）
+  	不抛出异常的单个对象的new和delete（接受一个nothrow参数，出错时返回NULL）
+  	不抛出异常的数组new和delete（同上）
+  placement new和delete签名（接受一个内存地址参数，什么也不做）不能被用户程序替换。
+  ```
+
+  不抛异常的new操作符：`int* a = new(nothrow) int(2);`
+
+- delete的实现过程：对指针指向的对象运行适当的**析构函数**；然后通过调用名为**operator delete** 的标准库函数释放该对象所用内存
+
+  ![image-20241021225001235](./assets/image-20241021225001235.png)
+
+**相同点**
+
+- 都可用于内存的动态申请和释放
+
+**不同点**
+
+- 前者是C++运算符，后者是C/C++语言标准库函数
+
+- new自动计算要分配的空间大小，malloc需要手工计算
+
+- new是类型安全的，malloc不是。例如：
+
+  ```c++
+  int* p = new float[2]; //编译错误
+  int* p = (int*)malloc(2 * sizeof(double));//编译无错误
+  ```
+
+**free()如何知道释放内存块的大小**
+
+[free()如何知道释放内存块的大小 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/98859924)
+
+举个例子：假设你用malloc需要申请100字节，实际是申请了104个字节。把前4字节存成该块内存的实际大小，并把前4字节后的地址返回给你。 free释放的时候会根据传入的地址向前偏移4个字节 从这4字节获取具体的内存块大小并释放。
+
+### 右值引用，移动语义，完美转发
+
+#### 左值引用和右值引用
 
 [引用声明 - cppreference.cn - C++参考手册](https://cppreference.cn/w/cpp/language/reference)
 
@@ -479,6 +1676,7 @@ int main()
 int a1 = 10;
 int& a2 = 10;// 编译错误：非常量左值引用
 int& a2 = a1;//编译正确，左值引用可以接受左值
+cosnt int& a3 = a1;
 ```
 
 - **常量左值引用既可以接收左值，也可以接收右值**
@@ -494,7 +1692,7 @@ int& a2 = a1;//编译正确，左值引用可以接受左值
 
   作用：右值引用可以用于[延长临时对象的生命周期](https://cppreference.cn/w/cpp/language/reference_initialization#Lifetime_of_a_temporary)（请注意，常量左值引用也可以延长临时对象的生命周期，但不能通过它们进行修改）
 
-  右值引用既可以作为左值，也可以作为右值，当右值引用有名字的时候为左值：`int&& a = 3;`此时a为左值；右值引用没名字的时候为右值：`move()`的返回值为右值引用，此时右值引用为右值，因此该返回值只能被右值引用接收；
+  **右值引用既可以作为左值，也可以作为右值**，当右值引用有名字的时候为左值：`int&& a = 3;`此时a为左值；右值引用没名字的时候为右值：`move()`的返回值为右值引用，此时右值引用为右值，因此该返回值只能被右值引用接收；
 
 ```c++
 	int i = 0;
@@ -507,7 +1705,8 @@ int& a2 = a1;//编译正确，左值引用可以接受左值
 class X{
 public:
     X(){}
-    X(const X& x){}
+    X(X& x){}
+    X(X&& x){}
     ~X(){}
     void show(){cout<<"show"<<endl;}
 };
@@ -531,17 +1730,17 @@ int main(){
 
 特别强调：
 
-1. 在开启NRVO或者c++17及以上时，只有一次构造
+1. 在开启NRVO或者c++17及以上时，只有两次构造（普通构造和移动构造）
 
 2. x2绑定的不是x1，而是`X make_x()`的返回值，也就是说x2延长的是返回值的生命周期（不考虑NRVO）。
 
-### 引用与临时对象的生命周期
+#### 引用与临时对象的生命周期
 
 [引用初始化 - cppreference.cn - C++参考手册](https://cppreference.cn/w/cpp/language/reference_initialization)
 
 - 通用规则：
 
-  默认情况下，**一个临时对象的生命周期会持续到创建它的那个完整表达式 (full-expression) 的末尾（通常是分号 ;的位置）**
+  默认情况下，**一个临时对象的生命周期会持续到创建它的那个完整表达式的末尾（通常是分号 ;的位置）**
 
   当一个引用（const T& 或 T&&）**直接绑定**到一个临时对象上时，这个临时对象的生命周期会被延长，直到该引用离开其作用域。
 
@@ -677,7 +1876,7 @@ int main(){
 
   举个例子：对于上面例外四中的n3和n4，我们可以把`get_name()`的返回值类型改为`std::string`，这样n3和n4就会作为接收name的第一个引用，从而根据例外一的规则正确延长name的生命周期
 
-### 返回值中的左值/右值引用
+#### 返回值中的左值/右值引用
 
 ```c++
 int& f() {
@@ -746,13 +1945,19 @@ int f3() {
 
 [C++表达式的类型与值类别详解-CSDN博客](https://blog.csdn.net/m0_62327743/article/details/134178090)
 
-### std::move
+#### std::move
 
 [一文读懂C++右值引用和std::move - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/335994370)
 
-- <font color=red>std::move就是将左值转为右值。</font>这样就可以重载到移动构造函数了，移动构造函数将指针赋值一下就好了，不用深拷贝了，提高性能
-
-- 使用场景：**可移动对象在<需要拷贝且被拷贝者之后不再被需要>的场景，建议使用**`std::move`**触发移动语义，提升性能。**
+> - <font color=red>std::move是一个类型转换，用于将参数的值类别强制转换为将亡值。</font>这样就可以重载到移动构造函数了，移动构造函数将指针赋值一下就好了，不用深拷贝了，提高性能
+>
+> - 使用场景：**可移动对象在<需要拷贝且被拷贝者之后不再被需要>的场景，建议使用**`std::move`**触发移动语义，提升性能。**
+> - 移动构造一定会修改临时变量的值，所以不能用`const Array&&`接收
+> - 移动构造和拷贝构造必须同时提供（unique_ptr除外），且拷贝构造一定要加const
+>
+> - 移动构造函数中，右值引用形参是一个左值
+>
+> - 移动构造函数应声明为noexcept
 
 ```cpp
 class Array {
@@ -790,30 +1995,491 @@ int main(){
 
 - 注意：`std::move`本身移动不了什么，唯一的功能是把左值强制转换成右值，实现等同于一个类型转换：`static_cast<T&&>(lvalue)`，所以单纯的`std::move(xxx)`不会有性能提升，**通常使用`std::move`结合类的构造函数实现移动语义或者通过右值引用延长返回值生命周期**。
 
-```C++
-int &&ref_a = 5;
-ref_a = 6; 
- 
-// 等同于以下代码：
- 
-int temp = 5;
-int &&ref_a = std::move(temp);	// 相当于int &&ref_a = static_cast<int&&>(temp);
-ref_a = 6;
+#### 向成员传递的移动语义
+
+> - 写了移动构造函数之后一定要写一个对应的拷贝构造函数（eg1）
+
+```c++
+// eg1
+class HugeMem
+{
+public:
+	HugeMem(int size) {
+		sz = size;
+		c = new int[sz];
+	}
+	~HugeMem() {
+		delete[] c;
+	}
+	HugeMem(HugeMem&& hm) {
+		sz = hm.sz;
+		c = hm.c;
+		hm.c = nullptr;
+	}
+
+	int* c;
+	int sz;
+};
+class Moveable
+{
+public:
+	Moveable() : i(new int(3)), h(1024) { }
+	~Moveable() { delete i; }
+	Moveable(Moveable&& m) noexcept // 移动构造函数应声明为noexcept，因为如果在m.i = nullptr之前抛出异常，会导致在调用函数中的m.i依然可以访问
+		: i(m.i)
+		, h(move(m.h))	// 移动语义向成员变量的传递
+	{
+		m.i = nullptr;
+	}
+
+	int* i;
+	HugeMem h;
+};
+
+Moveable GetTemp() {
+	Moveable tmp = Moveable();
+	return tmp;
+}
+
+int main() {
+	Moveable a(GetTemp());
+	return 0;
+}
 ```
 
-### C++只在栈或堆上实例化对象
+注意：
 
-[C++只在栈或堆上实例化对象_c++如何实现只在栈上实例化对象?-CSDN博客](https://blog.csdn.net/qq_36652619/article/details/100748669)
+- 如果我们把`h(move(m.h))`改成`h(m.h)`，会发现编译报错，这是因为`h(m.h)`会调用拷贝构造函数，而在重载了移动构造函数之后，拷贝构造函数被隐藏，因此报错，所以**移动构造和拷贝构造必须同时提供**，只声明其中一种的话，类都仅能实现一种语义（诸如`unique_ptr`例外）。
 
-[如何定义一个只能在堆/栈上生成对象的类？ - JemmyZhong - 博客园 (cnblogs.com)](https://www.cnblogs.com/jemmyzhong/p/14584743.html)
+#### 函数栈帧，new/delete
+
+[EBP 和 ESP 详解_ebp和esp-CSDN博客](https://blog.csdn.net/yu97271486/article/details/80425089)
+
+[C/C++ 函数调用过程，压栈出栈_基础](https://www.cnblogs.com/wiesslibrary/p/15727311.html)
+
+[一个实例深入了解函数进栈出栈过程_进阶](https://blog.csdn.net/qq_37655329/article/details/121836108)
+
+- 压栈时动态分配（new）所得的内存
+
+  ![image-20241021234942651](./assets/image-20241021234942651.png)
+
+  - **注意：new实际分配的内存大小固定为16的倍数**
+  - 红色：以图一为例：0041要拆分为`0040 + 0001`，其中0040表示new时分配的内存大小（16进制），0001表示当前内存是new（0000则表示delete，delete时会将0040-0040的内存块全部释放掉）
+  - 灰色：debug模式下分配的内存，用于保存调试信息
+  - 淡绿色（pad）：填充字段，将内存大小固定为16的倍数
+  - 深绿色：new出来所可以访问的对象
+
+- 压栈时动态分配（new）所得的数组
+
+  ![image-20241022204122080](./assets/image-20241022204122080.png)
+
+  - 大部分和上面一样，唯一的区别是需要注意可访问的部分
+
+- array delete
+
+  ![image-20241022205914075](./assets/image-20241022205914075-1729602457408-1.png)
+
+  - 如果不用array delete 会导致数组中1-n的对象没有调用析构函数，造成堆内存泄漏，但是栈内存不会泄漏，因为调用delete一定会调用free，调用free一定会释放它所申请的内存，只是会少调用析构函数，所以[delete[]对内置类型可以省略]([https://www.cnblogs.com/hazir/p/new_and_delete.html)。
+
+  - 一定要看：
+
+    > 当我们写一个new表达式时，共有两个函数被调用：一个是用于内存分配的operator new, 另一个是对象的构造函数。如果在第一步，内存申请成功了，然后在执行对象的构造函数时被抛出了异常，如果不处理申请到的内存就会造成内存泄漏问题。 编译器会这么做：它会查找到与oeprator new函数的参数相同的oeprator delete的函数，然后调用该operator delete进行内存的释放,如果没有找到对应的函数编译器什么也不做。 因此，如果你想自定义placement new函数的话，你也需要定义一个对应的placement delete函数，该函数**只会在new一个对象时如果内存申请成功但是构造失败的时候调用**，用于防止内存泄漏， **正常情况下是不会被调用的**。
+
+    new ， delete，sizeof都是C++中的关键字，不是函数
+
+    new 表达式调用 operator new 函数，delete 表达式调用 operator delete 函数。
+
+    ```c++
+    MyClass* ptr = new MyClass(10);
+    // new 表达式首先调用 operator new(sizeof(MyClass))。
+    // 然后在返回的内存地址上调用 MyClass::MyClass(10)。
+    // 最后返回一个 MyClass* 类型的指针。
+    
+    delete ptr;
+    // delete 表达式首先调用 ptr->~MyClass()。
+    // 然后调用 operator delete(ptr)。
+    ```
+
+#### 返回值优化
+
+[C++的那些事——返回值优化 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/588852649)
+
+[深入浅出RVO、NRVO以及std::move的策略与影响 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/665538550)
+
+[c++中返回值优化（RVO）和命名返回值优化（NRVO）介绍_nrvo优化-CSDN博客](https://blog.csdn.net/lr_shadow/article/details/123332927)
+
+> - 返回值优化在编译期完成（Linux编程.docx中看编译阶段）
+
+```c++
+class HasPtrMem {
+public:
+    HasPtrMem() {
+        cout << "construct" << endl;
+    }
+    HasPtrMem(const HasPtrMem& rhs) {	// 注意拷贝构造函数一定要加const，否则接收不了右值
+        cout << "copy construct" << endl;
+    }
+    HasPtrMem(HasPtrMem&& rhs) {
+        cout << "move Construct" << endl;
+    }
+
+    ~HasPtrMem() {
+        cout << "destruct" << endl;
+    }
+};
+
+HasPtrMem GetTemp() {
+    HasPtrMem t;
+    return t;
+}
+
+int main() {
+    HasPtrMem a = GetTemp();
+    // 只会有两次构造，因为不会有 临时对象->b 的移动构造
+    HasPtrMem&& b = GetTemp();
+    return 0;
+}
+```
+
+![image-20241017200134423](./assets/image-20241017200134423.png)
+
+- 根据函数栈帧相关知识
+
+  - `GetTemp()`中创建的变量t存放在当前函数（`GetTemp()`）的栈帧中
+  - `HasPtrMem`的临时对象存放在`GetTemp()`的返回地址
+  - `main()`中创建的对象a存放在`main()`的函数栈中
+
+- 注意在`GetTemp()`中构造出来的变量虽然是左值，**但是在`return t`会直接把`t`当右值表达式进行重载决议**，这是标准中非常特殊的规定，所以上面的两处拷贝构造其实用移动构造表述更准确
+
+- 在开启RVO/NRVO的情况下，编译器会让`GetTemp()`中的t直接创建在a的位置上，因此只会调用一次构造函数
+
+- 无法优化的场景
+
+  对于这些场景，不论是C++11还是C++17，都会取消掉对应的返回值优化，或者复制省略
+
+  - 对象类型与返回值类型不一致时，编译器无法优化（比如常见的错误是对在函数内对返回值对象使用了std::move操作），比如：
+
+    ```c++
+    // 将此函数代替上面的GetTemp()，会导致编译器无法进行返回值优化，最终导致会进行两次构造（一次构造，一次移动构造），多一次移动构造是因为由HasPtrMem&&向HasPtrMem的构造
+    HasPtrMem GetTemp() {
+        HasPtrMem t;
+        return move(t);
+    }
+    ```
+
+  - 返回对象依赖于运行时的分支依赖，比如：
+
+    ```c++
+    vector<int> GetArray() {
+      vector<int> obj1;
+      vector<int> obj2;
+      if (..) {
+          return obj1;
+      } else {
+          return obj2;
+      }
+    }
+    ```
+
+  - 其它场景还有：
+
+    - 返回全局变量
+    - 返回函数参数
+
+#### move_if_noexcept
+
+该函数用于替代`move()`。该函数在类的移动构造函数没有noexcept 关键字修饰时返回一个左值引用从而使变量可以使用拷贝语义，而在类的移动构造函数有noexcept 关键字时，返回一个右值引 用，从而使变量可以使用移动语义。
+
+```c++
+int main() {
+	Moveable a;
+	Moveable b(move_if_noexcept(a));
+
+	// 编译选项: g++ -std=c++11 2-6-1.cpp
+}
+```
+
+#### C++值类别
+
+[值类别 - cppreference.cn - C++参考手册](https://cppreference.cn/w/cpp/language/value_category)
+
+> 值类别是表达式的性质，而非对象
+
+每个 C++ [表达式](https://cppreference.cn/w/cpp/language/expressions)（运算符及其操作数、字面量、变量名等）都由两个独立的属性描述：*[类型](https://cppreference.cn/w/cpp/language/type)*和*值类别*。每个表达式都有某种非引用类型，并且每个表达式都恰好属于三个主要值类别之一：[*prvalue*](https://cppreference.cn/w/cpp/language/value_category#prvalue)、[*xvalue*](https://cppreference.cn/w/cpp/language/value_category#xvalue) 和 [*lvalue*](https://cppreference.cn/w/cpp/language/value_category#lvalue)。
+
+- lvalue（左值）：有身份的值， 之所以叫左值是因为历史原因，这种值可以在赋值表达式的左侧。
+- prvalue（纯右值）没有身份的表达式，不能取地址，是实实在在的右值。
+- xvalue（将亡值，“eXpiring” value）：和字面意思一样，快要消亡的值，它和lvalue的区别就在于即将消亡，所以它也是有身份的，这类对象的资源是可以被复用的。
+
+```c++
+oid f(int&& a) { }// 要求a为右值表达式，亡值，纯右值
+
+int f1(){return 1;}
+
+int main() {
+    int&& p = 1;
+    //f(p); p从值类别上来说，是一个左值
+
+    // 返回类型是对象的右值引用的函数调用或重载运算符表达式，例如 std::move(x) 是亡值表达式
+    f(move(p));
+
+    // 转换到对象的右值引用类型的类型转换表达式，例如 static_cast<char&&>(x); 是亡值表达式
+    f(static_cast<int&&>(p));
+
+    // 字面量，即含义就是字面意思的常量
+    // 除了字符串字面量之外的字面量，例如42，true，nullptr 都是纯右值表达式
+    f(1);   // 纯右值表达式
+
+    // 返回类型为非引用的函数调用表达式，是亡值表达式
+    f(f1());
+
+    int a;
+    int& b = a;
+    using T = decltype(b);
+
+    forward<int>(a);
+    forward<int&>(a);
+}
+```
+
+注意，判断一个**表达式**的值类别为左值还是右值，不是根据其值类型是左值引用还是右值引用来判断，以下几点可用于判断其值类别：
+
+- 如果可以获取表达式的地址，则表达式为**左值**（返回值为左值引用的函数调用表达式）。
+
+- 如果表达式的类型是左值引用，则该表达式是**左值**。`T&, const T&`
+
+  ```c++
+  class test {
+  public:
+  };
+  test& f() {	// 严格来说，f()的返回值是泛左值，或是将亡值
+      test t;	// 垂悬
+      return t;
+  }
+  int main(){
+      auto&& a = f();	// a被推导为test&
+  }
+  ```
+
+- 否则，表达式为**右值**。从概念上（通常也是事实上）右值对应于临时对象，例如从函数返回或通过隐式类型转换创建的对象。大多数 Literals 值也是右值
+
+#### 万能引用（引用折叠）
+
+[【万能引用（引用折叠）】＆【完美转发】](https://cloud.tencent.com/developer/article/2382293)
+
+在模板中用的比较多
+
+- 引用折叠：
+
+  ```c++
+  typedef const int T;
+  typedef T& TR;
+  TR& v = 1;			// 该申明再C++98中导致编译错误
+  ```
+
+    其中`TR& v=1`这样的表达式会被编译器认为是不合法的表达式，而在C++11中，一 旦出现了这样的表达式，就会发生引用折叠，即将复杂的未知表达式折叠为已知的简单表达式，具体如下图。
+
+    ![image-20240922100117950](./assets/image-20240922100117950-1729935113632-1.png)
+
+    **右值引用和普通值的右值引用折叠成右值引用，所有其他组合均折叠成左值引用**。
+
+- 万能引用的定义以及参数推导
+
+  ```c++
+  template<typename T>
+  void func( T&& param){
+      
+  }
+  func(5);  //15是右值， param是右值引用
+  int a = 10; //
+  func(a); //x是左值, T被推导为int&，param是左值引用
+  ```
+
+  解释：
+
+  - 这里的`&&`是一个未定义的引用类型，称为通用引用 [Universal References](https://isocpp.org/blog/2012/11/universal-references-in-c11-scott-meyers)
+
+    它必须被初始化，`T&&`是左值引用还是右值引用**只**取决于调用方传入的实参的值类别，**如果传入的实参是一个左值，则T被推导为T&的形式，此时T&&是一个左值引用；如果传入的实参是一个右值，则T被推导为T的形式，此时T&&就是一个右值引用。**
+
+    证明：
+
+    ```c++
+    template<typename T>
+    constexpr char judeg_v[2]{"T"};
+    
+    template<typename T>
+    constexpr char judeg_v<T&>[3]{"T&"};
+    
+    template<typename T>
+    constexpr char judeg_v<T&&>[4]{"T&&"};
+    
+    template<typename Ty>
+    void test(Ty&& y) {
+        cout << judeg_v<Ty> << endl;
+    }
+    
+    int main(){
+        int i;
+        int& j = i;
+        int&& k = move(i);
+    
+        test(i);
+        test(j);
+        test(k);
+        test(move(i));
+        cout << judeg_v<int&&> << endl;
+    }
+    /***********输出***********
+    T&
+    T&
+    T&
+    T
+    T&&
+    ***********输出***********/
+    ```
+
+  - **注意，只有当发生自动类型推断时（如函数模板的类型自动推导，或`auto`关键字），`&&`才是一个`Universal References`。**
+
+#### 完美转发
+
+[转发引用 - cppreference.com](https://zh.cppreference.com/w/cpp/language/reference#.E8.BD.AC.E5.8F.91.E5.BC.95.E7.94.A8)
+
+[std::forward - cppreference.com](https://zh.cppreference.com/w/cpp/utility/forward)
+
+[C++11 中的通用引用 -- Scott Meyers ： 标准 C++](https://isocpp.org/blog/2012/11/universal-references-in-c11-scott-meyers)
+
+- 完美转发原理：
+
+  ```c++
+  template <class>
+  constexpr bool is_lvalue_reference_v = false; 
+  
+  template <class _Ty>
+  constexpr bool is_lvalue_reference_v<_Ty&> = true;
+  
+  template <class _Ty>
+  constexpr _Ty&& forward(remove_reference_t<_Ty>& _Arg) noexcept {
+      return static_cast<_Ty&&>(_Arg);
+  }
+  
+  template <class _Ty>
+  constexpr _Ty&& forward(remove_reference_t<_Ty>&& _Arg) noexcept {
+      static_assert(!is_lvalue_reference_v<_Ty>, "bad forward call");	// 左值
+      return static_cast<_Ty&&>(_Arg);
+  }
+  ```
+
+  解释：
+
+  1. `remove_reference_t<_Ty>`是个不推导语境，所以`remove_reference_t<_Ty>&&`不是万能引用，而是右值引用；且使用forward时必须显式指明推导类型
+  1. 该模板的调用表达式到底是返回一个泛左值还是右值，取决于用户显式指明的类型，与`_Arg`无关，也就是说：
+     - 如果`_Ty`形如`_Ty&`，根据引用折叠，该调用表达式的返回值的类型是左值引用，其值类别是**泛左值**。
+     - 如果`_Ty`形如`_Ty`，根据引用折叠，该调用表达式的返回值的类型是右值引用，其值类别是**右值**。
+     - 如果`_Ty`形如`_Ty&&`，根据引用折叠，该调用表达式的返回值的类型是右值引用，其值类别是**右值**。
+
+3. 由于`_Args`也可以为泛左值或是右值，所以：
+   - `forward<_Ty>(_Arg)`可以将泛左值转发为左值（✔）
+   - `forward<_Ty>(_Arg)`可以将泛左值转发为右值（✔）
+   - `forward<_Ty>(_Arg)`可以将右值转发为右值（✔）（一般来说，在转发函数里用不到）
+   - `forward<_Ty>(_Arg)`可以将右值转发为泛左值（❌）`static_assert()`禁止该转换
+4. 注意，当`_Args`为泛左值时，优先匹配左值引用的版本；当`_Args`为右值时，优先匹配右值引用的版本
+  5. 由上，如果直接使用`forward<>()`，那么该模板和`move()`不仅没啥区别，还需要额外指明推导类型，正确用法如下点所示
+
+- 转发函数通用格式：
+
+  当 t 是[转发引用](https://zh.cppreference.com/w/cpp/language/reference#.E8.BD.AC.E5.8F.91.E5.BC.95.E7.94.A8)（被声明为到无 cv 限定函数模板形参的右值引用的函数实参）时，此重载将实参转发给另一个函数，带有它被传递给调用方函数时的[值类别](https://zh.cppreference.com/w/cpp/language/value_category)。
+
+  ```c++
+  void IrunCodeActuallyy(int&& t) { }
+  template <typename T>
+  void IamForwording(T&& t){
+  	IrunCodeActuallyy(forward<T>(t));	// move 和 forward 在实际实现上差别并不大。
+  }
+  int main() {
+  	IamForwording(1);
+  }
+  ```
+
+  注意，如果想用完美转发，需要注意以下事项：
+
+  - `IamForwording`函数参数必须指定为`T&&`，否则无法接收右值，也不叫万能引用
+
+  - `forward`模板必须加，且必须显式指明模板参数为`T`（也可以是`T&&`，不可以是`T&`）
+
+  - 在转发函数的上下文中，显然重载决议优先匹配左值引用的版本
+
+  - 在这种语境下，`T&&`叫万能引用，`t`叫转发引用
+
+- **实际应用：**
+
+  - 用于包装函数：
+
+    ```c++
+    #include <iostream>
+    using namespace std;
+    
+    template <typename T, typename U>
+    void PerfectForward(T&& t, U& Func)
+    {
+    	cout << t << "\tforwarded..." << endl;
+    	Func(forward<T>(t));
+    }
+    void RunCode(int& x) {}
+    void RunHome(int&& y) {}
+    void RunComp(double& z) {}
+    
+    int main() {
+    	PerfectForward(1, RunCode);
+    	PerfectForward(2, RunHome);
+    	PerfectForward(2.3, RunComp);
+    
+    	return 1;
+    }
+    ```
+
+  - 实现make_pair，make_unique
+
+#### move和forward的区别
+
+- move源码
+
+  ```c++
+  template <class _Ty>
+  constexpr remove_reference_t<_Ty>&& move(_Ty&& _Arg) noexcept {
+      return static_cast<remove_reference_t<_Ty>&&>(_Arg);
+  }
+  ```
+
+- forward源码
+
+  ```c++
+  template <class _Ty>
+  constexpr _Ty&& forward(remove_reference_t<_Ty>& _Arg) noexcept {
+      return static_cast<_Ty&&>(_Arg);
+  }
+  
+  template <class _Ty>
+  constexpr _Ty&& forward(remove_reference_t<_Ty>&& _Arg) noexcept {
+      static_assert(!is_lvalue_reference_v<_Ty>, "bad forward call");
+      return static_cast<_Ty&&>(_Arg);
+  }
+  ```
+
+- 区别：
+
+  1. forward的函数形参`remove_reference_t<_Ty>`是个不推导语境，所以使用forward时必须显式指明推导类型
+  2. move在使用时忽略推导类型的引用，强制将_Arg的值类型转换为右值引用；forward则会保留推导类型的引用，所以在返回时会发生引用折叠，所以会根据指定的推导类型返回左值引用或者右值引用
+  3. 从返回值的角度来说，`move()`的返回值的类型一定是右值引用，值类别一定是右值；`forward<>()`的返回值类型要么是左值引用，要么是右值引用，值类别与调用转发函数时传入的函数实参保持一致，要么是泛左值，要么是右值。
+
+### 。。。C++只在栈或堆上实例化对象
 
 - 只能在栈上分配类对象
 
   ```c++
   class A{
   private:
-      void* operator new(size_t t){}			// 私有化new操作符
-      void operator delete(void* ptr){}	  // 私有化delete操作符
+      static void* operator new(size_t t){}			// 私有化new操作符，就是不写static，也会默认为静态的
+      static void operator delete(void* ptr){}	  // 私有化delete操作符，同上
   public:
       A(){}
       ~A(){}
@@ -1053,64 +2719,6 @@ https://zhuanlan.zhihu.com/p/20206577
 ![image-20240902220753395](./assets/image-20240902220753395.png)
 
 所以正常情况下，应当通过指针传递，来避免切除问题
-
-### 虚继承
-
-[#虚继承](../2-深入理解C++11/深入理解C++11.md/#虚继承实现原理)
-
-### 虚函数，虚指针，虚函数表
-
-虚表指针vptr跟虚函数密不可分，对于有虚函数或者继承于拥有虚函数的基类，对该类进行实例化时，在**构造函数执行时会对虚表指针进行初始化，并且存在对象内存布局的最前面（在继承的情况下，也是将虚表指针放在最前面）**
-虚函数表（Virtual Function Table，VFT）位于C++内存模型中的**常量区**，可将虚函数表视为一个包含函数指针的静态数组，其中每个指针都指向相应的虚函数；而虚函数则位于C++内存模型中的**代码区**。
-
-```c++
-#include <iostream>
-#include <bitset>
-#include <string>
-using namespace std;
-
-class B
-{
-public:
-	virtual void test() {
-	}
-	int a = 0;
-};
-
-class C {
-public:
-	void test1() {
-
-	}
-	int c = 0;
-	int d = 0;
-};
-
-int main()
-{
-	B b;
-	cout << &b << endl;			// 对象地址
-	cout << &b.a << endl;		// 成员变量地址，与对象地址之间差了8个字节（被虚函数指针占用）
-
-	C c;
-	cout << &c << endl;
-	cout << &c.c << endl;
-	cout << &c.d << endl;
-
-	cout << sizeof(&b) << endl;
-	return 0;
-}
-/*
-0xaf141ffb00
-0xaf141ffb08
-0xaf141ffaf8
-0xaf141ffaf8
-0xaf141ffafc
-16
-*/
-```
-
-[构造函数不能为虚函数的原因](https://blog.csdn.net/salmonwilliam/article/details/114259314#)
 
 ### 运算符重载
 
@@ -1850,7 +3458,7 @@ dynamic_cast<type&>(e);		 	  // 引用转换失败时，会抛出std::bad_cast�
 dynamic_cast<type&&>(e);		// 只能转换成指针/引用
 ```
 
-> - 运行时检查，<font color=red>前提是子类继承父类</font>，比static_cast更安全
+> - 运行时检查，转换时需要用到父类虚函数表中的`offset-to-top`，所以<font color=red>前提是父类有虚函数，为多态类</font>，比static_cast更安全
 >
 > - 用途：
 >
@@ -1977,54 +3585,6 @@ int main()
 ```
 
 一般用在哈希函数中
-
-### #error，static_assert和assert
-
-用于排除逻辑上不可能存在的状态
-
-- **#error** 
-
-  - 语法格式：`#error error-message`
-
-  - 预编译期断言，编译程序时，只要遇到`#error`就会生成一个编译错误提示消息，并停止编译。
-
-- **assert**
-
-  - 语法格式：`assert( expression );`
-
-  - 运行期断言，计算表达式，如果结果为 **`false`**，则打印诊断消息并中止程序。
-
-  - 由于NDEBUG宏的存在，`assert()`在release模式下被禁用，因此它仅在debug模式下显示错误消息，如想在release模式下输出，**应使用`#undef NDEBUG`，同时该预编译指令必须放在`#include<cassert>`前面**。
-
-    ```c++
-    // 禁用assert()的简要实现
-    #ifdef NDEBUG
-    #define assert(expr)			(static_cast<void> (0))
-    #else
-    ......
-    #endif
-    // 显然，在定义了NDEBUG宏后，assert()被展开为一条无意义的语句，然后被编译器优化掉
-    ```
-
-    所以对于对应用程序正确运行至关重要的检查（如检查 `dynamic_cast()` 的返回值）时，为了确保它们在debug模式下也会执行，应使用 if 语句
-
-- **static_assert**
-
-  - 语法格式：`static_assert(constant-expression, string-literal);`（注意只能是**常量表达式**和**常量字符串**）
-
-  - 编译期断言， 如果指定的常数表达式为 **`false`**，则编译器显示指定的消息，并且编译失败
-
-    ```c++
-    // static_assert()简要实现
-    #define assert_static(e) \
-    	do { \
-    		enum { assert_static__ = 1 / (e) }; \
-    	} while(0)
-    ```
-
-    `do {} while(0)`的妙用：
-
-    [代码使用do...while(0)的好处_do while 0 的好处-CSDN博客](https://blog.csdn.net/m0_60069998/article/details/128971920)
 
 ### STL容器
 
@@ -3227,200 +4787,3 @@ private:
 - 为什么`weak_ptr::lock()`要使用cas操作而不是直接将`_Uses`加1
 
   因为`lock()`中有一个比较/交换操作，要先判断`_Uses`是否为0，再加一，这两步显然不能合成为一个原子操作，所以需要使用cas保障线程安全
-
-### 异常
-
-异常用于处理逻辑上可能发生的错误
-
-**异常处理工作原理**
-
-​	每当您使用 throw 引发异常时，编译器都将查找能够处理该异常的 catch(Type)。异常处理逻辑首 先检查引发异常的代码是否包含在 try 块中，如果是，则查找可处理这种异常的 catch(Type)。如果 throw 语句不在 try 块内，或者没有与引发的异常兼容的 catch( )，异常处理逻辑将继续在调用函数中寻找。 因此，异常处理逻辑沿调用栈向上逐个地在调用函数中寻找，直到找到可处理异常的 catch(Type)。**在退栈过程的每一步中，都将销毁当前函数的局部变量，因此这些局部变量的销毁顺序与创建顺序相反。**（chapter28.4）
-
-**std::exception 类**
-
-​	捕获 std::bad_alloc 时，实际上是捕获 new 引发的 std::bad_alloc 对象。std::bad_alloc 继承了 C++标准类 std::exception，而 std::exception 是在头文件<exception>中声明的。
-下述重要异常类都是从 std::exception 派生而来的。
-
-- bad_alloc：使用 new 请求内存失败时引发。
-- bad_cast：试图使用 dynamic_cast 转换错误类型（没有继承关系的类型）时引发。
-- ios_base::failure：由 iostream 库中的函数和方法引发。
-
-std::exception 类是异常基类，它定义了虚方法 what( )；这个方法很有用且非常重要，详细地描述 了导致异常的原因。在程序清单 28.2 中，第 18 行的` exp.what( )`提供了信息 bad array new length，让用 户知道什么地方出了问题。由于 std::exception 是众多异常类型的基类，因此可使用 `catch(const exception&)`捕获所有将 `std::exception` 作为基类的异常：
-
-```c++
-void SomeFunc() 
-{ 
-   try 
-   { 
-      // code made exception safe 
-   } 
-   catch (const std::exception& exp) // catch bad_alloc, bad_cast, etc    { 
-      cout << "Exception encountered: " << exp.what() << endl;    } 
-}
-```
-
-**从 std::exception 派生出自定义异常类**
-
-​	可以引发所需的任何异常。然而，让自定义异常继承 std::exception 的好处在于，现有的异常处理 程序 catch(const std::exception&)不但能捕获 bad_alloc、bad_cast 等异常，还能捕获自定义异常，因为它 们的基类都是 exception。
-
-```c++
-#include <exception> 
-#include <iostream> 
-#include <string> 
-using namespace std;
-
-class CustomException : public std::exception
-{
-	string reason;
-public:
-	// constructor, needs reason 
-	CustomException(const char* why) :reason(why) {}
-
-	// 重写父类what()虚函数
-    // 注意noexcept关键字，可避免在what()引发异常
-	virtual const char* what() const noexcept
-	{
-		return reason.c_str();
-	}
-};
-
-double Divide(double dividend, double divisor)
-{
-	if (divisor == 0)
-		throw CustomException("CustomException: Dividing by 0 is a crime");
-
-	return (dividend / divisor);
-}
-
-int main()
-{
-	cout << "Enter dividend: ";
-	double dividend = 0;
-	cin >> dividend;
-	cout << "Enter divisor: ";
-	double divisor = 0;
-	cin >> divisor;
-	try
-	{
-		cout << "Result is: " << Divide(dividend, divisor);
-	}
-	catch (exception& exp)// catch CustomException, bad_alloc, etc 
-	{
-		cout << exp.what() << endl; 474
-			cout << "Sorry, can't continue!" << endl;
-	}
-
-	return 0;
-}
-```
-
-### noexcept修饰符（说明符）
-
-noexcept 表示其修饰的函数不会抛出异常。在 C++11 中如果 noexcept 修饰的函数抛出了异常，编译器会直接调用 std::terminate () 函数来终止程序的运行。这比基于异常机制的 throw 在效率上会高一些。
-
-语法：
-
-```c++
-void excpt_func() noexcept;
-void excpt_func() noexcept(constant_expression);// 只能是常量表达式
-```
-
-常量表达式的结果会被转换成一个 bool 类型的值。该值为 true，表示函数不会抛出异常；反之，则有可能抛出异常。这里，不带常量表达式的 noexcept 相当于声明了 noexcept (true)，即不会抛出异常。
-
-```c++
-#include <iostream>
-#include <exception>
-using namespace std;
-
-void Throw() { throw 1; }						// 该函数唯一作用是抛出异常
-void NoBlockThrow() { Throw(); }		// 该函数会让throw()中抛出的异常继续抛出
-void BlockThrow() noexcept {Throw(); }	// 该函数不允许让throw()抛出的异常继续抛出，而是调用terminate()中断程序
-
-int main() {
-	try {
-		Throw();
-	}
-	catch (...) {
-		cout << "Found throw." << endl; // Found throw.
-	}
-	try {
-		NoBlockThrow();
-	}
-	catch (...) {
-		cout << "Throw is not blocked." << endl; // Throw is not blocked.
-	}
-	try {
-		BlockThrow();					// terminate() called after throwing an instance of 'int'
-	}
-	catch (...) {
-		cout << "Found throw 1." << endl;
-	}
-	// 编译选项: g++ -std=c++11 2-6-1.cpp
-}
-```
-
-### noexcept操作符
-
-noexcept作为操作符时，通常用于模板
-
-语法：
-
-```c++
-template <class T>
-    void fun() noexcept(noexcept(T())) {}
-```
-
-这里，fun 函数是否是一个 noexcept 的函数，将由 T () 表达式是否会抛出异常所决定。这里的第二个 noexcept 就是一个 noexcept 操作符。当其参数是一个有可能抛出异常的表达式的时候，其返回值为 false，反之为 true。
-
-```c++
-#include <iostream>
-using namespace std;
-
-bool judge(int i) noexcept
-{
-	bool bj = static_cast<bool>(i);
-	return true;
-}
-
-template<typename Type>
-void mswap(Type& x, Type& y) noexcept(noexcept(judge(x)))    //此处先判断judge(x))是否被noexcept修饰，如果是，则mswap也被noexcept修饰。此处noexcept(judge(x))相当于一个一元谓词
-{
-	throw 1;
-	cout << "throw" << endl;
-}
-
-int main() {
-	int x = 0;
-	x++;
-	int y = 4;
-    
-	try {
-		mswap(x, y);
-	}
-	catch (...) {
-		cout << "Found throw." << endl; // Found throw.
-	}
-	// 编译选项: g++ -std=c++11 2-6-1.cpp
-}
-```
-
-应用场景：
-
-- 移动构造函数（move constructor）
-- 析构函数（destructor）。这里提一句，在新版本的编译器中，析构函数是默认加上关键字noexcept的。下面代码可以检测编译器是否给析构函数加上关键字noexcept。
-
-```scss
-    struct X
-    {
-        ~X() { };
-    };
-    
-    int main()
-    {
-        X x;
-        // explicitly marked as noexcept(true)
-        static_assert(noexcept(x.~X()), "Ouch!");
-    }
-```
-
-end 501

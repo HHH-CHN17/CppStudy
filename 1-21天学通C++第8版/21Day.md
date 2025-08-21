@@ -446,13 +446,11 @@ int main()
 
 - 只有进行常量初始化的时候发生收窄，才会编译报错，这很好理解
 
-### decltype
+### 、、、decltype
 
 [C++11特性：decltype关键字 - melonstreet - 博客园 (cnblogs.com)](https://www.cnblogs.com/QG-whz/p/4952980.html)
 
 [C++ decltype用法详解-CSDN博客](https://blog.csdn.net/qq_38196982/article/details/118578967)
-
-
 
 ### C++11 constexpr 关键字
 
