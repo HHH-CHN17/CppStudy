@@ -732,7 +732,7 @@ int f3() {
 
 [C++表达式的类型与值类别详解-CSDN博客](https://blog.csdn.net/m0_62327743/article/details/134178090)
 
-### 。。。std::move
+### std::move
 
 [一文读懂C++右值引用和std::move - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/335994370)
 
