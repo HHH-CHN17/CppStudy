@@ -2,6 +2,8 @@
 
 ### 零散小知识
 
+- 计算机网络与stl容器内容看八股文
+
 - C++11中，原子类型被视为一种库特性，而非语言特性，因其可以通过库的方式来实现
 
 - 复制及再抛出异常（page6）
@@ -1380,33 +1382,6 @@ public:
 
   - 结合前两章看
 
-### 指针的定义
-
-- 一级指针：是一个指针变量，该指针指向的地址保存着一个普通变量；
-
-- 二级指针：是一个指针变量，该指针指向的地址保存着一级指针的地址；
-
-- 例如：
-
-  ```c++
-  int a1[5] = {1, 2, 3, 4, 5};
-  int a2[5] = { 10, 20, 30, 40, 50 };
-  int a3[5] = { 100, 200, 300, 400, 500 };
-  int a4[5] = { 1000, 2000, 3000, 4000, 5000 };
-  int a5[5] = { 10000, 20000, 30000, 40000, 50000 };
-  int* p[5] = { a1, a2, a3, a4, a5 };
-    
-  int** pp = p;
-  cout << *(*(pp + 1) + 4) << endl;	// 50
-  ```
-
-  解释：
-
-  - 进行`operator + ()`时，加的是`sizeof(指针所指向类型的大小)`
-
-  - `pp + 1`时加的是`sizeof(int*)`，因为pp指向的的地址中存放的是`int*`，会加8个字节
-  - `*pp + 1`时加的是`sizeof(int)`，理由同上。
-
 ### 继承构造函数
 
 page75
@@ -2471,7 +2446,7 @@ int main() {
   2. move在使用时忽略推导类型的引用，强制将_Arg的值类型转换为右值引用；forward则会保留推导类型的引用，所以在返回时会发生引用折叠，所以会根据指定的推导类型返回左值引用或者右值引用
   3. 从返回值的角度来说，`move()`的返回值的类型一定是右值引用，值类别一定是右值；`forward<>()`的返回值类型要么是左值引用，要么是右值引用，值类别与调用转发函数时传入的函数实参保持一致，要么是泛左值，要么是右值。
 
-### 。。。C++只在栈或堆上实例化对象
+### C++只在栈或堆上实例化对象
 
 - 只能在栈上分配类对象
 
@@ -2595,6 +2570,8 @@ void main()
 }
 ```
 
+这是一个小端序系统，因为低位存在低字节
+
 #### 联合体的妙用
 
 - 查看类成员函数的地址
@@ -2707,12 +2684,6 @@ void main()
   	system("pause");
   }
   ```
-
-### C++constexpr
-
-[C++11关键字constexpr看这篇就够了-CSDN博客](https://blog.csdn.net/yao_hou/article/details/109301290)
-
-https://zhuanlan.zhihu.com/p/20206577
 
 ### 切除问题
 
@@ -3124,10 +3095,6 @@ int main() {
 }
 ```
 
-### for_each()
-
-[c++ for_each 用法_c++ foreach用法-CSDN博客](https://blog.csdn.net/u014613043/article/details/50619254)
-
 ### C++类型转换
 
 #### 隐式转换
@@ -3359,46 +3326,22 @@ int main() {
 
   解释：
 
-  1. 标准的隐式转换序列为：
-     1) 零或一个*标准转换序列*；
-     2) 零或一个*用户定义转换*；
-     3) 零或一个*标准转换序列*（仅在使用用户定义转换时适用）。
-  2. 显然`_1`处出现了两步用户定义转换，这是一个**编译期错误**。
-
-#### explicit关键字
-
-```C++
-#include <iostream>
-using namespace std;
-
-class A {
-public:
-    A(int x) : m_x(x) {}
-private:
-    int m_x;
-};
-
-class B {
-public:
-    explicit B(int x) : m_x(x) {}
-private:
-    int m_x;
-};
-
-int main() {
-    A a1 = 1;// 可以隐式转换
-
-    B b1 = 2;// 错误：只能显式转换
-    B b2 = static_cast<B>(3)// 正确：显式转换
-    return 0;
-}
-```
+  1. 显然`_1`处出现了两步用户定义转换，这是一个**编译期错误**。
 
 #### C++类型转换运算符
 
 [C++强制类型转换](https://www.cnblogs.com/chenyangchun/p/6795923.html)
 
 使用方法：`new_type result = cast_operator<new_type> (expression);`
+
+##### 基类与子类之间的转换
+
+> - 向上转换（用static_cast）
+>   - **子类指针->子类对象 转换为 基类指针->子类对象**（向上转换，内存安全，用static_cast）
+>   - 子类指针->基类对象 转换为 基类指针->基类对象（编译错误，子类指针不能指向基类对象）
+> - 向下转换（用dynamic_cast）
+>   - **基类指针->子类对象 转换为 子类指针->子类对象**（向下转换，内存不安全，dynamic_cast会进行运行时检查，检查指向的是否为子类对象，保证内存安全，static_cast则不会，但在访问子类对象专属的成员变量时两者都能正常运行）
+>   - 基类指针->基类对象 转换为 子类指针->基类对象（运行时错误。同上，但在访问子类专属的成员变量时dynamic_cast运行时会抛异常，static_cast会导致指针越界访问）
 
 ##### static_cast
 
@@ -3458,51 +3401,13 @@ dynamic_cast<type&>(e);		 	  // 引用转换失败时，会抛出std::bad_cast�
 dynamic_cast<type&&>(e);		// 只能转换成指针/引用
 ```
 
-> - 运行时检查，转换时需要用到父类虚函数表中的`offset-to-top`，所以<font color=red>前提是父类有虚函数，为多态类</font>，比static_cast更安全
+> - 运行时检查，转换时需要用到父类虚函数表中的`offset-to-top`来寻找子类对象的起始地址，所以<font color=red>前提是父类有虚函数，为多态类</font>，比static_cast更安全
 >
 > - 用途：
 >
 >   用于基类向子类的转换（下行转换，转换开销比static_cast大）
 >
 > - 当 基类指针所指对象为基类类型 时，向下转换失败（和动态多态的使用及条件很像）
-
-```c++
-#include<iostream>
-using namespace std;
-
-class Base
-{
-public:
-	Base() {};
-	virtual void Show() { cout << "This is Base calss"; }
-};
-class Derived :public Base
-{
-public:
-	Derived() {};
-	void Show() override { cout << "This is Derived class"; }
-};
-int main()
-{
-	// 基类指针指向子类对象，向下转换成功
-	Base* base = new Derived();
-	if (Derived* der = dynamic_cast<Derived*>(base))
-	{
-		cout << "success" << endl;
-	}
-
-	// 基类指针指向基类对象，向下转换失败
-	Base* base1 = new Base();
-	Derived* d = dynamic_cast<Derived*>(base1);
-	if(nullptr == d)
-	{
-		cout << "fail" << endl;
-	}
-
-	system("pause");
-	return 1;
-}
-```
 
 ##### const_cast
 
@@ -3555,93 +3460,1208 @@ int main()
 >   - 从一个指向类数据成员的指针到另一个指向不同类型的数据成员的指针
 >
 > - 转换后的类型值 需要转换回 原始类型，这样才是正确使用reinterpret_cast方式。
-
-```c++
-// reinterpret_cast不会对转换做检查，只会指示编译器将 表达式 当成新类型。
-#include <iostream>
-using namespace std;
-class A {
-public:
-	int m_a;
-};
-
-class B {
-public:
-	int m_b;
-};
-
-class C : public A, public B {};
-
-int main()
-{
-	C c;
-	B* br = reinterpret_cast<B*>(&c);
-	B* bs = static_cast <B*>(&c);
-	cout << &c << " " << br << " " << bs << endl;
-
-	return 0;
-}
-
-```
+>
+> - reinterpret_cast不会对转换做检查，只会指示编译器将 表达式 当成新类型。
 
 一般用在哈希函数中
 
-### STL容器
+### 空基类优化???
 
-#### std::string
+[C++惯用法之空基类优化-CSDN博客？？？](https://blog.csdn.net/haokan123456789/article/details/136333944)
 
-STL 提供了一个专门为操纵字符串而设计的模板类：`std::basic_string<T>`，该模板类的两个常用具 体化如下所示。
+> 当空类作为基类时，只要不会与同一类型的另一个对象或子对象分配在同一地址，就不需要为其分配任何空间
 
-- std::string：基于 char 的 std::basic_string 具体化，用于操纵**简单字符串**。
-- std::wstring：基于 wchar_t 的 std::basic_string 具体化，用于操纵**宽字符串**，通常用于存储支持各种语言中符号的 Unicode 字符。
+#### 非空基类在子类中的内存布局
 
-#### STL set，multiset，map，multimap（红黑树）
+```c++
+struct A {
+	int av;
+};
 
-[C++ set自定义排序-CSDN博客](https://blog.csdn.net/lv1224/article/details/79789638)
+struct B : A{
+    int vvv;
+	A vv;
+};
 
-- 自定义排序标准
-  - 重载自定义类中的`operate<`
-  - 创建自定义排序类，重载`operate()`
-  - 使用`decltype`
+int main()
+{
+	B b;
+	cout << hex << &b << endl;		// 00000037EEB3FCA8：子类对象地址
+	cout << hex << &b.vvv << endl;	// 00000037EEB3FCAC：int变量地址
+	cout << hex << &b.vv << endl;	// 00000037EEB3FCB0：基类子对象地址
 
-#### STL unordered_set，unordered_multiset，unordered_map，unordered_multimap（哈希表）
+	return 0;
+}
+```
 
-[突破编程_C++_C++11新特性 unordered_multiset](https://blog.csdn.net/h8062651/article/details/136850598)
+显然，int变量地址与子类对象地址不一样，中间隔了四个字节，这个四个字节其实是继承的基类对象的地址。也就是说：**继承关系时，基类和派生类地址相同。**
 
-[C++中set/unordered_set 自定义比较规则](https://blog.csdn.net/Genius_bin/article/details/114002899)
+#### 空基类在子类中的内存布局
 
-unordered_set底层是以哈希表为基础的一种容器，定义为：
+```c++
+struct A { };	// 空基类
 
-`template <class _Kty, class _Hasher = hash<_Kty>, class _Keyeq = equal_to<_Kty>, class _Alloc = allocator<_Kty>>`
+struct B : A{
+    int vvv;
+	A vv;
+}
+```
 
-以上为unordered_set()的参数列表，其中后面三个均为可缺省参数，默认为我们提供了`hash<_Kty>`、`equal_to<_Kty>`(_Kty为类模板)
+解释：
 
-如果unordered_set存储的是自定义类，则可以通过自定义`hash<_Kty>`和`equal_to<_Kty>`实现
-
-- 自定义哈希函数
-
-  `hash<类型>` 的作用是根据传递的参数通过哈希函数生成下标
-
-  ```c++
-  class hash_Heroes {
-  public:
-      size_t operator()(const Heroes& hero)const {
-          hash<string> hs;
-          return hs(hero.name);//哈希值由对象的name属性决定
-      }
-  };
-  ```
-
-- 自定义比较函数（哈希表中只要判断两对象是否相等即可）
+- 内存布局：
 
   ```c++
-  class equal_to_Heroes {
-  public:
-      bool operator()(const Heroes& hero1, const Heroes& hero2)const {
-          return hero1.name == hero2.name && hero1.age== hero2.age;
-      }//只有当姓名与年龄均相同时破判定为相同对象
-  };
+  class B size(8):
+          +---
+   0      | +--- (base class A)	// 空类A作为B类的基类，且该类的类型和vvv的类型不同
+          | +---
+   0      | vvv
+   4      | A vv
+          | <alignment member> (size=3)
+          +---
   ```
+
+  显然，此时会发现int变量地址与子类对象地址一致，因为此时基类对象为空基类，**当空类作为基类时，不需要为其分配空间，前提是这样做不会导致它被分配到与其他对象或者同类型的子对象相同的地址上**。这个就叫做**空基类优化技术**。
+
+#### 取消空基类优化的情况
+
+此段代码在msvc和g++中表现不一样，msvc对于下面两种情况依然用了空基类优化
+
+```c++
+// eg1
+struct A { };	// 空基类
+
+struct B : A {
+	A vv;
+	int vvv;
+};
+
+int main()
+{
+	B b;
+	cout << hex << &b << endl;		// 0x5ffe98：子类对象地址
+	cout << hex << &b.vv << endl;	// 0x5ffe99：基类子对象地址（msvc中两者地址相同）
+	cout << hex << &b.vvv << endl;	// 0x5ffe9c：int变量地址
+
+	return 0;
+}
+```
+
+显然，初始化B的时候，由于基类对象地址与基类子对象地址会重合，所以取消了空基类优化。
+
+```c++
+// eg2
+#include <iostream>
+class EmptyClass{ };
+class EmptyFoo : public EmptyClass{ };// 如果取消继承EmptyClass，则最终结果为：1, 1, 1
+class NoEmpty :public EmptyClass,  public EmptyFoo{ };
+int main(){
+    std::cout << sizeof(EmptyClass) << std::endl; //输出：1
+    std::cout << sizeof(EmptyFoo) << std::endl; //输出：1
+    std::cout << sizeof(NoEmpty) << std::endl; //输出：2（msvc中为1）
+}
+```
+
+显然，EmptyClass地址和EmptyFoo地址重合，所以取消空基类优化（两者属于继承关系，显然为同一类型）
+
+#### 应用分析
+
+- 使用空基类优化减少占用的内存
+
+  ```c++
+  struct A { };	// 空基类
+  
+  struct B {
+  	A vv;
+  	int vvv;
+  };
+  
+  struct B1 : private A {
+  	int vvv;
+  };
+  
+  int main()
+  {
+  	cout << sizeof(B) << endl;	// 8：A为基类子对象，不会用到空基类优化
+  	cout << sizeof(B1) << endl;	// 4：A为空基类，运用了空基类优化
+  
+  	return 0;
+  }
+  ```
+
+### POD类型？？？
+
+[POD - cppreference.com](https://zh.cppreference.com/w/cpp/language/classes#POD_.E7.B1.BB)
+
+page116
+
+> - 如果一个类型既是Trivial类型又是Standard layout类型，那么它就是POD类型。
+> - 常用于：兼容C语言，网络通信等。
+
+POD（Plain Old Data，平凡旧数据）是C++中的一个概念，它指的是一种可以**通过简单内存复制进行复制和传输的数据类型**。POD类型的对象可以通过`memcpy`或其他等价的操作进行复制，而且它们的内存布局是完全透明和可预测的。
+
+在C++中，POD类型可以分为两类：trivial（平凡）类型和standard layout（标准布局）类型。
+
+*简旧数据类*（POD） ﻿是满足以下所有条件的类：
+
+| 它是[聚合体](https://zh.cppreference.com/w/cpp/language/aggregate_initialization)<br />没有用户声明的复制赋值运算符<br />没有用户声明的析构函数并且<br />没有具有非简旧数据类类型（或这种类型的数组）或者引用类型的非静态数据成员。 | (C++11 前) |
+| ------------------------------------------------------------ | ---------- |
+| 它是平凡类，<br />它是标准布局类，并且<br />没有具有非简旧数据类类型（或这种类型的数组）的非静态数据成员。 | (C++11 起) |
+
+*简旧数据结构体* ﻿是非联合体的简旧数据类。*简旧数据联合体* ﻿是满足简旧数据类条件的联合体。
+
+#### 平凡类型
+
+平凡类/结构体定义如下：
+
+- 拥有平凡的构造/析构函数
+
+  不申明**默认构造/析构函数**，**拷贝构造函数**，**移动构造函数**，或使用`=default`显式申明默认版本的构造/析构函数时，该构造/析构函数为"平凡化的"
+
+  由上，trivial类型是一种没有任何特殊语义的类型，它的行为完全由其数据成员决定。例如，一个只包含基本类型（如int、char）成员的struct就是一个trivial类型。
+
+- 拥有平凡的拷贝，移动赋值运算符
+
+  同上
+
+- 不能包含虚函数与虚基类
+
+```c++
+struct trival{
+    int x;
+    trival()=default;
+};
+struct notrival{
+    int y;
+    trival();
+}
+// 可以使用 is_trival<T>::value 来判断
+```
+
+#### 标准布局类型
+
+标准布局的类/结构体定义如下：
+
+- 所有非静态成员拥有相同的访问权限
+- 存在继承关系时
+  - 非静态成员不能同时出现在子类和基类之间
+  - 多重继承时，非静态成员不能同时出现在多个基类之间
+- 类中第一个非静态成员类型与其基类不同（空基类优化相关知识）
+- 没有虚函数和虚基类
+- **所有非静态数据成员均符合标准布局类型，其基类也符合标准布局**。
+
+可以使用`is_standard_layout<T>::value`来判断
+
+### 非受限联合体
+
+[【C++11新特性：13】—— C++11非受限联合体](https://blog.csdn.net/heli200482128/article/details/128935288)
+
+[联合体声明 - cppreference.com](https://zh.cppreference.com/w/cpp/language/union)
+
+page124
+
+#### 定义
+
+- 联合体是一个结构体
+- 它的所有成员相对于基地址的偏移量都为0
+- 此结构空间要大到足够容纳最"宽"的成员；
+- 其内存对齐方式要适合其中所有的成员；
+- **任何非引用类型都可以成为联合体的数据成员**，这种联合体即非受限联合体（C++11）
+- 静态成员变量不能作为联合体的数据成员（静态成员函数可以）（C++11）
+
+#### 语法
+
+```c++
+// 非受限联合体，需要创建对象后才能使用
+union u {
+	int a;
+	double b;
+};
+// 非受限的匿名联合体，只能创建在类中，或者用static关键字创建在全局中，不用创建对象也能使用
+union {
+	int a;
+    double b;
+};
+```
+
+#### 注意事项
+
+**如果非受限联合体内有一个非 POD 的成员，而该成员拥有自定义的构造函数，那么这个非受限联合体的默认构造函数将被编译器删除；其他的特殊成员函数，例如默认拷贝构造函数、拷贝赋值操作符以及析构函数等，也将被删除，**此时无法创建非受限联合体的对象。
+
+所以如果要在非受限联合体中使用非 POD 的成员，应使用placement new，并自己为非受限联合体定义构造函数。代码如下：
+
+```c++
+#include <string>
+using namespace std;
+union U {
+    string s;
+    int n;
+public:
+    U() { new(&s) string; }
+    ~U() { s.~string(); }
+};
+int main() {
+    U u;
+    return 0;
+}
+```
+
+构造时，采用 placement new 将 s 构造在其地址 &s 上，这里 placement new 的唯一作用只是调用了一下 string 类的构造函数。注意，在析构时还需要调用 string 类的析构函数。
+
+#### placement new
+
+语法：
+
+```c++
+new (place) Type(args...);
+// place是一个指针，指向预分配的内存地址
+// Type是要创建的对象类型
+// args...是传递给构造函数的参数列表
+```
+
+`placement new`利用已经申请好的内存来生成对象，它不再为对象分配新的内存，而是将对象数据放在 address 指定的内存中。在本例中，`placement new`使用的是 s 的内存空间。
+
+#### 枚举式类
+
+当非受限的匿名联合体运用于类的声明时，这样的类被称为“枚举式类”：
+
+```c++
+class Student {
+public:
+	Student(bool g, int a) : gender(g), age(a) {}
+	bool gender;
+	int age;
+};
+class Singer {
+public:
+	enum Type { STUDENT, NATIVE };
+	Singer(bool g, int a) : s(g, a) { t = STUDENT; }
+	Singer(int i) : id(i) { t = NATIVE; }
+	~Singer() {}
+private:
+	Type t;
+	union {		// 显然如果在非受限的匿名联合体中使用非POD成员，则不用自定义构造/析构函数
+		Student s;
+		int id;
+	};
+};
+
+int main() {
+	Singer (true, 13);
+	Singer(310217);
+
+	return 0;
+}
+// 上面的代码中使用了一个匿名非受限联合体，它作为类 Singer 的“变长成员”来使用，这样的变长成员给类的编写带来了更大的灵活性。
+```
+
+### auto
+
+[auto](https://zh.cppreference.com/w/cpp/keyword/auto) 是一个**占位类型说明符**，不会进行推导。它指定了后续会被替换的*占位类型*，替换的类型通常通过[初始化器](https://zh.cppreference.com/w/cpp/language/initialization)推导得到。
+
+> - auto占位符在**编译期**起作用（不合标准的无法通过编译），auto修饰的变量必须初始化
+> - **形式如auto&&，表示万能引用**，即既可以为左值引用，也可以为右值引用
+> - 用 auto 来声明多个变量类型时，**只有第一个变量用于 auto 的类型推导**，然后推导出来的数据类型被作用于其他的变量。所以不允许这些变量的类型不同。
+> - 声明为auto的变量**无法带走原始表达式的cv限制符**（即volatile和const属性），但auto&可以
+> - 推导地址时，使用auto* 和auto没啥区别；但如果想声明引用，必须用auto&
+> - auto从表达式推导出类型后，进行类型定义时，允许一些冗余的符号。比如`cv 限制符`，`&`，`*`，如果推导出的类型已经有了这些属性，冗余的符号则会被忽略。
+> - 在结构体/类中，**非静态auto类型不能成员变量**
+> - auto不能作为函数参数，不能作为模板实例化类型
+> - auto不能带走static关键字
+
+```c++
+int main() {
+	int x = 1;
+	const int xx = 1;
+
+	auto x1 = &x;
+	auto* x2 = &x;			// x1和x2的类型都一样
+
+	auto& y1 = x, y2 = 1.3f; // auto被推导为int，所以y2的类型也为int，与右值类型不匹配，报错
+	auto& z = xx;			// xx为const，所以z也为const
+
+	auto&& i = move(x);		// i推导为右值引用
+	auto&& i1 = xxx;		// i1推导为左值引用
+
+	return 0;
+}
+```
+
+auto的const和volatile规则：
+
+```c++
+    int num = 1;
+    const auto a = num;             // const int类型
+    const auto& b = num;            // const int&类型
+    volatile auto* c = &num;        // volatile int*类型
+
+    auto d = a;                     // int类型，auto无法带走const属性
+    auto& e = a;                    // const int类型，auto引用可以
+    auto f = c;                     // int*类型，auto无法带走volatile属性
+    auto& g = c;                    // volatile int*类型，auto引用可以
+```
+
+auto不能使用的情况：
+
+```c++
+void func(auto x) {}            // auto不能作为函数参数
+
+struct stu {
+    auto var = 10;              // 非静态auto类型不能成员变量
+    static const auto var = 10; // 编译通过
+};
+
+int main()
+{
+    char x[3] = { 0 };
+    auto y = x;
+    auto z[3] = x;             // auto不能作为数组类型
+
+    std::vector<auto> v = { 1 };   // auto不能作为模板实例化类型
+
+    return 0;
+}
+```
+
+### decltype
+
+[《深入理解C++11》笔记-decltype](https://blog.csdn.net/WizardtoH/article/details/80964987)
+
+[C++11特性：decltype关键字 - melonstreet - 博客园 (cnblogs.com)](https://www.cnblogs.com/QG-whz/p/4952980.html)
+
+[C++ decltype用法详解-CSDN博客](https://blog.csdn.net/qq_38196982/article/details/118578967)
+
+> - decltype是一个类型推导运算符，在**编译期**起作用，decltype修饰的变量不用初始化
+> - 当推导的类型包括`cv 限制符`，`&`，`&&`同时还额外声明了这些属性时，冗余的符号则会被忽略（冗余的`*`不可被忽略）
+> - 推导地址时，使用`decltype(var_name)* `和`decltype(var_name)`有区别；
+> - decltype可以带走cv限制符，但如果对象声明中有cv限制符时，该对象的cv 限制符不会出现在其成员的类型推导结果中。
+> - decltype不能带走static关键字
+
+语法：`decltype(expr);`
+
+#### decltype推导四规则
+
+[decltype 说明符 (C++11 起) - cppreference.com](https://zh.cppreference.com/w/cpp/language/decltype)
+
+- 如果type是一个没有带括号的标记符表达式(可以理解为变量名称)或类成员访问表达式，那么decltype(type)就是type对应的类型。此外，如果type是一个重载的函数，则会导致编译失败。
+- 否则，如果 *表达式* 的[值类别](https://zh.cppreference.com/w/cpp/language/value_category)是*将亡值*，则 `decltype` 产生 `T&&`；
+- 否则，如果 *表达式* 的值类别是*左值*，或者该变量被括号包围（`decltype((i))`），则 `decltype` 产生 `T&`；
+- 否则，如果 *表达式* 的值类别是*纯右值*，则 `decltype` 产生 `T`。
+
+```c++
+struct S { double d; } s;
+int func(int);
+int func(double);
+int&& rvalue();
+const bool isvalue(int);
+
+int main()
+{
+    int i = 0;
+    int arr[5] = { 0 };
+    int* ptr = arr;
+
+    decltype(arr) var1;   // int[5]，不带括号的标记符表达式
+    decltype(ptr) var2;   // int*，不带括号的标记符表达式
+    decltype(s.d) var3;   // double，不带括号的成员访问表达式
+    decltype(func) var4;  // 编译失败，是重载的函数，否则var4被定义为函数类型
+
+    decltype(rvalue()) var5 = 1; // int&&，将亡值
+
+    // 左值推导为类型的引用
+    decltype((i)) var6 = i;     // int&带括号的左值
+    decltype(++i) var7= i;      // int&,++i返回i的左值
+    decltype(arr[3]) var8 = i;  // int&,[]返回i的左值
+    decltype(*ptr) var9 = i;    // int&,*返回i的左值
+    decltype("lvalue") var10 = "lvalue";  // const char(&)[], 字符串字面常量为左值
+
+    // 以上都不是,推导为本类型
+    decltype(1) var11;    // int，处理字符串字面常量以外的值为右值
+    decltype(i++) var14;  // int， i++返回右值
+    decltype((isvalue(1))) var15; // bool,圆括号可以忽略，有问题！！！！去vscode上试试
+
+    return 0;
+}
+```
+
+#### cv限制符的继承与冗余的符号
+
+上一篇中说到auto不能带走cv限制符(`const`、`volatile`)，`decltype`是能够带走的。不过，如果创建类对象时有`const`或`volatile`限制符，使用`decltype`推导时，其成员不会继承cv限制符。
+
+```c++
+struct st{
+	int i = 0;
+};
+
+int main()
+{
+	int i = 0;
+	int& j = i;
+	decltype(i)& var1 = i;     // int& 类型
+	decltype(j)& var2 = i;     // int& 类型，推导出的类型已经有引用，冗余的引用会被忽略
+
+	int* ptr = &i;
+	//decltype(ptr)* var3 = &i;    // 编译失败，int**裂隙不能指向int*类型
+	decltype(ptr)* var4 = &ptr;    // int**类型，推导出的类型是指针，不会被忽略
+
+	const int k = 0;
+	decltype(k) var5 = 1;          // const int类型
+	const decltype(k) var6 = 1;    // const int类型,推导出的类型已经有const，冗余的const会被忽略
+	const st cst;
+	decltype(cst.i) var7;			// int类型，decltype推导时，成员不继承对象的cv限制符
+
+	return 0;
+}
+```
+
+decltype推导的类型有时候会忽略一些冗余的符号，包括const、volatile、引用符号&。
+
+### 指针的定义
+
+- 一级指针：是一个指针变量，该指针指向的地址保存着一个普通变量；
+
+- 二级指针：是一个指针变量，该指针指向的地址保存着一级指针的地址；
+
+- 例如：
+
+  ```c++
+  int a1[5] = {1, 2, 3, 4, 5};
+  int a2[5] = { 10, 20, 30, 40, 50 };
+  int a3[5] = { 100, 200, 300, 400, 500 };
+  int a4[5] = { 1000, 2000, 3000, 4000, 5000 };
+  int a5[5] = { 10000, 20000, 30000, 40000, 50000 };
+  int* p[5] = { a1, a2, a3, a4, a5 };
+    
+  int** pp = p;
+  cout << *(*(pp + 1) + 4) << endl;	// 50
+  ```
+
+  解释：
+
+  - 进行`operator + ()`时，加的是`sizeof(指针所指向类型的大小)`
+
+  - `pp + 1`时加的是`sizeof(int*)`，因为pp指向的的地址中存放的是`int*`，会加8个字节
+  - `*pp + 1`时加的是`sizeof(int)`，理由同上。
+
+### 数组指针
+
+[数组指针基础](https://blog.csdn.net/Martin0316/article/details/105776435)
+
+[数组指针进阶](https://www.cnblogs.com/Chary/p/16098192.html)
+
+> - 对于数组arr[5]而言，arr表示数组首个元素地址，&arr表示数组地址，两者值相同，意义不同
+>
+>   ```c++
+>   int arr[5] = {};
+>   int* p1 = arr;	// OK
+>   int* p2 = &arr; // ERROR: “int (*)[5]”类型的值不能用于初始化“int *”类型的实体
+>   ```
+>
+> - 对于指针而言，调用`operator+()`时加的是`sizeof(指针所指向类型的大小)`
+>
+>   ```c++
+>   int a = 1;
+>   int* p = &a;
+>   auto p1 = p + 1; // p1比p大了四个字节，因为sizeof(int)==4
+>   
+>   int a[5];
+>   int* p = a;
+>   auto p1 = p + 1; // p1比p大了四个字节，因为a表示的是数组首个元素的地址，所以p指向的地址中存储的是int，然后sizeof(int)==4
+>   ```
+>
+
+- 定义：
+
+  数组指针即定义一个指向数组的指针变量，形如：
+
+  ```c++
+  int(*p)[n]; // n为要定义的个数。 
+  // 变量p的类型是int(*)[5]
+  ```
+
+- 简化：
+
+  ```c++
+  using pArr = int(*)[4]; // pArr是一个指针类型，该指针指向一个可容纳4个int数据的数组
+  pArr pa;	// 相当于 int(*pa)[4]
+  ```
+
+- 注意事项：
+
+  - 记得加*
+
+    ```c++
+    using PointArr1 = int[4];	// 这个不是数组指针，相当于直接定义了一个数组类型
+    PointArr1 pa1 = { 1,2,3,4 };
+    cout << pa1[1] << endl;
+    ```
+
+  - **&arr表示 整个数组 的首地址，该地址解引用后表示数组中第0个元素的首地址（虽然两者值一样）**
+
+    **arr表示这个数组的 第0个元素 的首地址，两个地址值加1时的逻辑不同**
+
+    ```c++
+    using PointArr = int(*)[4];
+    int arr[4];
+    PointArr pa = &arr;	// &arr表示 整个数组 的首地址，进行+1操作时，加的是sizeof(arr)，也就是16字节
+    int* paa = arr;		// arr表示这个数组的 第0个元素 的首地址，&arr和arr值一样，但进行+1操作时，加的是sizeof(int)
+    (*pa)[1] = 1;		//pa表示整个数组的首地址，解引用后(即*pa)表示数组中第0个元素的首地址
+    cout << *((*pa)+1) << endl;	// 相当于(*pa)[1]
+    cout << *(paa+1) << endl;	// 相当于paa[1]
+    ```
+
+  - 一维数组指针接收二维数组
+
+    ```c++
+    int a[][4] = { {1,2,3,4},{5,6,7,8} };	
+    PointArr p1 = a;				// a表示二维数组第0行数据（一维数组）的地址，与 PointArr p1 = &a[0] 等效
+    cout << *(*(p1+1)+1) << endl;	// *(p1+1)单独使用时表示的是第 1 行数据，因为使用整行数据没有实际的含义，所以放在表达式中会被转换为第 1 行数据的首地址
+    								// *(*(p1+1)+1)表示的是第 1 行第一个元素，是int型数据，有实际意义，可以直接访问
+    ```
+
+    解释：
+
+    - 这里之所以可以`PointArr p1 = a;`，是因为：
+      1. p1是`int(*)[4]`类型，表示数组地址；同时a表示数组首元素地址，在`int[2][4]`类型的数组中，数组首元素地址的类型为`int(*)[4]`，显然p1和a两者类型相同，所以可以互相赋值
+      2. 从上一点也能看出，如果我们把p1类型换成`int(*)[5]`或者其他非`int(*)[4]`类型的数组类型，则编译失败，因为`int(*)[]`，`int(*)[N]`，`int(*)[N+1]`是三个不同的类型，如果希望互相转换，可以使用`void*`。
+      3. 对于`cout << **a << endl;`而言，a是数组首元素的地址，而此处的数组首元素是个数组，所以a是个数组地址，所以`*a`表示数组首元素的地址，而此时，数组首元素是一个int型数据，所以`**a`会直接访问1。
+
+  - 定义二维数组指针没意义
+
+    ```c++
+    typedef int(*PointArr1)[2][4];		// 编译报错：二维数组指针定义没意义
+    PointArr1 p11 = {*a[0], *a[1]};
+    cout << p11[0][1] << endl;
+    ```
+
+- [#复习](#数组指针)
+
+- 问问你
+
+  以下不同的cout语句的区别
+
+  ```c++
+  int arr[4] = {1, 2, 3, 4};
+  int (*arr1)[4];
+  arr1 = &arr;
+  cout << (*arr1)[3] << endl;
+  cout << (**arr1) << endl;
+  cout << (*arr) << endl;
+  cout << arr1[3] << endl;    // 和 arr1 + 3 一样
+  cout << arr + (sizeof(arr) / sizeof(arr[0])) * 3 << endl;
+  cout << &arr + 3 << endl;
+  ```
+
+  ```c++
+  4					// arr1是数组地址，数组地址，数组地址，所以想访问数组的数据需要解引用访问
+  1					// arr1是数组地址，解引用后为数组首元素的地址，再解引用才能访问首元素
+  1					// arr是数组首元素的地址，所以arr的类型是int*，对其解引用，则类型为int，访问数组首元素
+  0xe6d7dffdf0		// arr1是数组地址，所以arr1+3实际是arr1+3*sizeof(arr1)，且因为未对结果解引用，所以arr1[3]的类型依然为int (*)[4]，也就是说arr1[3]实际上是个地址。如果对该结果进行解引用，则行为未定义
+  0xe6d7dffdf0		// 重点要知道arr是数组首元素地址即可
+  0xe6d7dffdf0		// 同上，arr是数组首元素地址，所以&arr是数组地址
+  ```
+
+### 函数指针
+
+[函数指针基础](https://blog.csdn.net/qq_27825451/article/details/103081289)
+
+[指针，函数，数组](https://blog.csdn.net/qq_27825451/article/details/103087048)
+
+[函数指针进阶](https://blog.csdn.net/m0_71503225/article/details/135895313)
+
+> - **函数指针首先是个指针**，它指向的值是个函数；**指针函数首先是个函数**，它的返回值是个指针。根据这点去理解其他类似于”指针数组“，”数组指针“的概念。
+>
+> - 阅读函数指针时，从内往外看；简化函数指针的时候，从外往内看
+>
+> - 注意当函数指针作为函数返回值时，函数声明与函数指针的区别
+>
+> - 对于函数`void func();`而言，func和&func都表示函数地址，两者值相同（数组中两者意思不同）
+>
+> - `typedef int (*FUNC)(int, int);`表示申明了一个函数指针类型
+>
+>   `typedef int (FUNC)(int, int);`表示申明了一个函数类型，使用该类型创建的变量只准定义，不准赋值
+>
+>   `int (FUNC)(int, int);`表示一个函数声明，只能定义，不能创建变量。
+
+- 定义：
+
+  函数指针即定义一个指向函数的指针变量，形如：
+
+  ```c++
+  int (*p)(int, int); 
+  // 这个函数的类型是有两个整型参数，返回值是个整型。对应的函数指针类型：
+  // int (*) (int, int);  
+  ```
+
+  **其中，`int (*p)(int,int)`可以理解成`int (*)(int,int) p`**
+
+- 注意事项：
+
+  ```c++
+  using FUNC = int(*)(int, int);      //定义一个FUNC代表 int(*)(int, int) 类型
+  // 也许你会想，定义了函数指针之后，赋值是地址传递，那能不能用值传递呢？答案是不能，原因如下：
+  // 函数定义存放在代码区，肯定不能复制，且复制后代表有多重定义
+  class A {
+  public:
+  	using FUNC = int(int, int);
+  	FUNC fu;				// 此时FUNC是个函数类型，声明出fu后，fu相当于是个函数声明
+  };
+  void A::fu() { }
+  ```
+
+- 函数指针作为函数的返回值
+
+  语法：
+
+  ```c++
+  int (*AFunction(char *ch, int(*p)(int,int)))(int, int);
+  // 表示AFunction(char *ch,int (*p)(int,int))的返回值为：
+  // 类型为int (*)(int, int)的函数
+  ```
+
+  - 优先级：`()>[]> *`，所以`int(*p)(int);`表示函数指针，是一个变量；`int* p(int);`表示函数声明。
+
+  - **其中，`int (*AFunction(char *ch,int (*p)(int,int)))(int, int);`可以理解成：**
+
+    **`int (*)(int, int) AFunction(char *ch, int (*)(int,int) p);`**
+
+  - **该语句是一个函数声明，表示声明了一个叫AFunction的函数，而非函数指针。因为根据优先级关系，AFunction先和右边的括号结合，再和左边的*号结合，所以AFunction不是指针，是它的返回值是指针**
+
+    **如果想声明一个函数指针，应该写成这样：**
+
+    **`int (*(*AFunction)(char *ch, int(*p)(int,int)))(int, int);`**
+
+- 使用typedef 简化指针定义
+
+  简化函数指针的时候，从外往内看
+
+  ```c++
+  using Pointer = int(*)(int, int); 	//Pointer等价于类型 int (*)(int,int)，int (*)(int,int)是类型名，Pointer是别名
+  Pointer p = add; //但是这里由于C语言语法的关系，我们不能写成 int (*)(int,int) Pointer 这样的形式
+  ```
+
+  通过`typedef`就能将函数指针的定义统一成“**类型 变量**”的形式，我们再看一个复杂例子：
+
+  ```c++
+  using FUNC = int(*)(int, int);      //定义一个FUNC代表 int(*)(int, int) 类型
+  using pfuncAFun = FUNC(*)(const char*, FUNC);//定义一个pfuncAFun代表 FUNC(*)(const char*, FUNC) 类型
+  
+  int add(int a, int b){
+  	return a + b;
+  }
+  // int (*AFunction(const char* ch, int(*p)(int, int)))(int, int)
+  FUNC AFunction(const char * ch, FUNC p) //这实际上就是 “类型名称 对象名称”，相比于上面未简化的函数表达式清晰不少
+  {
+  	if (ch == "add"){
+  		return p;
+  	}
+  	else
+  		return NULL;
+  }
+  
+  int main() {
+  //	int (*(*p)(const char*, int(*)(int, int)))(int, int) = AFunction;//注意要用(*p)表示指针
+  	pfuncAFun p = AFunction; // 相比上面复杂的类型声明，此处简单不少
+  //	pfuncAFun p = &AFunction; 注意AFunction和&AFunction都表示函数地址，两者值相同
+      
+  	FUNC p1 = p("add", add);
+  //	FUNC p1 = (*p)("add", add); 正常调用时，不论是否对p解引用，都可以正常运行该函数。
+  
+  	return 1;
+  }
+  ```
+
+- 练习题：
+
+  ```c++
+  (*(void(*)())0)();
+  // void(*)()：函数指针类型，我们定义为X
+  // (void(*)())0：即(X)0，将0强制转换为void(*)()类型的函数指针，将该指针定义为Y
+  // (*(void(*)())0)()：即(*Y)()，表示解引用调用0地址处的函数
+  ```
+
+  ```c++
+  void (*signal(int, void(*)(int)))(int);
+  // 1.signal是一个函数声明
+  // 2.signal 函数有两个参数，第一个参数的类型是int，第二个参数的类型是 void(*)(int) 函数指针类型
+  // 3.该函数指针指向的函数有一个int类型的参数，返回类型是void
+  // 4.signal函数的返回类型也是void(*)(int) 函数指针类型，该函数指针指向的函数有一个int类型的参数，返回类型是void
+  ```
+
+  ```c++
+  int (*(*pf())())();
+  //	分析的时候由内向外
+  //  pf先与()结合，所以pf是函数申明，
+  //	int (*(*X)())();   // 简化成该形式，显然X是pf函数的返回值类型，是函数指针类型，之后要把(*X)放在一起看，(*X)为X解引用后对应的函数名
+  //	int (*Y)();		  // 显然Y是(*X)()的返回值类型，是函数指针类型
+  //	简化的时候由外向内
+  //	typedef int(*PF_I)();
+  //	typedef PF_I(*PF_PFI)();
+  //	PF_PFI pf() { return nullptr; }
+  ```
+
+  技巧：
+
+  1. 先找名字
+  2. 看名字先和谁结合
+     - 如果先和`*`结合，则该名字为**指针**，要把`(*名字)(param_list)`/`(*名字)[N]`当成一个整体，该整体表示一个函数声明/数组声明
+     - 如果先和`()`结合，则该名字为**函数声明**，要把`名字(param_list)`当成一个整体，该整体表示一个函数声明，其中名字的左边表示该函数的返回值。
+     - 如果先和`[]`结合，则该名字为**数组**，要把`名字[N]`当成一个整体，该整体表示一个数组，其中名字的左边表示该数组的类型。
+  3. 逐层分析。
+
+### 函数指针数组
+
+- 定义：
+
+  函数指针数组指的是数组里存放的是函数指针：
+
+  ```c++
+  int (*FuncArr[5])(int,int);
+  // 声明了一个叫FuncArr的数组，该数组能存5个函数指针
+  // 其中函数指针的格式为：返回值为int，参数为int,int
+  ```
+
+### 函数指针数组的指针
+
+- 定义：
+
+  指向函数指针数组的指针是一个指针，指针指向一个数组，数组的元素都是函数指针。
+
+  ```c++
+  int (*(*pFuncArr)[5])(int,int);
+  // 声明了一个叫pFuncArr的指针，该指针指向一个数组
+  // 该数组能存5个函数指针
+  // 其中函数指针的格式为：返回值为int，参数为int,int
+  ```
+
+- 练习题：
+
+  简化`int (*(*pFuncArr)[5])(int,int)`
+
+  ```c++
+  using PFUNC = int(*)(int, int);
+  using PFUNCARR = PFUNC(*)[5];
+  
+  int (*(*pFuncArr)[5])(int,int);
+  PFUNCARR pFuncArrtest = pFuncArr;	// 可以正常赋值，说明简化成功
+  
+  //int (*pFuncArr[5])(int,int);
+  //PFUNCARR pFuncArrtest = &pFuncArr;// 此时注意pFuncArr是个数组而非数组指针，所以需要取址
+  ```
+
+### 函数指针数组
+
+- 定义：
+
+  函数指针数组指的是数组里存放的是函数指针：
+
+  ```c++
+  int (*FuncArr[5])(int,int);
+  // 声明了一个叫FuncArr的数组，该数组能存5个函数指针
+  // 其中函数指针的格式为：返回值为int，参数为int,int
+  ```
+
+### 函数指针数组的指针
+
+- 定义：
+
+  指向函数指针数组的指针是一个指针，指针指向一个数组，数组的元素都是函数指针。
+
+  ```c++
+  int (*(*pFuncArr)[5])(int,int);
+  // 声明了一个叫pFuncArr的指针，该指针指向一个数组
+  // 该数组能存5个函数指针
+  // 其中函数指针的格式为：返回值为int，参数为int,int
+  ```
+
+- 练习题：
+
+  简化`int (*(*pFuncArr)[5])(int,int)`
+
+  ```c++
+  using PFUNC = int(*)(int, int);
+  using PFUNCARR = PFUNC(*)[5];
+  
+  int (*(*pFuncArr)[5])(int,int);
+  PFUNCARR pFuncArrtest = pFuncArr;	// 可以正常赋值，说明简化成功
+  
+  //int (*pFuncArr[5])(int,int);
+  //PFUNCARR pFuncArrtest = &pFuncArr;// 此时注意pFuncArr是个数组而非数组指针，所以需要取址
+  ```
+
+### C++11中的函数指针
+
+[函数指针进阶](https://www.cnblogs.com/lvchaoshun/p/7806248.html)
+
+[成员函数指针 - cppreference.com](https://zh.cppreference.com/w/cpp/language/pointer#.E6.88.90.E5.91.98.E6.8C.87.E9.92.88)
+
+> - 使用auto进行推断时，auto* 和auto没有区别，都会推断为函数指针
+> - 使用函数类型作为函数形参时，调用自动退化为函数指针
+> - 类函数指针赋值要使用 **&**
+> - `&T::value` 是[成员指针](https://zh.cppreference.com/w/cpp/language/pointer#.E6.88.90.E5.91.98.E6.8C.87.E9.92.88)的语法，不区分是数据成员还是成员函数，如果有这个成员 `value`，`&类名::成员名字` 自然合法
+> - 使用 `(实例对象).*函数指针` 或者 `(实例对象)->*函数指针`调用函数指针所指向的**类非静态成员函数**
+
+- typedef与decltype组合简化函数类型/函数指针类型的声明
+
+  ```c++
+  void test() { }
+  int main() {
+  	typedef decltype(test)* pfu2;	// ①记得加*，否则变成了函数类型声明；②decltype无法推导重载函数
+  	pfu2 pfuu1 = test;
+  
+  	return 1;
+  }
+  ```
+
+- 使用auto定义函数类型/函数指针类型
+
+  ```c++
+  void test() { }
+  // 推导地址时，使用auto* 和auto没啥区别
+  auto pf = add;//pf为指向add的指针
+  auto *pf = add;//pf为指向add的指针  
+  ```
+
+- 函数指针作为形参
+
+  ```c++
+  typedef decltype(test) add2;  
+  typedef decltype(test)* PF2;//推导地址时，使用decltype()* 和decltype()有区别；
+  
+  void fuc2 (add2 add);//函数类型形参，调用自动转换为函数指针
+  void fuc2 (PF2 add);//函数指针类型形参，传入对应函数(指针)即可  
+  ```
+
+- 使用decltype优化返回值为函数指针的函数声明
+
+  ```c++
+  decltype(testa)* fuc2(int a);//明确知道返回哪个函数，可用decltype关键字推断其函数类型,
+  ```
+
+- 使用追踪返回类型优化返回值为函数指针的函数
+
+  ```c++
+  auto fuc2(int a) -> decltype(testa)* //fuc2返回函数指针为void(*)()
+  {
+  	return testa;
+  }
+  ```
+
+- 通过函数指针调用类成员函数
+
+  [类成员函数指针](https://www.runoob.com/w3cnote/cpp-func-pointer.html)
+
+  > - 类函数指针赋值要使用`&`，访问要用`*`解引用（与普通函数指针不同）
+  > - 使用 `(实例对象).*函数指针` 或者 `(实例对象)->*函数指针`调用函数指针所指向的**类非静态成员函数**（静态成员函数不用）
+  > - 取类成员函数地址时：**①记得加&；②记得加上范围限定符**
+  > - 声明指向非静态类成员函数的指针时，记得加范围限定符，静态的话则不用
+  > - 对类成员函数取址时：
+  >   - 为**非静态成员函数**时，只能通过联合体进行取址，获得的是该函数在内存中的实际地址
+  >   - 为**虚函数**时，只能通过联合体进行取址，其地址在编译时期是未知的，获得的是一个索引值
+  >   - 为**静态成员函数时**，可以直接访问其地址
+
+  - 通过普通函数指针调用类成员函数
+
+    ```c++
+    #include <iostream>
+    using namespace std;
+    
+    template<typename src_type>
+    void* union_cast(src_type src)
+    {
+    	union {
+    		src_type src;
+    		void* dst;
+    	}u;
+    	u.src = src;
+    	return u.dst;
+    }
+    
+    class A
+    {
+    public:
+    	void test(void) { }
+    
+    	virtual void virtest() { }
+    
+    	static void stattest() { }
+    };
+    void test() {}
+    
+    int main() {
+    //	声明指向非静态类成员函数的指针时：①记得加范围限定符
+    	void(A::*pf)();		// 声明了一个void(A::*)()类型的变量
+    	pf = &A::test;
+    	pf = &A::virtest;
+    
+    //	声明指向静态类成员函数的指针时：不用加范围限定符
+    	void(*statpf)();
+    	statpf = &A::stattest;	//初始化的时候和普通成员函数一样。
+        
+    //	使用.*调用指针指向的函数
+        A a;
+        (a.*pf)();
+        statpf();//静态成员函数可以直接访问
+    
+    //	如果想访问类成员函数的地址，需要用到我的union_cast函数
+    	void* pf1 = union_cast(&A::test);	//输出为实际地址
+    	void* pf2 = union_cast(&A::virtest);//g++输出为0x1，msvc输出为实际地址
+    
+    	return 1;
+    }
+    
+    ```
+
+  - 通过类成员函数指针调用类成员函数
+
+    除了函数调用有区别，其余都一样
+
+    ```c++
+    #include <iostream>
+    using namespace std;
+    
+    template<typename src_type>
+    void* union_cast(src_type src)
+    {
+    	union {
+    		src_type src;
+    		void* dst;
+    	}u;
+    	u.src = src;
+    	return u.dst;
+    }
+    
+    class A
+    {
+    public:
+    	void (A::* p1)();	// 此时p1是个成员变量
+    	void (*p2)();
+    
+    	void test() { }		// test是个函数地址
+    	virtual void virtest() { }
+    	static void stattest() { }
+    
+    	A() {
+    		//取类成员函数地址时：①记得加&；②记得加上范围限定符
+    		p1 = &A::test;		// 将函数地址赋给成员变量
+    		p1 = &A::virtest;
+    		p2 = &A::stattest;
+    	}
+    };
+    
+    int main() {
+    	A a;
+    //	p1为成员变量，需要用实例化对象进行访问，所以a.p1表示访问该成员变量（即函数地址）
+    //	由于a.p1指向的是非静态成员函数，所以要通过实例化对象用 .* 进行访问
+    	(a.*a.p1)();
+    
+    //	静态成员函数不用传this，所以较为简单
+    	(*a.p2)();
+    
+    //	如果想访问类成员函数的地址，需要用到我的union_cast函数
+    	void* pf1 = union_cast(a.p1);
+    	void* pf2 = union_cast(&A::virtest);
+    
+    	return 1;
+    }
+    ```
+
+- 总结（以下几种也是回调函数的常用方式）
+
+  调用类非静态成员函数的几种方式（**以下不论哪种，都需要先定义一个完整类型的对象**）：
+
+  `virtest()`的调用与`test()`的调用同理
+
+  1. 使用lambda表达式（推荐）：
+
+     ```c++
+     A a;
+     auto func = [&a]() {
+         a.test();	
+     };
+     func();
+     ```
+
+     如果想将func当作函数实参进行传递，则格式如下：
+
+     ```c++
+     void test(const function<void()>& f) {
+         f();
+     }
+     test(func);	// 调用A::test()
+     ```
+
+     注意：
+
+     - test函数的形参类型不能为`function<void()>&`，因为：
+
+       当使用func传递给f时，因为func和f两者的类型不同，因此会发生[#隐式转换](../1-21天学通C++第8版/21Day.md/#C++类型转换)，func通过用户定义转换函数进行转换后的结果是一个[#右值](#C++值类别)，左值引用无法接收右值，所以编译失败。
+
+  2. 使用普通函数指针：
+
+     ```c++
+     A a;
+     using PFUNC = void(A::*)();
+     PFUNC p = &A::test;
+     (a.*p)();
+     ```
+
+  3. 使用类成员函数指针：
+
+     ```c++
+     A a;
+     (a.*a.p1)();
+     ```
+
+  4. 使用`bind()`（最好别用，用lambda即可）
+
+     ```c++
+     auto func = bind(&A::test, &a);
+     func();
+     ```
+
+### 回调函数
+
+#### 普通函数的函数回调
+
+![image-20230924155414689](./assets/image-20230924155414689.png)
+
+  理解：
+
+ 现在我要开发一个方便大伙表白的函数，这个函数名叫做表白神器，在这个函数里干三件事。1. 表白之前的场地布置等准备活动。2. 表白时的动作以及我对女生说的话。3. 表白之后的场地打扫等收尾活动。在这三件事情中，第1，3条都是可以确定的事情，只有第2件事情不确定，因为每个人的做法都不一样，这个时候就可以用到函数指针，那么用户在调用表白函数时只需要传入自己准备好的个性化表白函数指针，即可有一个完整的表白流程。这种函数调用的方法就叫函数的回调，其中个性化表白函数就叫回调函数。
+
+  **对于回调函数需要注意两点：**（在和普通函数调用对比之后，我注意到两点不同的地方）
+
+1. 在表白神器中不能直接调用个性化表白函数，因为不同的用户有不同的个性化表白函数，我根本不知道这个表白神器具体被谁调用。
+2. 采用函数指针传参的形式，使不同用户在调用同一个表白神器时，可以根据自己的情况调用不同的个性化表白函数，使函数整体的灵活性更强。
+3. 很明显，通过以上2点，对于我的需求而言，我只能使用回调函数来实现
+
+  **回调函数的传参方式：**
+
+1. 由调用者函数提供实参
+
+   ![image-20230924170830100](./assets/image-20230924170830100.png)
+
+2. 由外界提供实参
+
+   ![image-20230924171620044](./assets/image-20230924171620044.png)
+
+#### 类成员函数的函数回调
+
+[关于C++ 回调函数(callback) 精简且实用_c++回调函数_zhoupian的博客-CSDN博客](https://blog.csdn.net/zhoupian/article/details/119495949)
+
+##### 静态函数
+
+![image-20230924224354217](./assets/image-20230924224354217.png)
+
+##### 非静态函数
+
+**std::function：**
+
+function<>的实例对象封装各种可调用的实体，包括函数指针，lambda表达式，类的成员函数，普通函数
+
+[C++11中的std::function_std::function 大小__大猪的博客-CSDN博客](https://blog.csdn.net/u013654125/article/details/100140547)
+
+封装类的非静态成员函数：
+
+![image-20230924232044028](./assets/image-20230924232044028.png)
+
+封装函数指针：
+
+![image-20230924234949595](./assets/image-20230924234949595.png)
+
+**std::bind**
+
+bind用来绑定函数的某些参数的，在函数的回调之中，可以用来将 类的非静态成员函数 中的第一个参数与具体对象绑定，但注意对于参数列表中的剩余参数，必须显示指明或者用placeholders::_1 / _2 / _3……指定。他的返回值是一个可调用的实体，可以选择用function<>接受
+
+[C++11中的std::bind__大猪的博客-CSDN博客](https://blog.csdn.net/u013654125/article/details/100140328)
+
+使用bind配合function实现函数的回调（耦合度低）
+
+![image-20230925002136475](./assets/image-20230925002136475.png)
+
+使用function<>实现函数的回调（耦合度高）
+
+![image-20230925003038566](./assets/image-20230925003038566.png)
+
+### 强类型枚举
+
+[C enum(枚举) 基础](https://www.runoob.com/cprogramming/c-enum.html)
+
+[《深入理解C++11》强类型枚举](https://blog.csdn.net/WizardtoH/article/details/81010433)
+
+> - **强作用域**，必须定义枚举类型才能使用。
+> - **转换限制**，不能隐式转换为整形。
+> - **底层类型**，默认底层类型为int，能够显式指定底层类型（必须是整形）。
+> - **属于POD类型**。
+> - 是编译期常量
+
+- 语法：
+
+  ```c++
+  enum class Type : char{              // 定义枚举类型并指定底层类型
+      Low,
+      Medium,
+      High
+  }type;					// 定义枚举变量
+  ```
+
+- 例子：
+
+  ```c++
+  enum class Level {
+      One,Two,Three,Four,Five
+  };
+  
+  enum class Type {
+      Low,Medium,High
+  };
+  
+  class Password {
+  public:
+      Password(Level l, Type t) :level(l), type(t) {}
+      Level level;
+      Type type;
+  };
+  
+  int main()
+  {
+      Password pwd(One, Low);         // 编译失败，必须使用枚举类型名字
+      Password pwd(Level::One, Type::Low);
+  
+      if (pwd.level < Type::Medium){}   // 编译失败，必须使用同一枚举类型进行比较
+  
+      if (pwd.level < Level::Three){}
+  
+      if (pwd.type > 1){}               // 编译失败，无法隐式转换为整形
+  
+      if ((int)pwd.type > 1){}
+  
+      return 0;
+  }
+  ```
+
+  指定基本类型之后，各个编译器之间的实现就会相同，便于代码移植
+
+- C++11对原有枚举类型的拓展（了解即可）
+
+  - 原有枚举类型的底层类型默认时，仍由编译器来具体指定实现，但也可以显式指定
+
+    ```c++
+    enum Type : char
+    {
+        c1, c2, c3, c4
+    };
+    ```
+
+  - 枚举成员的名字除了自动输出到父作用域，也可以再枚举类型定义的作用域内有效
+
+    ```c++
+    enum Type { c1, c2, c3};
+    Type t1 = c1;
+    Type t2 = Type::c2;		// 两者都是合法的使用形式
+    ```
 
 ### 函数对象与谓词
 
@@ -3659,12 +4679,19 @@ C++程序员常用于 STL 算法的函数对象可分为下列两种类型。
 
 [【C++11】lambda表达式详解](https://blog.csdn.net/weixin_45031801/article/details/141063431)
 
+>- lambda等价于`ret-type operator()(param-list) const{}`的仿函数，mutable可以取消const
+>- lambda默认内联（类中定义的函数也是默认内联的）
+>- lambda函数可以由auto进行推断，推断结果为对应函数类型（但其实属于闭包类型）
+>- 块作用域中的lambda函数仅能捕捉父作用域中的自动变量；而仿函数可以捕捉父作用域外的变量（尤其是在类中，**只能通过捕获this指针来访问类的成员变量**）。
+>- 按引用捕获局部变量时，注意局部变量的生存周期
+
 语法格式：`[capture list] (parameter list) -> return type { function body };`（return type可省略）
 
-- capture list 是捕获列表，用于指定 Lambda表达式可以访问的外部变量。捕获列表可以为空，表示不访问任何外部变量，也可以使用默认捕获模式`&`或`=`来表示按引用或按值捕获所有外部变量，还可以混合使用具体的变量名和默认捕获模式来指定不同的捕获方式，C++17 允许在 Lambda表达式的捕获列表中使用 `*this`，从而实现捕获 this 指针。
-- parameter list 是参数列表，用于表示 Lambda表达式的参数，可以为空，表示没有参数，也可以和普通函数一样指定参数的类型和名称，还可以在 c++14 中使用 auto 关键字来实现泛型参数。
-- return type 是返回值类型，用于指定 Lambda表达式的返回值类型，可以省略，表示由编译器根据函数体推导，也可以使用 -> 符号显式指定，还可以在 c++14 中使用 auto 关键字来实现泛型返回值。
-- function body 是函数体，用于表示 Lambda表达式的具体逻辑，可以是一条语句，也可以是多条语句，还可以在 c++14 中使用 constexpr 来实现编译期计算。
+- `[capture]`，捕捉列表。捕捉列表总是在lambda函数的开始，**[]是lambda函数的引出符**。编译器根据该引出符确定接下来的代码是不是lambda函数。捕捉列表能够捕捉上下文中的变量以供lambda函数使用。**lambda的捕捉列表中的变量都会成为等价于仿函数的成员变量**。
+- `(parameters)`，参数列表。和普通函数的参数列表一致，如果不需要参数可以连`()`一起省略。
+- `mutable`，一个修饰符。**默认情况下，lambda函数总是一个const函数**，mutable可以取消其常量性。在使用mutable时，`()`不可省略，即使参数为空。
+- `->return-type`，返回类型。用追踪返回类型声明函数的返回值。不需要返回值时，可以连同符号->一起省略。另外，在返回类型明确的情况下，也可以省略，让编译器推导出返回类型。
+- `statement`，函数体。与普通函数一样，但是可以使用捕捉列表中的变量。
 
 可将 lambda 表达式视为包含公有 `operator()`的匿名结构（或类）。从这种意义上说，lambda 表达式属于函数对象。
 
@@ -3719,6 +4746,155 @@ struct NoName
   	return 0;
   }
   ```
+  
+- 捕捉列表
+
+  - [var]表示以值传递的方式来捕捉变量var。
+  
+  - [=]表示以值传递的方式捕捉所有父作用域的变量，包括this指针。
+  
+  - [&var]表示引用传递捕捉变量var。
+  
+  - [&]表示引用传递捕捉所有父作用域的变量，包括this指针。
+  
+  - [this]表示值传递方式捕捉当前的this指针。
+  
+  - 以上的方式可以组合使用，但是不允许对同一个变量以同一方式重复捕捉。
+  
+    ```c++
+    [=,&a,&b];	// 按引用捕获a，b，按值捕获其他变量
+    [&,a,this];	// 注意a不能是成员变量，只能是局部变量。
+    [=,a];		// 编译报错，重复捕获
+    ```
+  
+  - 在块作用域(可以理解为在{}以内的代码)以外的lambda函数捕捉列表必须为空，这种lambda和普通函数除了语法上不同以外，和普通函数差别不大。在块作用域内的lambda函数只能捕捉父作用域中的自动变量，不能捕捉非此作用域的变量或者非自动变量(如静态变量等)。
+
+#### lambda的基础使用
+
+lambda相当于局部函数（C++不允许局部函数，lambda算是一种巧妙方式实现了局部函数），可以就地使用，也可以通过变量来接受
+
+```c++
+// auto被推断为函数类型，x为函数名
+auto x = [=](){return 1+1;};	
+x();	// 使用该lambda函数
+
+// auto被推断为int（lambda的返回值类型）
+auto x1 = [=](){return 1+1;}();	// lambda函数就地使用
+```
+
+#### lambda函数的有趣实验
+
+- lambda的类型
+
+  从C++11标准的定义上可以发现，lambda 的类型被定义为“闭包”（closure）的类， 而每个 lambda表达式则会产生一个闭包类型的**临时对象**（右值)。因此，严格地讲，lambda 函数并非函数指针。不过**C++11标准却允许lambda 表达式向函数指针的转换**，但前提是，lambda 函数没有捕捉任何变量，且函数指针所示的函数原型，必须跟 lambda 函数有着相同的调用方式（推荐使用`function<>`接收lamda表达式）。
+
+  ```c++
+  int main()
+  {
+  	void(*pfunc)();		// 定义pfunc函数指针
+  	int x = 1, y = 2;
+  
+  	auto x1 = [x,y]( )->void {};
+  	auto x2 = []( )->void {};
+  	pfunc = x1;			// 编译失败：没有lambda向函数指针的转换函数
+  	pfunc = x2;			// 编译成功
+  
+  	return 0;
+  }
+  ```
+
+- lambda的常量性以及mutable关键字
+
+  对于以下lambda表达式：
+
+  ```c++
+  int main(){
+  	int x = 1, y = 2, z = 3;
+  	auto const_lambda = [x, &y](int z)->void {
+  		x = 2;		// 编译报错，不可修改
+  		y = 3;		// 编译成功
+  		z = 4;		// 编译成功
+  		};
+  }
+  ```
+
+  相当于仿函数：
+
+  ```c++
+  class const_lambda
+  {
+  public:
+  	const_lambda(int _x, int& _y) : x(_x), y(_y) {}
+  
+  	void operator()(int z) const {
+  		x = 2;
+  		y = 3;
+  		z = 4;
+  	}
+  private:
+  	 int x;
+  	int& y;
+  };
+  
+  int main(){
+  	int x = 1, y = 2, z = 3;
+  	const_lambda cl(x, y);
+  	cl(z);
+  }
+  ```
+
+  由上可得：
+
+  1. 对于常量成员函数`void operator()(int z)`而言，不能在函数体内改变class中任何成员变量，所以x不可以更改
+  2. 对于常量成员函数而言，const修饰的是this，引用本身属于this，但**引用所指向的值不属于该对象**，所以y可更改
+  3. z显然可以更改
+
+- lambda的命名
+
+  使用`lambda`表达式 时由编译器生成一个 空类，为了避免这个自动生成的 空类 引发冲突，会将这个 空类 命名为`lambda_uuid`
+
+  > **`uuid`** 是 **通用唯一标识码**，可以生成一个重复率极低的辨识信息，避免类名冲突，这也意味着即便是两个功能完全一样的 **`lambda` 表达式**，也无法进行赋值，因为 **`lambda_uuid`** 肯定不一样 
+
+#### lambda和 STL
+
+先看代码
+
+```c++
+inline void test(int i) {
+	cout << 1 + i << endl;
+}
+
+void test(int j)
+{
+	vector<int> vec;// 假设vec中有100w条数据
+	// 使用lambda
+	for_each(vec.begin(), vec.end(), [=](int i) {
+		cout << 1 + i + j << endl; });
+	// 使用函数指针
+	for_each(vec.begin(), vec.end(), test);
+}
+```
+
+由上：
+
+1. 编译器会对lambda进行内联优化；但不一定会对函数指针inline优化，因此效率上lambda更快
+2. 函数指针无法捕获运行时状态，而lambda可以（bind()好像也可以）
+
+### extern "C"？？？
+
+> 总结：`extern "C"` 就是使得被其包裹的函数在编译生成符号表的时候不适用/不使用名字重整技术，所以`extern "C"`仅影响生成的符号名，在函数定义的时候仍然可以使用C++的一些特性。由此可得使用 `extern "C"` 会导致很多问题，比如在声明时无法使用函数重载，命名空间，同名，等等特性。（同时也正因为名字重整技术，所以C++的代码生成的ABI无法跨平台，C和C++也无法互相引用对方的ABI，当然C标准也没有规定统一的ABI，）
+
+名字重整名：[C++中的名字重整技术 - lizhenghn - 博客园](https://www.cnblogs.com/lizhenghn/p/3661643.html)
+
+ABI：[C/C++ ABI兼容那些事儿 - 知乎](https://zhuanlan.zhihu.com/p/556726543)
+
+[你们说的ABI，Application Binary Interface到底是什么东西？ - 知乎](https://www.zhihu.com/question/381069847)
+
+[extern "C"错误辟谣](https://www.bilibili.com/video/BV1Cu4y1P7Fc?vd_source=54c100b5cef5d27f46b1b7de9dcaa4de)
+
+[有错误，但可以参考：C/C++中的 extern 和extern“C“](https://blog.csdn.net/m0_46606290/article/details/119973574)
+
+[抽象例子，可以加深印象：C++的符号修饰问题](
 
 ### 智能指针
 
@@ -3730,7 +4906,11 @@ struct NoName
 
 #### 智能指针介绍
 
-![1694436767869](./assets/1694436767869.png) 按理来说当p2=p1时，所有权已经转移到p2身上了，但我在cout<<*p1;时，程序不会报错，只有在运行时才会报错，所以auto_ptr被弃用 ![Alt text](./assets/image-3.png) 即用unique_ptr不允许两者之间的赋值操作，只允许通过move()转移所有权 ![1694441095253](./assets/1694441095253.png) ![1694438313733](D:\学习规划\LPResume\学习笔记\C++学习难点\附件\1694438313733.png)
+![1694436767869](./assets/1694436767869.png) 按理来说当p2=p1时，所有权已经转移到p2身上了，但我在cout<<*p1;时，程序不会报错，只有在运行时才会报错，所以auto_ptr被弃用 ![Alt text](./assets/image-3.png) 即用unique_ptr不允许两者之间的赋值操作，只允许通过move()转移所有权 
+
+![1694441095253](./assets/1694441095253.png) 
+
+![image-20250822134540042](./assets/image-20250822134540042.png)
 
 [shared_ptr在多线程下的安全性问题](https://blog.csdn.net/www_dong/article/details/114418454)
 
@@ -3897,7 +5077,7 @@ class A和class B的对象各自被两个智能指针管理，此时的内存布
 
 > - shared_ptr的引用计数读写都是线程安全的（都是原子操作）
 >
-> - 修改shared_ptr指向是线程不安全的（看例1）
+> - 对shared_ptr自身进行修改是线程不安全的（看例1）
 >
 >   解决办法：①使用`atomic<>`。②使用互斥锁
 >
@@ -4787,3 +5967,181 @@ private:
 - 为什么`weak_ptr::lock()`要使用cas操作而不是直接将`_Uses`加1
 
   因为`lock()`中有一个比较/交换操作，要先判断`_Uses`是否为0，再加一，这两步显然不能合成为一个原子操作，所以需要使用cas保障线程安全
+
+### constexpr？？？
+
+[《深入理解C++11》笔记-常量表达式_c++11常量-CSDN博客](https://blog.csdn.net/WizardtoH/article/details/81034443)
+
+[编译期常量？？？](https://zhuanlan.zhihu.com/p/250238866)
+
+[字面值常量类（常量构造函数）](https://blog.csdn.net/qq_41453285/article/details/95751287)
+
+>- const描述的是“运行时常量”（修饰普通变量时是编译时常量），constexpr描述的是“编译时常量”
+>- 对于constexpr修饰的变量而言，如果没有被调用，则编译器可以不为其生成数据，而仅将其当作**编译期常量**
+>- 尽量不要用编译期常量，如果要用，则编译期的浮点常量表达式精度>=运行期浮点常量表达式精度
+>- constexpr修饰自定义类型声明时，需要先定义**常量构造函数**
+>- constexpr修饰的函数也可以用于非常量表达式中的类型构造。因为如果表达式不满足常量性，那么constexpr关键字将会被忽略。
+
+- constexpr修饰的普通函数
+
+  - 定义：
+
+    - 函数只能包含return语句。
+    - 函数必须有返回值。
+    - 在使用前必须已经定义。
+    - return返回语句中不能使用非常量表达式的函数、全局数据，且必须是一个常量表达式。
+
+  - 例子：
+
+    ```c++
+    const int g2 = 5;
+    constexpr int func2(int g){
+        return g;      
+    }
+    int main(){
+        int a[func2(g2)];// 编译通过
+    }
+    ```
+
+- constexpr修饰的表达式值
+
+  ```c++
+  const int i = 1;
+  constexpr int j = 1;
+  ```
+
+  i作为全局变量时，编译器一定为i产生数据;
+
+  对于j而言，如果没有被显式调用，则编译器可以不为其生成数据，而仅将其当作**编译期常量**
+
+  编译期常量：枚举值，右值，constexpr/const修饰的变量。
+
+- constexpr修饰的构造函数
+
+  默认只有内置类型才能修饰为常量表达式值，自定义类型如果要成为常量表达式值，必须定义**常量构造函数**
+
+  - 定义：
+
+    - 函数体必须为空。
+    - 初始化列表只能由常量表达式来赋值。
+
+  - 例子：
+
+    ```c++
+    class Example {
+    public:
+    	Example() {}
+    	constexpr Example(int i) : data(i) {}// 常量构造函数
+    private:
+    	int data;
+    };
+    int main(){
+    //	constexpr Example ex;		   编译失败
+    	constexpr Example ex1(1);	// 编译通过
+    }
+    ```
+
+- constexpr的应用
+
+  - 在模板函数中的应用
+
+    **如果模板函数被实例化后不满足常量性，那么constexpr关键字将会被忽略。**
+
+    **constexpr不可以作用于虚函数，因为虚函数是运行时的行为**
+
+    ```c++
+    class Example{
+    private:
+        int data;
+    };
+    
+    template<typename T>
+    constexpr T func(T t)
+    {
+        return t;
+    }
+    
+    int main()
+    {
+        constexpr int i = func(1);		// 通过编译，模板函数实例化后满足常量性
+    
+        Example ex;
+        Example ex1 = func(ex);
+        constexpr Example ex2 = func(ex);  // 无法通过编译，因为Example没有常量性，模板的constexpr被忽略
+    
+        return 0;
+    }
+    ```
+
+  - 把计算步骤提前到编译阶段
+
+    ```c++
+    constexpr size_t c_fib(size_t n) noexcept
+    {
+        return n == 0 ? 0 : (n == 1 ? 1 : c_fib(n - 1) + c_fib(n - 2));
+    }
+    
+    int main(void)
+    {
+        constexpr size_t n = 25;
+        clock_t startTime, endTime;
+        
+        startTime = clock();
+        constexpr size_t r2 = c_fib(n);
+        endTime = clock();
+        std::cout << r2 << ", c_fib: " << endTime - startTime << "ms" << std::endl;                // 1ms
+        
+        return 0;
+    }
+    ```
+
+### nullptr与NULL
+
+NULL定义：
+
+```c++
+#ifndef NULL
+    #ifdef __cplusplus
+        #define NULL 0
+    #else
+        #define NULL ((void *)0)
+    #endif
+#endif
+```
+
+nullptr定义：
+
+关键词 `nullptr` 代表指针字面量。它是 [std::nullptr_t](mk:@MSITStore:C:\Users\李沛\Desktop\C++标准\CppStudy\cppreference-zh-20240915.chm::/chmhelp/cpp-types-nullptr_t.html) 类型的[纯右值](mk:@MSITStore:C:\Users\李沛\Desktop\C++标准\CppStudy\cppreference-zh-20240915.chm::/chmhelp/cpp-language-value_category.html)。存在从 `nullptr` 到任何指针类型及任何成员指针类型的[隐式转换](mk:@MSITStore:C:\Users\李沛\Desktop\C++标准\CppStudy\cppreference-zh-20240915.chm::/chmhelp/cpp-language-implicit_conversion.html)。同样的转换对于任何空指针常量也存在，空指针常量包括 [std::nullptr_t](mk:@MSITStore:C:\Users\李沛\Desktop\C++标准\CppStudy\cppreference-zh-20240915.chm::/chmhelp/cpp-types-nullptr_t.html) 的值，以及宏 [NULL](mk:@MSITStore:C:\Users\李沛\Desktop\C++标准\CppStudy\cppreference-zh-20240915.chm::/chmhelp/cpp-types-NULL.html)。
+
+- 空指针常量：
+
+  空指针常量不是一个具体的值，而是一个**类别**。以下两种表达式都属于这个类别：
+
+  1. 一个值为 0 的**整型字面量**。
+     - 例如：0, 0L, 0u。
+     - **注意**: 必须是**字面量**。一个值为 0 的 int **变量**不是空指针常量。
+  2. 一个类型为 std::nullptr_t 的**纯右值 (prvalue)**。
+     - 这其实就是特指关键字 nullptr。
+
+- 也就是说：**不仅** **nullptr** **可以被隐式地转换为任何类型的空指针，任何其他符合‘空指针常量’定义的表达式（也就是值为 0 的整型字面量）也拥有同样的能力。**
+
+  ```c++
+  int* p = nullptr;
+  int* p = 0;
+  int* p = NULL;
+  // 由于nullptr，0，NULL 都是空指针常量，所以这两行代码能够通过编译
+  ```
+
+| 特性           | NULL                     | nullptr                     |
+| -------------- | ------------------------ | --------------------------- |
+| **本质**       | **宏 (macro)**，通常是 0 | **关键字 (keyword)**        |
+| **类型**       | 不明确 (通常是 int)      | std::nullptr_t              |
+| **类型安全性** | **不安全**               | **类型安全**                |
+| **重载决议**   | **可能导致歧义或错误**   | **行为明确，符合预期**      |
+| **适用范围**   | C / 旧版 C++             | **现代 C++ (C++11 及之后)** |
+| **使用建议**   | **不应再使用**           | **始终使用**                |
+
+综上，对于`void func(int n);`和`void func(char* p);`这两个函数声明，如果函数调用表达式使用`func(NULL)`，则显然重载决议选择参数为int的函数，造成歧义
+
+### 快速排序
+
