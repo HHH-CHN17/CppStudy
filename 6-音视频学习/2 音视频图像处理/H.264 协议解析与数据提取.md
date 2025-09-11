@@ -708,6 +708,287 @@ H.264 标准的核心内容就是一系列的**句法表**。这些表格精确�
   - `End of Sequence (nal_unit_type = 10)`: 标记**整个视频序列的结束**。两者作用不同。
 - **冗余图像**: 一种**容错机制**，是基本图像的低质量副本，用于在数据丢失时进行恢复。
 
----
-这次的解释严格按照图示顺序，并对您提到的所有元素都进行了解析。现在我们对码流的宏观结构有了更全面和准确的理解。接下来，我们将深入到构成这一切的基础——NAL 单元的头部。
+## 4.2 NAL 层句法解析
 
+NAL (网络适配层) 的核心任务是将 VCL (视频编码层) 产生的编码数据打包成一个个独立的 NAL 单元 (NALU)，以便于在各种网络和存储环境中传输。理解 NAL 层的句法是解析任何 H.264 码流的第一步。
+
+---
+
+#### **1. NALU 基本结构**
+
+每个 NALU 由两部分组成：一个 1 字节的 **NAL 头部 (NAL Header)** 和紧随其后的 **原始字节序列载荷 (RBSP)**。
+
+`NAL Unit = 1-byte NAL Header + RBSP`
+
+*   **RBSP (Raw Byte Sequence Payload)**:
+    *   这是来自 VCL 的原始编码数据，例如一个完整的 SPS、PPS 或一个 Slice 的数据。
+    *   为了防止其内部出现与 Annex B 格式的起始码 (`0x000001`) 冲突的字节序列，RBSP 在封装进 NALU 前会经过**防竞争字节 (Emulation Prevention Bytes)** 处理。
+
+#### **2. NAL 头部**
+
+NAL 头部是每个 NALU 的第一个字节，它包含了识别该 NALU 内容和属性的所有信息。
+
+| Bit      | 7                  | 6   5       | 4   3   2   1   0 |
+| :------- | :----------------- | :---------- | :---------------- |
+| **字段** | `F`                | `nri`       | `type`            |
+| **名称** | forbidden_zero_bit | nal_ref_idc | nal_unit_type     |
+
+*   **`forbidden_zero_bit` (1 bit)**
+    *   H.264 规范规定该位必须为 `0`。如果网络传输中检测到该位为 `1`，则表明该 NALU 可能存在比特错误。
+
+*   **`nal_ref_idc` (2 bits)**
+    *   **语义**: NAL Reference IDC (指示)。表示该 NALU 的重要性，或者说它是否被用作**参考**来解码其他图像。
+    *   **取值**:
+        *   `00`: 该 NALU 不用于参考（例如 B 帧的 Slice，SEI）。在网络拥塞时，这些 NALU 可以被优先丢弃。
+        *   `01` ~ `11`: 该 NALU 包含用于参考的图像数据（例如 I 帧、P 帧的 Slice），值越大表示越重要。SPS 和 PPS 的 `nri` 也必须大于 0。
+
+*   **`nal_unit_type` (5 bits)**
+    *   **语义**: 定义了 NALU 中 RBSP 的数据类型。这是解码器进行码流解析时**首先要检查的字段**。
+    *   **核心类型值与含义**:
+
+| `nal_unit_type` |  C   | 描述                                                         |
+| :-------------: | :--: | :----------------------------------------------------------- |
+|        0        |  -   | 未定义                                                       |
+|        1        |  2   | 非 IDR 图像的编码条带 (P/B Slice)                            |
+|     2, 3, 4     |  2   | 数据分区 A, B, C (Data Partition)。一种不常用的容错技术，将片数据拆分成三个不同重要性的 NALU。 |
+|        5        |  2   | IDR 图像的编码条带 (I Slice in an IDR picture)               |
+|        6        |  3   | 补充增强信息 (SEI - Supplemental Enhancement Information)    |
+|        7        |  0   | 序列参数集 (SPS - Sequence Parameter Set)                    |
+|        8        |  1   | 图像参数集 (PPS - Picture Parameter Set)                     |
+|        9        |  4   | 访问单元分隔符 (AUD - Access Unit Delimiter)                 |
+|       10        |  5   | 序列结束符 (End of Sequence)                                 |
+|       11        |  6   | 码流结束符 (End of Stream)                                   |
+
+*   *注：C 列代表类别，用于数据分区，此处仅作了解。*
+
+【**笔记**】
+- **解析入口**: 解析 H.264 码流的第一步是找到 NALU 边界（通过起始码或长度），然后读取 NAL Header 的第 1 个字节。
+- **关键操作**: `nal_unit_type = nal_header_byte & 0x1F;`。通过这个位运算，可以立即获知当前 NALU 的类型。
+- **实践流程**:
+  1.  从码流中分离出单个 NALU 的数据（不含起始码）。
+  2.  取该数据段的第一个字节 `nal_header_byte`。
+  3.  计算 `nal_unit_type`。
+  4.  使用 `switch (nal_unit_type)` 对不同类型的 NALU（如 SPS, PPS, Slice）进行分类处理。
+
+## 4.3 关键 NALU 内容概览
+
+在通过 `nal_unit_type` 识别出 NALU 的类型后，我们需要了解其内部 RBSP 承载的核心信息。本节对 SPS、PPS 和 Slice Header 进行概览，重点关注实践中最常用到的句法元素。
+
+---
+
+#### **1. SPS 概览**
+
+`nal_unit_type = 7`
+
+SPS 提供了解码整个视频序列所需的全局参数。正确设置这些参数是编码高质量、高兼容性码流的关键。
+
+*   **核心句法元素解读**:
+    
+    *   **`profile_idc`**: **档次**，定义了码流所使用的编码工具子集。
+        *   `66` (Baseline Profile): 支持 I/P 帧，CAVLC。简单、计算复杂度低，适用于实时通信（如视频会议）。
+        *   `77` (Main Profile): 在 BP 基础上增加 B 帧、CABAC 等，压缩效率更高。适用于标清数字电视。
+        *   `100` (High Profile): 在 MP 基础上增加 8x8 变换、量化矩阵等，压缩效率最高。是高清应用（直播、蓝光）的主流选择。
+    *   **`level_idc`**: **级别**，在特定 Profile 基础上，对码率、分辨率、帧率等参数设置的一系列上限。级别越高，对解码器的性能要求越高。
+        *   例如：`level_idc = 41` (Level 4.1) 支持 1080p@30fps，而 `level_idc = 42` (Level 4.2) 支持 1080p@60fps。
+    
+*   **FFmpeg C++ API 实践**:
+    *   在 C++ 中使用 FFmpeg 的 `libx264` 编码器时，可以通过 `AVDictionary` (或 `av_opt_set`) 来设置 `profile` 和 `level`。
+
+    ```cpp
+    #include <libavcodec/avcodec.h>
+    #include <libavutil/opt.h>
+    
+    // 假设 pCodecCtx 是你的 AVCodecContext 指针
+    AVDictionary *opts = nullptr;
+    
+    // 1. 设置 Profile (档次)
+    // 可选值: "baseline", "main", "high", "high10", "high422", "high444"
+    av_dict_set(&opts, "profile", "high", 0);
+    
+    // 2. 设置 Level (级别)
+    // libx264 使用的 Level 值是 level_idc 的 10 倍。例如 Level 4.1 对应 "4.1" 或 "41"。
+    av_dict_set(&opts, "level", "4.1", 0);
+    
+    // 如果使用 av_opt_set (更现代的方式)
+    // av_opt_set(pCodecCtx->priv_data, "profile", "high", 0);
+    // av_opt_set(pCodecCtx->priv_data, "level", "4.1", 0);
+
+
+    // 在 avcodec_open2 之前将这些选项应用到编码器上下文
+    // int ret = avcodec_open2(pCodecCtx, codec, &opts);
+    // av_dict_free(&opts); // 打开后释放字典
+    ```
+
+#### **2. PPS 概览 **
+
+`nal_unit_type = 8`
+
+PPS 定义了序列中一帧或多帧图像的编码参数。
+
+*   **核心句法元素解读**:
+    *   `pic_parameter_set_id`: PPS 的 ID。
+    *   `seq_parameter_set_id`: 此 PPS 所引用的 SPS 的 ID。
+    *   `entropy_coding_mode_flag`: 熵编码模式选择 (`0`: CAVLC, `1`: CABAC)。
+    *   `pic_init_qp_minus26`: 初始量化参数 QP 的偏移量。
+
+#### **3. Slice Header 概览 **
+
+`nal_unit_type = 1, 5`
+
+片头 (Slice Header) 包含了正确解码一个片所需的所有信息。
+
+*   **核心句法元素解读**:
+    *   `slice_type`: **片的类型**，这是最重要的字段之一，决定了片内宏块的预测方式。
+    *   `frame_num`: 图像的解码顺序号，用于参考帧管理。
+    *   `pic_parameter_set_id`: 该片所引用的 PPS 的 ID。
+
+【**笔记**】
+- **Profile & Level**:
+    - **Profile**: 决定了**能用哪些编码工具** (决定了兼容性和压缩效率)。
+    - **Level**: 决定了**编码参数的上限** (决定了解码器的性能要求)。
+- **FFmpeg C++ API**: 使用 `av_dict_set` 或 `av_opt_set` 设置 `profile` 和 `level` 选项。
+- **关键链接**: 解码器通过 `Slice Header` 中的 `pic_parameter_set_id` 找到 PPS，再通过 PPS 中的 `seq_parameter_set_id` 找到 SPS，从而获取解码所需的所有参数。
+
+# 第五章：实践：NALU 提取与解析
+
+本章的目标是将理论知识转化为代码实现。我们将分别针对 **Annex B** 和 **AVCC** 两种码流格式，实现 NALU 的提取，并重点解析 SPS 和 PPS，以获取视频的基本信息。
+
+## 5.1 Annex B 格式码流解析
+
+Annex B 格式通过起始码来分隔 NALU，常见于实时流媒体传输。您的 C++ 代码示例 `find_h264_start_code` 正是用于处理这种格式。
+
+【**笔记：Annex B 格式 NALU 提取与解析流程**】
+
+```cpp
+/*
+ * 核心思路：通过搜索起始码来定位并分离每个 NALU。
+ * 
+ * 关键实现步骤：
+ */
+
+// 1. 定义起始码常量
+const uint8_t start_code_3[] = {0x00, 0x00, 0x01};
+const uint8_t start_code_4[] = {0x00, 0x00, 0x00, 0x01};
+
+// 2. 实现一个函数来查找起始码
+//    该函数从给定位置开始，在数据流中搜索 3字节或4字节的起始码。
+//    返回起始码的起始位置迭代器。
+std::vector<uint8_t>::const_iterator find_start_code(
+    std::vector<uint8_t>::const_iterator begin,
+    std::vector<uint8_t>::const_iterator end) 
+{
+    const uint8_t startCode3[] = { 0x00, 0x00, 0x01 };
+    const uint8_t startCode4[] = { 0x00, 0x00, 0x00, 0x01 };
+
+    auto it = std::search(begin, end, std::begin(startCode4), std::end(startCode4));
+    if (it != end) {
+        return it; // 返回起始码的开始位置
+    }
+
+    it = std::search(begin, end, std::begin(startCode3), std::end(startCode3));
+    if (it != end) {
+        return it; // 返回起始码的开始位置
+    }
+
+    return end;
+}
+
+// 3. 主解析循环
+void parse_annexb_stream(const std::vector<uint8_t>& stream_data) {
+    auto it_curr = stream_data.cbegin();
+    auto it_end = stream_data.cend();
+
+    while (it_curr < it_end) {
+        // a. 查找当前 NALU 的起始位置
+        auto it_nal_begin = find_start_code(it_curr, it_end);
+        if (it_nal_begin == it_end) {
+            break; // 未找到更多起始码，解析结束
+        }
+
+        // b. 确定起始码长度 (3或4字节)
+        size_t start_code_len = (it_nal_begin + 3 < it_end && *(it_nal_begin + 3) == 0x01) ? 4 : 3;
+        auto it_data_begin = it_nal_begin + start_code_len;
+
+        // c. 查找下一个 NALU 的起始位置，即当前 NALU 的结束位置
+        auto it_nal_end = find_start_code(it_data_begin, it_end);
+
+        // d. 提取 NALU 数据 (不含起始码)
+        std::vector<uint8_t> nal_unit_data(it_data_begin, it_nal_end);
+
+        // e. 解析 NALU Header
+        if (!nal_unit_data.empty()) {
+            uint8_t nal_unit_type = nal_unit_data & 0x1F;
+            
+            switch (nal_unit_type) {
+                case 7: // SPS
+                    // parse_sps(nal_unit_data);
+                    break;
+                case 8: // PPS
+                    // parse_pps(nal_unit_data);
+                    break;
+                // ... 其他类型处理
+            }
+        }
+        
+        // f. 更新当前位置，准备下一次搜索
+        it_curr = it_nal_end;
+    }
+}
+```
+
+*   **注意**: 在解析 SPS 和 PPS 的 RBSP 之前，需要先处理**防竞争字节**。即遍历 `nal_unit_data`，当遇到 `0x00 0x00 0x03` 序列时，将 `0x03` 移除。
+
+## 5.2 AVCC 格式码流解析
+
+AVCC 格式使用长度前缀来分隔 NALU，常见于 MP4 等文件容器。
+
+【**笔记：AVCC 格式 NALU 提取与解析流程**】
+
+```cpp
+/*
+ * 核心思路：循环读取“长度”和“数据”对。
+ * 
+ * 关键实现步骤 (假设长度字段为 4 字节):
+ */
+void parse_avcc_stream(const std::vector<uint8_t>& stream_data) {
+    auto it_curr = stream_data.cbegin();
+    auto it_end = stream_data.cend();
+    const size_t NALU_LENGTH_FIELD_SIZE = 4; // 长度字段大小，可能为1, 2或4
+
+    while (it_curr + NALU_LENGTH_FIELD_SIZE <= it_end) {
+        // a. 读取 NALU 长度 (注意网络字节序转换)
+        uint32_t nalu_length = 0;
+        for (size_t i = 0; i < NALU_LENGTH_FIELD_SIZE; ++i) {
+            nalu_length = (nalu_length << 8) | *(it_curr + i);
+        }
+        it_curr += NALU_LENGTH_FIELD_SIZE;
+        
+        if (it_curr + nalu_length > it_end) {
+            // 数据不完整，解析错误
+            break; 
+        }
+
+        // b. 提取 NALU 数据
+        std::vector<uint8_t> nal_unit_data(it_curr, it_curr + nalu_length);
+        
+        // c. 解析 NALU Header (与 Annex B 格式相同)
+        if (!nal_unit_data.empty()) {
+            uint8_t nal_unit_type = nal_unit_data & 0x1F;
+            
+            switch (nal_unit_type) {
+                case 7: // SPS
+                    // parse_sps(nal_unit_data);
+                    break;
+                case 8: // PPS
+                    // parse_pps(nal_unit_data);
+                    break;
+                // ... 其他类型处理
+            }
+        }
+        
+        // d. 更新当前位置
+        it_curr += nalu_length;
+    }
+}
+```
+*   **注意**: AVCC 格式中的 NALU 数据**不包含起始码**，也**没有防竞争字节**。其 RBSP 就是纯净的编码数据，可以直接进行句法解析。
