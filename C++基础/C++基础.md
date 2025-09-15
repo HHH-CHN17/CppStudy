@@ -296,6 +296,14 @@ int main() {
 
 综上，有符号数char为正数时，正常计算，为负数时，结果 = -(2^7 - 后七位数的正数值)，其他有符号整数同理
 
+无符号数相减
+
+注意无符号数的减法：a - b = (a + b的补数) % 2^n^，其中b的补数=2^n - b
+
+无符号整数减法通过其固有的回绕特性，可以准确地计算出了两者之间的逻辑距离
+
+不过前提是缓冲区的容量 capacity_ 必须小于或等于无符号索引类型最大值的一半。原因见：【无锁数据结构：C++实战】
+
 ### 存储类别，存储期，存储区？？？
 
 [C++变量的存储类别（动态存储、静态存储、自动变量、寄存器变量、外部变量） - DoLittleDo - 博客园](https://www.cnblogs.com/DoLittleDo/p/5805742.html)
@@ -771,7 +779,7 @@ deﬁne是在编译的**预处理阶段**起作用；而const是在**编译、�
   [C++ const？？？](https://www.runoob.com/w3cnote/cpp-const-keyword.html)
 
   - 不考虑类的情况
-    const常量在定义时必须初始化，之后无法更改，成为以一个**编译期常量**；const形参可以接收const和非const类型的实参
+    const常量在定义时必须初始化，之后无法更改，成为以一个**运行期常量**；const形参可以接收const和非const类型的实参
 
   - 考虑类的情况
     const成员变量：只能通过构造函数初始化列表进行初始化，并且必须有构造函数；
@@ -946,10 +954,9 @@ int main() {
   Base* arr = new derive[10];
   // 未定义行为，
   // 在msvc的derive类布局中，会先给Base做内存对齐，再给derive做内存对齐，所以sizeof(Base)==16，sizeof(derive)==24
-  //		sizeof(Base)*3 == sizeof(derive)*2。arr[6].print()能正常输出
+  //		sizeof(Base)*3 == sizeof(derive)*2。arr[6].print()和arr[3].print()能正常输出
   // 但是在gcc中，sizeof(Base)==sizeof(derive)==16。arr[7].print();	正常输出
   // 所以在derive的内存空间里加上sizeof(Base)，本身就是未定义行为，
-  // 需要学完内存序之后再来看
   arr[7].print();		// #1
   
   Base* ptr = new derive{};
@@ -1439,7 +1446,7 @@ int main() {
 
 [#总结](#继承构造函数)
 
-### 委派构造函数
+### 。。。委派构造函数
 
 [C++11之委派构造函数](https://blog.csdn.net/qq_45254369/article/details/126771257)
 
@@ -3964,7 +3971,7 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
 >   int a = 1;
 >   int* p = &a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为sizeof(int)==4
->   
+>     
 >   int a[5];
 >   int* p = a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为a表示的是数组首个元素的地址，所以p指向的地址中存储的是int，然后sizeof(int)==4
