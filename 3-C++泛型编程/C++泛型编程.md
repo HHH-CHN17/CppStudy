@@ -361,29 +361,26 @@ int main() {
      ```c++
      // 空参数版本，终结模板递归
      template<typename T>
-     T m_sum(T num)
-     {
+     T m_sum(T num){
      	return num;
      }
      // 参数递归，common_type_t<Args...>表示求形参包中的公共类型，和之前的decltype差不多功能，但更正规。
      template<typename T, typename... Args, typename RT = common_type_t<T,Args...>>
-     RT sum(T num, Args... args)
-     {
-     	RT res = 0;
-     	res = num + m_sum(args...);
+     RT sum(T num, Args... args){
+     	RT res = num + m_sum(args...);
      	return res;
      }
      int main() {
      	cout << sum(1, 2, 3, 4) << endl;
      }
      ```
-
+     
      注意：
-
+     
      - 空参数版本的模板是必不可少的，原因如下：
-
+     
        如果写成普通递归的形式：
-   
+     
        ```c++
        template<typename T, typename... Args, typename RT = common_type_t<Args...>>
        RT sum(T num, Args... args)
@@ -397,9 +394,9 @@ int main() {
        	return res;
        }
        ```
-   
+     
        当递归进行到`args...`只剩最后一个的时候，实例化模板结果如下：
-   
+     
        ```c++
        int sum(int num)
        {
@@ -413,9 +410,9 @@ int main() {
        	return res;
        }
        ```
-   
+     
        也就是说，实例化时不会因为提前return而忽略7-10行的实例化，**实例化过程可以理解成将 推导结果/显式申明 替换掉模板中的模板参数的过程**
-   
+     
    - 方法二：（数组）
    
      > 形参包展开，正好可以用来初始化数组
@@ -749,7 +746,7 @@ int main() {
 
   | 声明有 constexpr 的函数是隐式的内联函数。弃置的函数是隐式的内联函数：其（弃置）定义可出现在多于一个翻译单元中。 | (C++11 起) |
   | ------------------------------------------------------------ | ---------- |
-  | inline 说明符，在用于具有静态存储期的变量（静态类成员或命名空间作用域变量）的 [声明说明符序列](https://www.apiref.com/cpp-zh/cpp/language/declarations.html#.E8.AF.B4.E6.98.8E.E7.AC.A6) 时，将变量声明为*内联变量*。声明为 constexpr 的静态成员变量（但不是命名空间作用域变量）是隐式的内联变量。 | (C++17 起) |
+  | inline 说明符，在用于具有**静态存储期的变量**（静态类成员或命名空间作用域变量）的 [声明说明符序列](https://www.apiref.com/cpp-zh/cpp/language/declarations.html#.E8.AF.B4.E6.98.8E.E7.AC.A6) 时，将变量声明为*内联变量*。声明为 constexpr 的静态成员变量（但不是命名空间作用域变量）是隐式的内联变量。 | (C++17 起) |
 
 - 解释：
 
@@ -1872,7 +1869,9 @@ int main() {
   }
   ```
 
-## 模板编译的过程
+[#总结](#折叠表达式（C++17新特性）)
+
+## **模板编译的过程**
 
 作者：匿名用户
 链接：https://www.zhihu.com/question/31845821/answer/575319562
@@ -1939,7 +1938,7 @@ f(p);
 
 [2].在**函数/类模板的定义**中，对于定义中的依赖于模板参数的名字进行名字查找（和一开始的那个名字查找不是一个意思，开头的那个查找指的是**查找声明**，这里的查找指的是**定义中对名字的查找**）。实际上，模板有[二段名称查找规则](https://zhuanlan.zhihu.com/p/599328180)。第一遍（检查模板定义时）查找函数体里不依赖于模板参数的名字以及进行必要的语法分析。第二遍（模板实例化时）查找函数体里依赖于模板参数的名字以及生成实例。就是因为有二段名称查找，所以我们在模板语境下才需要写`template`和`typename`让编译器在函数模板的第一遍名字查找的时候，对语法有一个正确的分析。考虑`T::foo<5>(4);`。在正确的二段名称查找的规则下，这个语句应该被理解为`T::foo < 5`的结果和`(4)`比大小。
 
-## 待决名
+## 。。。待决名
 
 [详情看这里：待决名 | 现代 C++ 模板教程](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/09待决名#待决名)
 
