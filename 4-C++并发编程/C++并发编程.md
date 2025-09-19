@@ -67,7 +67,7 @@ emplace_back是一个函数模板，参数是形参包，将参数全部完美�
 
 在 C++ 标准库中，没有直接管理线程的机制，只能通过对象关联线程后，**通过该对象来管理线程**。类 `std::thread` 的对象就是指代线程的对象，而我们本节说的“线程管理”，其实也就是指管理 `std::thread` 对象。（这句话很关键，好好理解）
 
-### 启动新线程
+### 。。。启动新线程
 
 [具体细节看这里](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/02使用线程.html#启动新线程)
 
