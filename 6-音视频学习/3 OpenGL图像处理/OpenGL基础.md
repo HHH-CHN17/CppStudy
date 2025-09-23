@@ -1110,6 +1110,8 @@ FragColor = vec4(result, 1.0);
 
 ##### TBN矩阵推导
 
+[todo (68 封私信 / 83 条消息) 切线空间与TBN矩阵推导 - 知乎](https://zhuanlan.zhihu.com/p/1934601901397245987)
+
 **目标**：
 
 在CPU端，为模型的每一个三角形（图元），计算出其**切线空间 (Tangent Space)** 的三个基向量：**T (Tangent)**, **B (Bitangent)**, 和 **N (Normal)**。
