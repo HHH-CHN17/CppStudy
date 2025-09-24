@@ -193,7 +193,6 @@ FFmpeg倾向于使用数据结构来承载配置信息，而不是通过大量�
 
 *   **`AVStream` vs `AVCodecContext`：蓝图与车间**
     `AVStream` (通过其成员 `codecpar`) 提供了创建和配置 `AVCodecContext` 所需的全部**静态参数**，它是一份“蓝图”。而 `AVCodecContext` 是根据这份蓝图构建出来的、一个**动态的、可执行解码/编码操作的实例**（“车间”）。`avcodec_parameters_to_context()` 函数是连接二者的桥梁。
-
 *   **`AVStream` vs `AVPacket`：轨道与列车**
     `AVStream` 定义了一条数据流的“轨道”属性，特别是它的时间坐标系 (`time_base`)。`AVPacket` 则是承载着压缩数据的“列车”，行驶在这条轨道上。`AVPacket` 中的 `stream_index` 成员指明了它属于哪条 `AVStream` “轨道”，其 `pts` 和 `dts` 必须由该 `AVStream` 的 `time_base` 来解释才有意义。
 

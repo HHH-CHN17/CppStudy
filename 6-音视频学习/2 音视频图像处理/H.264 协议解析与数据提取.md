@@ -51,9 +51,6 @@ graph TD;
     RawVideo[视频源] --> A;
     A -- "产出: Slice 数据 (RBSP)" --> B;
     B -- "封装成: NAL 单元 (NALU)" --> Network[网络/存储介质];
-
-    style A fill:#f9f,stroke:#333,stroke-width:2px;
-    style B fill:#ccf,stroke:#333,stroke-width:2px;
 ```
 *图示：VCL 与 NAL 的分层关系概念图，此概念源自《新一代视频压缩编码标准》图 8.2。*
 
