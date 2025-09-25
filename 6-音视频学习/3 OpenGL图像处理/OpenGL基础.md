@@ -778,12 +778,14 @@ PboPackFromFBO和PboPack一样，不过我们需要读取FBO中的像素数据�
    - **模拟现象**: 模拟场景中那些**间接**被照亮的光。在现实世界中，光线会在物体之间进行无数次反弹，使得即使是背光的物体也不会是纯黑的。环境光照就是对这种复杂现象的**粗略近似**。
 
    - **计算方法**: 非常简单，它不考虑光源的位置、方向，也不考虑物体的表面朝向。
+     
+     `环境光颜色 = 全局环境光强度 × 物体材质颜色`
      $$
      \text{Ambient} = \text{light\_color} \cdot \text{ambient\_strength} \cdot \text{object\_color}
      $$
 
      - `ambient_strength`: 一个很小的常数因子（如0.1），用来减弱环境光，使其看起来像是基础色。
-
+     
    - **效果**: 为整个场景提供一个基础的亮度，确保没有任何物体是纯黑的，增加了场景的整体感。
 
    ---
@@ -806,6 +808,8 @@ PboPackFromFBO和PboPack一样，不过我们需要读取FBO中的像素数据�
      3. **计算夹角余弦**：利用**点乘**计算 $\mathbf{n}$ 和 $\mathbf{l}$ 的夹角余弦值。$\cos(\theta) = \max(0.0, \mathbf{n} \cdot \mathbf{l})$。使用`max(0.0, ...)`是为了确保当光从物体背面照射时（点积为负），光照强度不会是负数。
 
      4. **最终颜色**:
+
+        `漫反射颜色 = 光源颜色 × 物体材质颜色 × max(0, dot(法线, 光线方向))`
         $$
         \text{Diffuse} = \text{light\_color} \cdot (\mathbf{n} \cdot \mathbf{light}) \cdot \text{object\_color}
         $$
@@ -837,6 +841,8 @@ PboPackFromFBO和PboPack一样，不过我们需要读取FBO中的像素数据�
      4. **反光度 (Shininess)**: 引入一个**反光度**指数 $p$ (例如32, 64, 128)。将点积结果进行 $p$ 次幂运算，$(\mathbf{v} \cdot \mathbf{r})^p$。这个操作会使高光的光斑变得更小、更集中，模拟不同材质的光滑程度。$p$值越大，材质越光滑，高光点越锐利。
 
      5. **最终颜色**:
+   
+        `镜面光颜色 = 光源颜色 × 高光颜色 × pow(max(0, dot(视线方向, 反射方向)), 光泽度)`
         $$
         \text{Specular} = \text{light\_color} \cdot \text{specular\_strength} \cdot (\mathbf{v} \cdot \mathbf{r})^p
         $$
@@ -847,7 +853,7 @@ PboPackFromFBO和PboPack一样，不过我们需要读取FBO中的像素数据�
         ![basic_lighting_specular_theory](./assets/basic_lighting_specular_theory.png)
 
    - **效果**: 在物体表面上增加亮斑，极大地提升了材质的质感和真实感。
-
+   
    ---
 
 **最终组合**:
