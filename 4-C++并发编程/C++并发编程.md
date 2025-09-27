@@ -67,7 +67,7 @@ emplace_back是一个函数模板，参数是形参包，将参数全部完美�
 
 在 C++ 标准库中，没有直接管理线程的机制，只能通过对象关联线程后，**通过该对象来管理线程**。类 `std::thread` 的对象就是指代线程的对象，而我们本节说的“线程管理”，其实也就是指管理 `std::thread` 对象。（这句话很关键，好好理解）
 
-### 。。。启动新线程
+### 启动新线程
 
 [具体细节看这里](https://mq-b.github.io/ModernCpp-ConcurrentProgramming-Tutorial/md/02使用线程.html#启动新线程)
 
@@ -92,7 +92,7 @@ public:
 };
 
 int main() {
-	thread t(Task());	// 语义分析中，该语句被认为是函数申明
+	thread t(Task());	// 语义分析中，该语句被认为是函数声明
 	t.join();
 }
 ```
@@ -274,7 +274,6 @@ int main() {
   		t.join();    // 2
   	}
   }
-  
   ```
 
 ### RAII
@@ -288,8 +287,8 @@ class thread_guard{
 private:
 	std::thread m_Thr;
 public:
-	template<typename Callable_Ty, typename... Args>
-	explicit thread_guard(Callable_Ty&& obj, Args&&... args)
+	template<typename Callable_Ty, typename ...Args>
+	explicit thread_guard(Callable_Ty&& obj, Args&& ...args)
 			: m_Thr(std::forward<Callable_Ty>(obj), std::forward<Args>(args)...)
 	{}
 
@@ -372,17 +371,17 @@ int main() {
   struct decay
   {
   private:
-      typedef typename std::remove_reference<T>::type U;
+      typedef std::remove_reference_t<T> U;
   public:
-      typedef typename std::conditional< 
-          std::is_array<U>::value,
-          typename std::add_pointer<typename std::remove_extent<U>::type>::type,
-          typename std::conditional< 
-              std::is_function<U>::value,
-              typename std::add_pointer<U>::type,
-              typename std::remove_cv<U>::type
-          >::type
-      >::type type;
+      using type = std::conditional_t<
+          std::is_array_v<U>,
+          std::add_pointer_t<std::remove_extent_t<U>>,
+          std::conditional_t<
+              std::is_function_v<U>,
+              std::add_pointer_t<U>,
+              std::remove_cv_t<U>
+          >
+      >;
   };
   // MSVC
   template <class _Ty>
@@ -713,7 +712,7 @@ int main(){
   
     从接口的角度来说，如果一个类（或者程序）提供的接口，对于（调用该接口的）线程来说是**原子的**，或者多个线程之间的切换不会导致该接口的执行结果存在二义性，这样在调用该接口时就无需额外考虑线程同步问题，那么该接口就是线程安全的。
   
-    线程安全问题都是由**全局变量**或**静态变量**引起的。如果每个线程中对全局变量或静态变量只有读操作，而无写操作，那么这个全局变量或静态变量是线程安全的；如果有多个线程同时对全局变量或静态变量执行写操作，则一般都需要考虑**线程同步**，否则就可能影响线程安全。
+    线程安全问题都是由**静态存储期变量**或**动态存储期变量**引起的。如果每个线程中对全局变量或堆变量只有读操作，而无写操作，那么这个全局变量或静态变量是线程安全的；如果有多个线程同时对全局变量或静态变量执行写操作，则一般都需要考虑**线程同步**，否则就可能影响线程安全。
   
   - 类的线程安全
   
@@ -1277,7 +1276,7 @@ void foo(){
 
     解释：
 
-    - `_Owns`：表示成员`_Pmtx`是否已经被**当前线程**拥有（`_Owns`为`true`时，表示`_Pmtx`已经被上锁了，也可以理解成当前块（在本节里，我们也可以把块看成一个线程）已经拥有了`_Pmtx`的上锁状态；`_Owns`为`false`时，表示`_Pmtx`的上锁状态还没有被当前块所拥有）。
+    - `_Owns`：表示成员`_Pmtx`是否已经被**当前块**拥有（`_Owns`为`true`时，表示`_Pmtx`已经被上锁了，也可以理解成当前块（在本节里，我们也可以把块看成一个线程）已经拥有了`_Pmtx`的上锁状态；`_Owns`为`false`时，表示`_Pmtx`的上锁状态还没有被当前块所拥有）。
 
   - 构造函数：
 
@@ -1720,7 +1719,7 @@ mutex Singleton::m_mtx;
 
   - once_flag可以是类的静态/普通成员，也可以是全局变量，或者是静态局部变量，用于搭配call_once使用
 
-  - call_once在第一次调用完后，便会给oneflg上标记，保证**只进行一次线程安全的初始化**。
+  - call_once在第一次调用完后，便会给onceflg上标记，保证**只进行一次线程安全的初始化**。
 
 - 注意事项：
 
@@ -1763,8 +1762,8 @@ mutex Singleton::m_mtx;
 [单例--Meyers' Singleton-CSDN博客](https://blog.csdn.net/weixin_44048823/article/details/104080864)
 
 > - 静态局部变量初始化在 C++11 是线程安全
-> - 静态局部变量存放在内存的**全局数据区**。
-> - 静态局部变量在**编译期**赋初值，且**只赋值一次**。如果变量在初始化时，并发线程同时进入到static声明语句，并发线程会阻塞等待初始化结束，所以**静态局部变量具有线程安全性**。(参考：[#static关键字](../3-C++泛型编程/C++泛型编程.md/#static关键字))
+> - 静态局部变量具有静态存储期。
+> - 静态局部变量视情况进行零/常量/动态初始化，且**只赋值一次**。如果变量在初始化时，并发线程同时进入到static声明语句，并发线程会阻塞等待初始化结束，所以**静态局部变量具有线程安全性**。(参考：[#static关键字](../3-C++泛型编程/C++泛型编程.md#static关键字))
 > - 函数结束时，静态局部变量不会消失，每次该函数调用时，也不会为其重新分配空间。它始终驻留在全局数据区，直到程序运行结束。静态局部变量的初始化与全局变量类似．
 
 - 静态局部变量示例：
@@ -1786,7 +1785,7 @@ mutex Singleton::m_mtx;
       A::instance(++i);
       A::instance(i++);
       A::instance(i);
-      cout <<  A::instance(i).c << endl;
+      cout << A::instance(i).c << endl;
   }
   ```
 
@@ -1881,7 +1880,7 @@ mutex Singleton::m_mtx;
   解释：
   
   - 注意看15行的注释
-  - 关于inline的用法，见：[#inline说明符](../3-C++泛型编程/C++泛型编程.md/#inline说明符)
+  - 关于inline的用法，见：[#inline说明符](../3-C++泛型编程/C++泛型编程.md#inline说明符)
   
   ```c++
   // 复杂版本，建议放到IDE中看
@@ -1889,47 +1888,35 @@ mutex Singleton::m_mtx;
   // 懒汉式单例的基类
   template<typename T>    //T 是子类
   class Singleton_Lazy_Base {
-      using Singleton_type = unique_ptr<T, void(*)(T*)>;
-      friend Singleton_type;
-      
   private:
-      // 初始化函数也要写成static！！！
-      template<typename ...Args>
-      static void init(Args&&... args) {
-          up.reset(new T(forward<Args>(args)...));
-      }
-      
+  	using Singleton_type = unique_ptr<T, void(*)(T*)>;
       static void Destory(T* p_sgl) {
           delete p_sgl;
       }
   
-      inline static unique_ptr<T, void(*)(T*)> up{nullptr, &Singleton_Lazy_Base<T>::Destory};
-      inline static once_flag of{};
+      inline static std::unique_ptr<T, void(*)(T*)> up{ nullptr, Singleton_Lazy_Base<T>::Destory };
+      inline static std::once_flag of{};
   
   public:
+  
       template<typename ...Args>
       static Singleton_type& GetInstance(Args&&... args) {
-          // lambda无法使用万能引用（C++20前），故此处使用模板函数完成完美转发
-          call_once(of, Singleton_Lazy_Base<T>::init<Args...>, forward<Args>(args)...);
+          // &args...表示按引用捕获参数包
+          std::call_once(of, [&args...]() {
+              up.reset(new T(std::forward<Args>(args)...));
+              }
+          );
           return up;
       }
   
-      static Singleton_type& GetInstance() {
-          call_once(of, []() {
-              up.reset(new T);
-          });
-          return up;
-      }
-  
-  	Singleton_Lazy_Base(const Singleton_Lazy_Base&) = delete;
-  	Singleton_Lazy_Base(Singleton_Lazy_Base&&) = delete;
-  	Singleton_Lazy_Base& operator=(const Singleton_Lazy_Base&) = delete;
+      Singleton_Lazy_Base(const Singleton_Lazy_Base&) = delete;
+      Singleton_Lazy_Base(Singleton_Lazy_Base&&) = delete;
+      Singleton_Lazy_Base& operator=(const Singleton_Lazy_Base&) = delete;
   
   protected:
-       Singleton_Lazy_Base() = default;
-      ~Singleton_Lazy_Base(){ cout << "~Singleton_Lazy_Base" << endl; }
+      Singleton_Lazy_Base() = default;
+      ~Singleton_Lazy_Base() { std::cout << "~Singleton" << std::endl; }
   };
-  
   
   // 具体的子类，一定要注意在CRTP中，不同子类继承的父类是不同的父类，所以static变量也是互不相通的，不同子类之间不会因为这些变量造成死锁
   class Single_CRTP : public Singleton_Lazy_Base<Single_CRTP>
@@ -2981,7 +2968,7 @@ public:
     std::cout << fut.get() << '\n'; // 不阻塞，此处获取返回值
     ```
 
-    ？？？问题：把`future.get()`放在`task(10, 2)`前面为什么不会像async那样执行呢，`future.get()`只会等待对应函数执行吗？
+    如果把`future.get()`放在`task(10, 2)`前面，则会一直阻塞。因为代码会一直等待后续调用`task(10, 2);`或其他类似函数完成任务之后才会返回
 
   - 异步调用`packaged_task`类的函数对象
 
