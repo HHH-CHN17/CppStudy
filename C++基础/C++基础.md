@@ -2687,7 +2687,7 @@ int main()
   }
   ```
 
-### 。。。切除问题
+### 切除问题
 
 ![image-20240902220753395](./assets/image-20240902220753395.png)
 
@@ -3939,11 +3939,11 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
   cout << *(*(pp + 1) + 4) << endl;	// 50
     二维指针             一维指针               数据
   +----------+        +----------+        +----------+
-  |    pp    |------->|    &a1   |------->|    1     |
+  |    pp    |------->|    a1    |------->|    1     |
   +----------+        +----------+        +----------+
-                      |    &a2   |        |    2     |
+                      |    a2    |        |    2     |
                       +----------+        +----------+
-                      |    &a3   |        |    3     |
+                      |    a3    |        |    3     |
                       +----------+        +----------+
                            ...                ...
   ```
@@ -3974,7 +3974,7 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
 >   int a = 1;
 >   int* p = &a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为sizeof(int)==4
->                 
+>                   
 >   int a[5];
 >   int* p = a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为a表示的是数组首个元素的地址，所以p指向的地址中存储的是int，然后sizeof(int)==4
@@ -4478,7 +4478,8 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
           class A : public enable_shared_from_this<A>{
           public:
               void test() {
-                  const shared_ptr<A>& this_a = shared_from_this();	// #3	获取已构造指针（应该先获取weak_ptr）
+                  const shared_ptr<A>& this_a = shared_from_this();	// #3	获取已构造指针（读操作线程安全）
+                  // todo: 互斥锁保证线程安全
                   cout << "this: " << this_a.get() << endl;
                   cout << this_a->a << endl;
               }
@@ -4498,9 +4499,9 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
               t.join();
           }
           ```
-  
+          
           解释：
-  
+          
           1. `enable_shared_from_this`使用的前提是已经有一份A的`shared_ptr`
           2. 值传递构造`shared_ptr`的副本
           3. `test()`函数中通过`shared_from_this()`获取对应智能指针
@@ -5215,6 +5216,18 @@ void dispatchMessage(int msgid) {
    ```
 
    使用了一个比较/交换操作，类似于`compare_exchange_weak()`，保证`_Uses`安全增加
+
+   使用原子变量实现：
+
+   ```c++
+   bool _Incref_nz() noexcept {
+       int old_val = use_;
+       int new_val = ++old_val;
+       while (!use_.compare_exchange_weak(old_val, new_val)) {
+           new_val = ++old_val;
+       }
+   }
+   ```
 
 3. `_Destory()`，`_Delete_this()`（纯虚函数，由子类自己实现）
 

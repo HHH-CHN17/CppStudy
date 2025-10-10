@@ -1279,8 +1279,10 @@ FragColor = vec4(result, 1.0);
 
 ### OpenGL优化
 
-1. 提前深度测试，由近到远画，减少绘制的片段
-2. 对于重复的物体，不用重复传顶点数据，直接改变它原有的mvp矩阵进行移动即可
-3. 对于看不到的物体，可以进行剔除
-4. 天空盒学习
-5. obj文件中的数据很多怎么办
+1. 天空盒实现 https://learnopengl-cn.github.io/04%20Advanced%20OpenGL/06%20Cubemaps/
+2. obj文件加载优化 https://learnopengl-cn.github.io/03%20Model%20Loading/01%20Assimp/
+3. 人脸模型的旋转
+4. 大眼瘦脸效果 https://zhuanlan.zhihu.com/p/113680399
+5. 三角条带绘制 https://www.cnblogs.com/mjk961/p/9547205.html
+6. 模板测试，透视与混合 https://learnopengl-cn.github.io/04%20Advanced%20OpenGL/02%20Stencil%20testing/
+7. OpenGL优化：面剔除；提前深度测试；不在摄像机范围内的片段不进行绘制；重复的物体，直接改变它原有的mvp矩阵
