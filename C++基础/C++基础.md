@@ -3974,7 +3974,7 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
 >   int a = 1;
 >   int* p = &a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为sizeof(int)==4
->                   
+>                     
 >   int a[5];
 >   int* p = a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为a表示的是数组首个元素的地址，所以p指向的地址中存储的是int，然后sizeof(int)==4
@@ -4088,9 +4088,9 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
 >
 > - 对于函数`void func();`而言，func和&func都表示函数地址，两者值相同（数组中两者意思不同）
 >
-> - `typedef int (*FUNC)(int, int);`表示申明了一个函数指针类型
+> - `typedef int (*FUNC)(int, int);`表示声明了一个函数指针类型
 >
->   `typedef int (FUNC)(int, int);`表示申明了一个函数类型，使用该类型创建的变量只准定义，不准赋值
+>   `typedef int (FUNC)(int, int);`表示声明了一个函数类型，使用该类型创建的变量只准定义，不准赋值
 >
 >   `int (FUNC)(int, int);`表示一个函数声明，只能定义，不能创建变量。
 
