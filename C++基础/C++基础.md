@@ -2320,7 +2320,7 @@ int main() {
 
   - **注意，只有当发生自动类型推断时（如函数模板的类型自动推导，或`auto`关键字），`&&`才是一个`Universal References`。**
 
-#### 完美转发
+#### 。。完美转发
 
 [转发引用 - cppreference.com](https://zh.cppreference.com/w/cpp/language/reference#.E8.BD.AC.E5.8F.91.E5.BC.95.E7.94.A8)
 
@@ -3974,7 +3974,7 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
 >   int a = 1;
 >   int* p = &a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为sizeof(int)==4
->                     
+>                       
 >   int a[5];
 >   int* p = a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为a表示的是数组首个元素的地址，所以p指向的地址中存储的是int，然后sizeof(int)==4
