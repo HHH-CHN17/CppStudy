@@ -2320,7 +2320,7 @@ int main() {
 
   - **注意，只有当发生自动类型推断时（如函数模板的类型自动推导，或`auto`关键字），`&&`才是一个`Universal References`。**
 
-#### 。。完美转发
+#### 完美转发
 
 [转发引用 - cppreference.com](https://zh.cppreference.com/w/cpp/language/reference#.E8.BD.AC.E5.8F.91.E5.BC.95.E7.94.A8)
 
@@ -2360,7 +2360,7 @@ int main() {
 3. 由于`_Args`也可以为泛左值或是右值，所以：
    - `forward<_Ty>(_Arg)`可以将泛左值转发为左值（✔）
    - `forward<_Ty>(_Arg)`可以将泛左值转发为右值（✔）
-   - `forward<_Ty>(_Arg)`可以将右值转发为右值（✔）（一般来说，在转发函数里用不到）
+   - `forward<_Ty>(_Arg)`可以将右值转发为右值（❌）（看似可以，但其实不行，因为临时对象的生命周期只能延长到forward函数结束）
    - `forward<_Ty>(_Arg)`可以将右值转发为泛左值（❌）`static_assert()`禁止该转换
 4. 注意，当`_Args`为泛左值时，优先匹配左值引用的版本；当`_Args`为右值时，优先匹配右值引用的版本
   5. 由上，如果直接使用`forward<>()`，那么该模板和`move()`不仅没啥区别，还需要额外指明推导类型，正确用法如下点所示
@@ -3974,7 +3974,7 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
 >   int a = 1;
 >   int* p = &a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为sizeof(int)==4
->                       
+>                         
 >   int a[5];
 >   int* p = a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为a表示的是数组首个元素的地址，所以p指向的地址中存储的是int，然后sizeof(int)==4
@@ -4472,16 +4472,15 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
 
        1. **线程安全**问题：使用互斥锁解决
   
-       2. **内存安全**问题：使用`enable_shared_from_this`解决，示例：
+       2. **内存安全**问题：使用`shared_ptr`解决，示例：
   
           ```c++
-          class A : public enable_shared_from_this<A>{
+          class A{
           public:
               void test() {
-                  const shared_ptr<A>& this_a = shared_from_this();	// #3	获取已构造指针（读操作线程安全）
                   // todo: 互斥锁保证线程安全
-                  cout << "this: " << this_a.get() << endl;
-                  cout << this_a->a << endl;
+                  cout << "this: " << this << endl;
+                  cout << a << endl;
               }
               int a = 2;
           };
@@ -4502,9 +4501,53 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
           
           解释：
           
-          1. `enable_shared_from_this`使用的前提是已经有一份A的`shared_ptr`
+          1. `enable_shared_from_this`使用的前提是已经有一份A的`shared_ptr`（但是也不需要用这个类，因为我们是使用的lambda包装），如果是在A类中发起异步操作，则必须要用：
+          
+             ```c++
+             // 假设这个函数模拟一个异步任务执行器
+             void run_async(std::function<void()> task) {
+                 std::thread([t = std::move(task)]() {
+                     // ... 模拟工作
+                     t();
+                 }).detach();
+             }
+             
+             // 现在 A 需要自己发起异步任务
+             class A : public std::enable_shared_from_this<A> { // <-- 必须继承
+             public:
+                 void do_something_and_report_back() {
+                     cout << "A::do_something_and_report_back() called from thread " << std::this_thread::get_id() << endl;
+                     // 异步调用，这里无法从外部捕获 shared_ptr，因为我们就在对象内部
+                     run_async([self = shared_from_this()]() {
+                         self->on_complete();
+                     });
+                 }
+             
+                 void on_complete() {
+                     cout << "A::on_complete() called from thread " << std::this_thread::get_id() << endl;
+                     cout << "Value of a is: " << a << endl;
+                 }
+             
+                 int a = 2;
+             };
+             
+             int main() {
+                 {
+                     auto ptr = std::make_shared<A>();
+                     // 对象 A 自己发起了需要回调自身的异步操作
+                     ptr->do_something_and_report_back();
+                 } // ptr 离开作用域，引用计数-1，但 A 的实例不会被销毁
+             
+                 std::this_thread::sleep_for(1s); // 等待异步操作完成
+                 cout << "main function finished." << endl;
+                 return 0;
+             }
+             ```
+          
           2. 值传递构造`shared_ptr`的副本
+          
           3. `test()`函数中通过`shared_from_this()`获取对应智能指针
+          
           4. #4，#5：test是个异步函数，只能使用值传递，或者使用ref进行包装
   
   2. 使用普通函数指针：
@@ -5858,33 +5901,68 @@ public:
 
 用法与用途：
 
-**用于获取该对象的`shared_ptr<>`，防止同一个对象由不同的`shared_ptr<>`管理，多用于异步任务执行时保证该对象不被销毁**
+**当我们需要在成员函数中发起一次异步操作时，需要使用`shared_from_this()`获取当前对象的shared_ptr，延长生命周期**（见2，3）
 
 ```c++
-class test : public enable_shared_from_this<test> {
+// 管理器，负责注册和回调连接
+class ConnectionManager {
 public:
-    shared_ptr<test> get_shared() {
-        return shared_from_this();                  // _3
-        // return shared_ptr<test>{this};           _4
+    // 4. 模拟异步处理，在一段时间后调用回调函数
+    void process_connection(std::function<void()> callback) {
+        std::thread([cb = std::move(callback)]() {
+            // reading...
+            std::this_thread::sleep_for(1s);
+            cb(); // 调用回调
+        }).detach();
     }
-    void f() {
-        // do sth...
-        this_thread::sleep_for(1s);
-        cout << "access test " << a << endl;
-        // do sth...
-    }
-    int a = 2;
 };
 
-int main(){
-    {
-        shared_ptr<test> tst = make_shared<test>(); // 此时_Wptr已被初始化
-        // thread t{&test::f, tst->get()};           _1
-        thread t{&test::f, tst->get_shared()};      // _2
-        t.detach();
+// 连接类，继承自 enable_shared_from_this
+class Connection : public std::enable_shared_from_this<Connection> {
+public:
+    Connection(ConnectionManager& manager) : manager_(manager) {
+        std::cout << "Connection created.\n";
     }
-    cout << "thread end" << endl;
-    this_thread::sleep_for(2s);
+    // 5. callback()在异步线程执行完毕后，才会调用析构
+    ~Connection() {
+        std::cout << "Connection destroyed.\n";
+    }
+
+    // 异步操作入口
+    void start_read() {
+        // 2. 准备阶段：将lambda函数作为后续的异步回调函数
+        //     通过 shared_from_this() 获取自身的 shared_ptr
+        auto callback = [self = shared_from_this()]() {
+            self->on_read_complete();
+        };
+
+        // 3. 提交回调函数
+        manager_.process_connection(callback);
+    }
+
+private:
+    // 当数据读取完成时被调用的成员函数
+    void on_read_complete() {
+        std::cout << "on_read_complete() called, a: " << a << endl;
+    }
+
+    ConnectionManager& manager_;
+    int a = 111;
+};
+
+int main() {
+    ConnectionManager manager;// 假设这个manager是个全局的管理类
+    {
+        auto conn = std::make_shared<Connection>(manager);
+        // 1. 发起异步操作
+        conn->start_read();
+    }
+    // 2. 出了上面那个作用域后，conn被销毁
+
+    // 等待异步操作和回调
+    std::this_thread::sleep_for(2s);
+    std::cout << "--- Program finished ---\n";
+    return 0;
 }
 ```
 
