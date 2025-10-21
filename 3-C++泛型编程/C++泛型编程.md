@@ -366,7 +366,7 @@ int main() {
      }
      // 参数递归，common_type_t<Args...>表示求形参包中的公共类型，和之前的decltype差不多功能，但更正规。
      template<typename T, typename... Args, typename RT = common_type_t<T,Args...>>
-     RT sum(T num, Args... args){
+     RT m_sum(T num, Args... args){
      	RT res = num + m_sum(args...);
      	return res;
      }
@@ -383,7 +383,7 @@ int main() {
      
        ```c++
        template<typename T, typename... Args, typename RT = common_type_t<Args...>>
-       RT sum(T num, Args... args)
+       RT m_sum(T num, Args... args)
        {
            if (sizeof...(args) == 0)	// 最后一个参数传给了num
            {
@@ -398,7 +398,7 @@ int main() {
        当递归进行到`args...`只剩最后一个的时候，实例化模板结果如下：
      
        ```c++
-       int sum(int num)
+       int m_sum(int num)
        {
            if (0 == 0)
            {
@@ -435,7 +435,7 @@ int main() {
      }
      ```
 
-### 模板分文件
+### 。。。模板分文件
 
 #### include指令
 
