@@ -755,6 +755,8 @@ AMF0 的核心思想是在每个数据项前，放置一个 **1 字节的类型�
 
 ### 3.2 音视频数据封装
 
+**在此部分，我们需要重点配置两个东西：rtmp头，flv的tag头**
+
 RTMP 音视频消息 (ID 8/9) 的负载，其格式**完全等同于** FLV 文件格式中 **Audio/Video Tag** 的**数据体 (Tag Body)**。这是 librtmp 推流开发中，开发者**必须**手动构造的最核心、最复杂的部分，请阅读：
 
 [FLV封装格式—音视频基础知识 · FFmpeg原理](https://ffmpeg.xianwaizhiyin.net/base-knowledge/mux-flv.html)

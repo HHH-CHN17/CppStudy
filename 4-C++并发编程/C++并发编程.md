@@ -331,7 +331,7 @@ int main() {
 
 注意只有在抛出的异常被捕获时，thread_guard的析构函数才会被调用
 
-### 。。。decay类型退化
+### decay类型退化
 
 [std::decay - cppreference.com](https://zh.cppreference.com/w/cpp/types/decay)
 
