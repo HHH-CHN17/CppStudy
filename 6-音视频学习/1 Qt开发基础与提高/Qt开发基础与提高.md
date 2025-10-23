@@ -384,3 +384,16 @@ int main(int argc, char* argv[])
 [QWidget父子事件传递源码剖析_qt 一个widget触发mousemove事件同时触发另一个widget的mousemove事件-CSDN博客](https://blog.csdn.net/kupepoem/article/details/121883121)
 
 [QT父子窗口事件传递与事件过滤器（讲了一些原理，比较清楚） - findumars - 博客园](https://www.cnblogs.com/findumars/p/6152886.html)
+
+### moc生成时机
+
+
+
+### d_ptr
+
+### 反射
+
+### 元对象实现
+
+### 信号与槽实现
+

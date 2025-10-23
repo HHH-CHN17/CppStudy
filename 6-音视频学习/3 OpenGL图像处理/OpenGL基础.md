@@ -1469,3 +1469,6 @@ FragColor = vec4(result, 1.0);
 5. 三角条带绘制 https://www.cnblogs.com/mjk961/p/9547205.html
 6. 模板测试，透视与混合 https://learnopengl-cn.github.io/04%20Advanced%20OpenGL/02%20Stencil%20testing/
 7. OpenGL优化：面剔除；提前深度测试；不在摄像机范围内的片段不进行绘制；重复的物体，直接改变它原有的mvp矩阵
+
+### obj文件加载优化
+
