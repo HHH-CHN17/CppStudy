@@ -1470,5 +1470,133 @@ FragColor = vec4(result, 1.0);
 6. 模板测试，透视与混合 https://learnopengl-cn.github.io/04%20Advanced%20OpenGL/02%20Stencil%20testing/
 7. OpenGL优化：面剔除；提前深度测试；不在摄像机范围内的片段不进行绘制；重复的物体，直接改变它原有的mvp矩阵
 
-### obj文件加载优化
+### obj文件加载（CPU端）
 
+[Assimp - LearnOpenGL CN](https://learnopengl-cn.github.io/03 Model Loading/01 Assimp/)
+
+1. 将一个大模型，分成多个mesh，记录这些mesh的文件索引，只有当我们需要绘制/使用mesh时，我们才从文件中读取这个mesh
+
+2. 对于每一个mesh，由多个face（面）组成，我们可以使用哈希表记录顶点属性数据和其在EBO中的出现位置；这样当我们读到重复的顶点数据时，我们不需要重复记录这条属性数据，只需要记录它在EBO中出现的下标即可
+
+   原始逻辑：
+
+   ```c++
+   // 遍历 'f' 行中的每个顶点定义 (e.g., "v1/vt1/vn1")
+   for (int i = 1; i <= 3; ++i) {
+       // ... 解析索引 ...
+       
+       // 创建一个全新的、完整的VertexAttr结构体
+       vertices_.append(
+           VertexAttr{
+               pos[...],
+               norm[...],
+               uv[...]
+           }
+       );
+       // 并为这个新顶点创建一个新的索引
+       indices_.append(static_cast<GLuint>(indices_.size()));
+   }
+   ```
+
+   新逻辑：
+
+   ```c++
+   // C++ Pseudocode
+   std::unordered_map<std::string, GLuint> uniqueVertices;
+   vertices_.clear();
+   indices_.clear();
+   GLuint nextIndex = 0;
+   
+   // for each face 'f' in the file:
+   //   for each vertex "v/vt/vn" string in the face:
+   
+   std::string vertexIdentifier = "v/vt/vn"; // e.g., "1/1/1"
+   
+   // 检查这个顶点组合是否已经见过
+   if (uniqueVertices.find(vertexIdentifier) != uniqueVertices.end())
+   {
+       // 见过！直接复用它的索引
+       indices_.append(uniqueVertices[vertexIdentifier]);
+   }
+   else
+   {
+       // 没见过！这是一个新的唯一顶点
+       // 1. 创建这个VertexAttr对象
+       VertexAttr newVertex = { pos[...], norm[...], uv[...] };
+   
+       // 2. 将它添加到我们最终的顶点列表中
+       vertices_.append(newVertex);
+   
+       // 3. 将它的新索引记录到查找表中
+       uniqueVertices[vertexIdentifier] = nextIndex;
+   
+       // 4. 将这个新索引添加到索引列表中
+       indices_.append(nextIndex);
+   
+       // 5. 准备下一个新顶点的索引
+       nextIndex++;
+   }
+   ```
+
+### OpenGL优化（GPU端）
+
+1. VAO和VBO，EBO本身就是对 上传顶点属性数据 这一行为的一种优化
+
+2. 顶点着色器中使用转换函数，从而使用顶点坐标表示纹理坐标，这样我们上传顶点属性数据的时候可以不用传纹理坐标
+
+3. 复杂的代数运算不要放在shader中，像tbn矩阵的计算，通常在cpu端进行，shader中仅取去除位移分量的model的逆转置矩阵对tbn分量进行转换运算即可
+
+4. 使用mipmap
+
+5. **实例化渲染 (Instanced Rendering)**
+
+   [实例化 - LearnOpenGL CN](https://learnopengl-cn.github.io/04 Advanced OpenGL/10 Instancing/)
+
+   *   **问题**: 如果你需要渲染成千上万个**相同或相似**的物体（例如，草地里的每一根草、森林里的每一棵树、太空中每一颗陨石），为每一个物体都发起一次单独的`glDraw...`调用，会造成巨大的CPU开销，使GPU长时间处于等待状态。
+
+   *   **解决方案**: **实例化渲染**允许你用**一次绘制调用 (Single Draw Call)**，来渲染成千上万个物体。
+       *   **工作原理**:
+           1.  你仍然只上传**一个**模型的数据（VBO/EBO）。
+           2.  你额外创建一个VBO，用来存储**每个实例**独有的数据（例如，每个陨石的世界变换矩阵、颜色等）。
+           3.  通过`glVertexAttribDivisor`告诉OpenGL，这个额外的VBO中的数据，是**“每个实例更新一次”**，而不是“每个顶点更新一次”。
+           4.  调用`glDrawElementsInstanced()`或`glDrawArraysInstanced()`，告诉GPU：“用这套顶点数据，画N个实例，并为每个实例从实例数据VBO中取用对应的属性。”
+       *   **优势**: 将成千上万次的Draw Call合并为一次，极大地降低了CPU到GPU的通信开销，是渲染大量重复物体的**最佳实践**。
+
+6. **面剔除 (Face Culling)**
+
+   *   **问题**: 对于一个封闭的实体模型（例如一个立方体），在任何时候，我们最多只能看到它的三个面。但默认情况下，GPU会光栅化并处理所有六个面，包括那些**背对**摄像机的、无论如何也看不见的面。这是一个巨大的性能浪费。
+
+   *   **解决方案**: 开启**面剔除**功能，让GPU在光栅化阶段之前，就**提前丢弃**那些背向摄像机的图元。
+       *   **工作原理**:
+           1.  通过顶点的**环绕顺序 (Winding Order)**（顺时针或逆时针）来判断一个面的正面和背面。通常，逆时针为正面。
+           2.  启用面剔除：`glEnable(GL_CULL_FACE);`
+           3.  指定要剔除的面：`glCullFace(GL_BACK);` (剔除背面)
+           4.  GPU会在光栅化之前，计算图元在屏幕空间中的朝向。如果发现它是背向的，就会**直接丢弃**它，后续的光栅化和片段着色都不会发生。
+       *   **优势**: 对于封闭模型，可以立即使渲染的图元数量减少约一半，效果立竿见影，且几乎没有性能开销。
+
+7. **减少着色器切换 (Shader Swapping)**
+
+   *   **问题**: 切换当前激活的着色器程序 (`glUseProgram()`) 是一个相对耗时的操作。如果你在渲染循环中，为不同材质的物体频繁地切换着色器程序，会增加CPU和驱动的开销。
+
+   *   **解决方案**: **批处理 (Batching)** 和 **Uber Shaders**。
+       *   **按着色器/材质排序**: 在渲染之前，对所有要渲染的物体，按照它们的着色器程序或材质进行排序。先用Shader A画所有需要它的物体，再切换到Shader B画所有需要它的物体。
+       *   **Uber Shaders (超级着色器)**: 编写一个功能强大的“全能”着色器，它可以通过`uniform`变量或`#define`宏来开启或关闭不同的功能（例如，有的物体需要法线贴图，有的不需要）。这样，你可以用一个着色器程序来渲染多种不同类型的物体，避免了切换。
+       *   **纹理图集 (Texture Atlases)**: 将多个小纹理合并到一张大纹理上。这样，使用不同贴图但材质相似的物体就可以一起绘制，而无需重新绑定纹理。
+
+8. **视锥体剔除 (Frustum Culling)**
+
+   *   **问题**: 即使开启了硬件的**裁剪(Clipping)**，CPU仍然会将场景中**所有**物体的绘制命令都发送给GPU。如果一个物体完全位于视锥体之外，GPU虽然最终会裁剪掉它，但CPU发送指令和GPU进行顶点变换的开销已经发生了。
+
+   *   **解决方案**: 在**CPU端**进行一次粗略的**视锥体剔除**，从一开始就不要向GPU提交那些看不见的物体的绘制命令。
+       *   **工作原理**:
+           1.  在CPU端，获取当前摄像机的**视锥体**（由6个平面定义）。
+           2.  为场景中的每个（或每组）物体，计算一个简单的**包围体 (Bounding Volume)**，如**包围球 (Bounding Sphere)** 或**轴对齐包围盒 (AABB)**。
+           3.  在渲染每一帧之前，遍历所有物体，检查它的包围体是否与视锥体相交。
+           4.  **只**为那些与视锥体相交的物体，提交绘制调用。
+       *   **优势**: 对于大型场景，可以极大地减少发送到GPU的顶点数量和绘制调用的数量，显著提升性能。
+
+   **总结**:
+   这些优化策略的核心思想都是**“做更少、更聪明的工作”**：
+
+   *   **实例化**：用更少的命令，让GPU做更多重复的工作。
+   *   **剔除 (Culling)**：在CPU和GPU的不同阶段，尽早地把看不见的东西扔掉。
