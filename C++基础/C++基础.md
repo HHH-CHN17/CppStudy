@@ -3525,7 +3525,7 @@ int main()
 
 decltype推导的类型有时候会忽略一些冗余的符号，包括const、volatile、引用符号&。
 
-### 。。。指针的定义
+### 指针的定义
 
 - 一级指针：是一个指针变量，该指针指向的地址保存着一个普通变量；
 
@@ -3580,7 +3580,7 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
 >   int a = 1;
 >   int* p = &a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为sizeof(int)==4
->                                     
+>                                       
 >   int a[5];
 >   int* p = a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为a表示的是数组首个元素的地址，所以p指向的地址中存储的是int，然后sizeof(int)==4
@@ -4514,6 +4514,7 @@ auto x1 = [=](){return 1+1;}();	// lambda函数就地使用
   1. 对于常量成员函数`void operator()(int z)`而言，不能在函数体内改变class中任何成员变量，所以x不可以更改
   2. 对于常量成员函数而言，const修饰的是this，引用本身属于this，但**引用所指向的值不属于该对象**，所以y可更改
   3. z显然可以更改
+  4. 我们要把const成员变量和const成员函数都当作const成员，然后注意**const对象和非const对象都能调用const成员**
 
 - lambda的命名
 
