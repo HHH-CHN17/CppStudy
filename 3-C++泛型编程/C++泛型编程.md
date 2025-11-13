@@ -732,7 +732,7 @@ int main() {
 
 [很简单，看这个：变量模板](https://mq-b.github.io/Modern-Cpp-templates-tutorial/md/第一部分-基础知识/03变量模板#可变参数变量模板)
 
-### 类的静态成员模板
+### 。。。类的静态成员模板
 
 #### 变量的初始化规则
 
@@ -856,6 +856,31 @@ int main() {
        std::string* p_str = new std::string("hello");
    }
    ```
+
+##### 补充
+
+对于以下代码：
+
+```c++
+int main(){
+    char s[] = "abc";
+    const char *p3 = "123456";
+}
+```
+
+解释：
+
+1. "abc"和"123456"的这种**字符串字面量具有静态存储期**，位于静态存储区
+
+   [字符串字面量 - cppreference.cn - C++参考手册](https://cppreference.cn/w/cpp/language/string_literal)
+
+   [字符串文字的存储 |Microsoft 学习](https://learn.microsoft.com/en-us/cpp/c-language/storage-of-string-literals?view=msvc-170)
+
+2. s和p3具有**自动存储期**，位于栈区。其中
+
+   `s` 是在栈上创建了字面量的**副本**；
+
+   `p3` 是在栈上存储了指向静态区字面量的**地址**。
 
 #### inline说明符
 
