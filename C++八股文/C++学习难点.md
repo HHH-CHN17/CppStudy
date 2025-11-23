@@ -899,24 +899,39 @@ https://www.bilibili.com/video/BV1Jp4y167R9?p=29&vd_source=62fe42e71e56edada3fb7
 ![image-20240224142425723](./assets/image-20240224142425723.png)
 
 ```c++
-int partition(int* arr, int left, int right) {
-    int pivot = arr[left];
-    int slow = left, quick = left;
-    // for循环需要扫描arr中的每一个元素
-    for (quick; quick <= right; quick++) {
-        if (arr[quick] < pivot)// 显然，arr[quick]可能大于，等于 或者 小于 pivot，我们只对小于的情况进行分析
-            swap(arr[slow++], arr[quick]);//经过这个swap，我们可以保证：slow左边的值一定小于pivot，slow->quick区间的值一定大于等于pivot
+class Solution {
+public:
+    int partion(vector<int>& nums, int start, int end) {
+        int pivot = nums[(start + end) / 2 ];
+        int left = start - 1, right = end + 1;
+        while (left < right ) {
+            do {
+                left++;
+            }while (nums[left] < pivot);
+            
+            do {
+                right--;
+            }while (nums[right] > pivot);
+            
+            if (left < right)
+                swap(nums[left], nums[right]);
+        }
+        return right;
     }
-    return slow;
-}
 
-void  quicksort(int* arr, int left, int right) {
-    if (left >= right)
-        return;
-    int pivotindex = partition(arr, left, right);
-    quicksort(arr, left, pivotindex - 1);
-    quicksort(arr, pivotindex + 1, right);
-}
+    void quick_sort(vector<int>& nums, int start, int end) {
+        if (start >= end)
+            return;
+        int pivot_idx = partion(nums, start, end);
+        quick_sort(nums, start, pivot_idx);
+        quick_sort(nums, pivot_idx + 1, end);
+    }
+
+    vector<int> sortArray(vector<int>& nums) {
+        quick_sort(nums, 0, nums.size() - 1);
+        return nums;
+    }
+};
 ```
 
 **快速排序改进**
