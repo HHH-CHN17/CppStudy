@@ -1559,7 +1559,11 @@ FragColor = vec4(result, 1.0);
 
 4. 使用mipmap
 
-5. **实例化渲染 (Instanced Rendering)**
+5. 能放在顶点着色器运算的代数运算就不要放在片段着色器运算（前提是两者没差别，如果是像冯氏光照模型，就不能这么做）
+
+6. 在GPU中进行YUV420P->RGB的转换，具体请参考：[使用 OpenGL 实现 RGB 到 YUV 的图像格式转换-腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1828544)
+
+7. **实例化渲染 (Instanced Rendering)**
 
    [实例化 - LearnOpenGL CN](https://learnopengl-cn.github.io/04 Advanced OpenGL/10 Instancing/)
 
@@ -1573,7 +1577,7 @@ FragColor = vec4(result, 1.0);
            4.  调用`glDrawElementsInstanced()`或`glDrawArraysInstanced()`，告诉GPU：“用这套顶点数据，画N个实例，并为每个实例从实例数据VBO中取用对应的属性。”
        *   **优势**: 将成千上万次的Draw Call合并为一次，极大地降低了CPU到GPU的通信开销，是渲染大量重复物体的**最佳实践**。
 
-6. **面剔除 (Face Culling)**
+8. **面剔除 (Face Culling)**
 
    *   **问题**: 对于一个封闭的实体模型（例如一个立方体），在任何时候，我们最多只能看到它的三个面。但默认情况下，GPU会光栅化并处理所有六个面，包括那些**背对**摄像机的、无论如何也看不见的面。这是一个巨大的性能浪费。
 
@@ -1585,7 +1589,7 @@ FragColor = vec4(result, 1.0);
            4.  GPU会在光栅化之前，计算图元在屏幕空间中的朝向。如果发现它是背向的，就会**直接丢弃**它，后续的光栅化和片段着色都不会发生。
        *   **优势**: 对于封闭模型，可以立即使渲染的图元数量减少约一半，效果立竿见影，且几乎没有性能开销。
 
-7. **减少着色器切换 (Shader Swapping)**
+9. **减少着色器切换 (Shader Swapping)**
 
    *   **问题**: 切换当前激活的着色器程序 (`glUseProgram()`) 是一个相对耗时的操作。如果你在渲染循环中，为不同材质的物体频繁地切换着色器程序，会增加CPU和驱动的开销。
 
@@ -1594,7 +1598,7 @@ FragColor = vec4(result, 1.0);
        *   **Uber Shaders (超级着色器)**: 编写一个功能强大的“全能”着色器，它可以通过`uniform`变量或`#define`宏来开启或关闭不同的功能（例如，有的物体需要法线贴图，有的不需要）。这样，你可以用一个着色器程序来渲染多种不同类型的物体，避免了切换。
        *   **纹理图集 (Texture Atlases)**: 将多个小纹理合并到一张大纹理上。这样，使用不同贴图但材质相似的物体就可以一起绘制，而无需重新绑定纹理。
 
-8. **视锥体剔除 (Frustum Culling)**
+10. **视锥体剔除 (Frustum Culling)**
 
    *   **问题**: 即使开启了硬件的**裁剪(Clipping)**，CPU仍然会将场景中**所有**物体的绘制命令都发送给GPU。如果一个物体完全位于视锥体之外，GPU虽然最终会裁剪掉它，但CPU发送指令和GPU进行顶点变换的开销已经发生了。
 
