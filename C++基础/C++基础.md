@@ -3525,7 +3525,7 @@ int main()
 
 decltype推导的类型有时候会忽略一些冗余的符号，包括const、volatile、引用符号&。
 
-### 。。。指针的定义
+### 指针的定义
 
 - 一级指针：是一个指针变量，该指针指向的地址保存着一个普通变量；
 
@@ -3580,7 +3580,7 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
 >   int a = 1;
 >   int* p = &a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为sizeof(int)==4
->                                           
+>                                             
 >   int a[5];
 >   int* p = a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为a表示的是数组首个元素的地址，所以p指向的地址中存储的是int，然后sizeof(int)==4
@@ -4880,10 +4880,12 @@ void dispatchMessage(int msgid) {
    ```c++
    bool _Incref_nz() noexcept {
        int old_val = use_;
-       int new_val = ++old_val;
-       while (!use_.compare_exchange_weak(old_val, new_val)) {
-           new_val = ++old_val;
+       while (old_val != 0) {
+           if (use_.compare_exchange_weak(old_val, old_val + 1)) {
+               return true; // 成功增加
+           }
        }
+       return false; // 如果 old_val 为 0，说明对象正在析构或已析构，不能增加引用
    }
    ```
 
