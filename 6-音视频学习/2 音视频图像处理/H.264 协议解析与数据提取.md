@@ -73,7 +73,9 @@ H.264 码流在逻辑上由 **参数集 (Parameter Sets)** 和 **VCL 数据流**
 
 一个编码后的视频序列，其解码依赖于一个清晰的引用链：片 (Slice) 引用图像参数集 (PPS)，图像参数集引用序列参数集 (SPS)。
 
-一个视频帧中可能既包含P片，又包含B片，只要包含了B片，我们就叫它B帧，P,I帧同理
+**一个视频帧中可能既包含P片，又包含B片，只要包含了B片，我们就叫它B帧，P,I帧同理**
+
+**其次，h.264在进行编码时，参考的是【先前已被编码并重建的参考帧】，这是为了保证与解码器同步**
 
 ![image-20250910161132811](./assets/image-20250910161132811.png)
 
@@ -157,7 +159,7 @@ RBSP 是原始的编码数据。为了防止 RBSP 内部出现与 Annex B 格式
 
 *   **机制**: 编码器在生成 RBSP 数据时，会检测是否存在 `0x000000`, `0x000001`, `0x000002`, `0x000003`。如果存在，就在最后两个字节之间插入一个值为 `0x03` 的防竞争字节。
     *   0x000001 -> 0x0000**03**01
-*   **解码**: 解码器在解析 NALU 时，如果遇到 `0x000003`，就会将`03`丢弃，从而恢复出原始的 RBSP 数据。
+*   **解码**: 解码器在解析 NALU 中的 RBSP 时，如果遇到 `0x000003`，就会将`03`丢弃，从而恢复出原始的 RBSP 数据。
 *   **注意**：对于H.264码流而言，一个图像的起始片，起始码通常为`0x00 00 00 01`，图像中后续的片，起始码通常为`0x00 00 01`
 
 【**笔记**】
@@ -991,3 +993,143 @@ void parse_avcc_stream(const std::vector<uint8_t>& stream_data) {
 }
 ```
 *   **注意**: AVCC 格式中的 NALU 数据**不包含起始码**，也**没有防竞争字节**。其 RBSP 就是纯净的编码数据，可以直接进行句法解析。
+
+## 5.3 解析 Slice Header 获取帧类型
+
+在 5.1 和 5.2 节中，我们已经能够提取出独立的 NALU，并通过 `nal_unit_type` 识别出 SPS、PPS 和 IDR 帧。但是，对于 `nal_unit_type = 1` 的非 IDR 图像，我们还无法区分它是 P 帧还是 B 帧。
+
+要解决这个问题，我们需要进一步解析 RBSP 中的 **Slice Header**，读取其中的 `slice_type` 字段。由于 H.264 的句法元素大多使用 **指数哥伦布编码 (ue(v))**，我们需要先实现一个简单的解码器。
+
+---
+
+**1. 基础工具：指数哥伦布解码器 (Golomb Decoder)**
+
+指数哥伦布编码是一种变长编码，非常适合表示概率分布不均匀的整数。其解码算法在标准文档中有明确规定。
+
+【**笔记：Golomb 解码器实现**】
+
+```cpp
+#include <vector>
+#include <cmath>
+#include <stdexcept>
+
+class GolombDecoder {
+public:
+    // 初始化：传入去除了防竞争字节的 RBSP 数据
+    GolombDecoder(const std::vector<uint8_t>& rbsp_data) 
+        : data_(rbsp_data), bit_idx_(0), byte_idx_(0) {}
+
+    // 核心功能：读取无符号指数哥伦布编码 (ue(v))
+    uint32_t read_ue() {
+        int leading_zeros = 0;
+        // 1. 计算前导零的个数
+        while (byte_idx_ < data_.size() && !read_bit()) {
+            leading_zeros++;
+        }
+        
+        if (byte_idx_ >= data_.size()) return 0; // 越界保护
+
+        // 2. 读取后续的 leading_zeros 位
+        uint32_t suffix = read_bits(leading_zeros);
+        
+        // 3. 计算值: 2^M - 1 + suffix
+        return (1 << leading_zeros) - 1 + suffix;
+    }
+
+    // 辅助功能：读取 1 个比特
+    bool read_bit() {
+        if (byte_idx_ >= data_.size()) return false;
+        bool bit = (data_[byte_idx_] >> (7 - bit_idx_)) & 1;
+        bit_idx_++;
+        if (bit_idx_ == 8) {
+            bit_idx_ = 0;
+            byte_idx_++;
+        }
+        return bit;
+    }
+
+    // 辅助功能：读取 n 个比特
+    uint32_t read_bits(int n) {
+        uint32_t val = 0;
+        for (int i = 0; i < n; i++) {
+            val = (val << 1) | read_bit();
+        }
+        return val;
+    }
+
+private:
+    const std::vector<uint8_t>& data_;
+    size_t byte_idx_; // 当前字节索引
+    int bit_idx_;     // 当前比特索引 (0-7)
+};
+```
+
+---
+
+**2. 解析 Slice Header**
+
+有了 `GolombDecoder`，我们就可以解析 Slice Header 了。根据 H.264 句法表，Slice Header 的前几个字段通常是：
+1.  `first_mb_in_slice` (ue(v))
+2.  `slice_type` (ue(v))
+3.  ...
+
+【**笔记：获取帧类型的完整函数**】
+
+```cpp
+// 定义帧类型枚举
+enum H264FrameType {
+    FRAME_I,
+    FRAME_P,
+    FRAME_B,
+    FRAME_UNKNOWN
+};
+
+H264FrameType get_slice_type(const std::vector<uint8_t>& nalu_data) {
+    if (nalu_data.empty()) return FRAME_UNKNOWN;
+
+    uint8_t nal_unit_type = nalu_data[0] & 0x1F;
+
+    // 1. 如果是 IDR (type=5)，肯定是 I 帧
+    if (nal_unit_type == 5) return FRAME_I;
+
+    // 2. 如果是非 IDR (type=1)，需要解析 Slice Header
+    if (nal_unit_type == 1) {
+        // 跳过 NAL Header (1 字节)
+        std::vector<uint8_t> rbsp(nalu_data.begin() + 1, nalu_data.end());
+        
+        // 【重要】实际工程中，这里必须先做 EBSP -> RBSP 的去防竞争字节处理
+        // 也就是把 0x00 0x00 0x03 变成 0x00 0x00
+        // remove_emulation_prevention_bytes(rbsp); 
+
+        GolombDecoder decoder(rbsp);
+
+        // a. 读取 first_mb_in_slice (ue(v)) - 我们不关心它的值，但必须读过去
+        decoder.read_ue(); 
+
+        // b. 读取 slice_type (ue(v)) - 这就是我们要的！
+        uint32_t slice_type_val = decoder.read_ue();
+
+        // 映射 slice_type 值到帧类型 (参考 4.2 节笔记)
+        // 0, 5 -> P Slice
+        // 1, 6 -> B Slice
+        // 2, 7 -> I Slice
+        if (slice_type_val == 0 || slice_type_val == 5) return FRAME_P;
+        if (slice_type_val == 1 || slice_type_val == 6) return FRAME_B;
+        if (slice_type_val == 2 || slice_type_val == 7) return FRAME_I;
+    }
+
+    return FRAME_UNKNOWN;
+}
+```
+
+---
+
+**3. 总结**
+
+通过结合 NAL Header (`nal_unit_type`) 和 Slice Header (`slice_type`)，我们终于能够精确地识别出每一帧的类型：
+
+*   **IDR 帧**: `nal_unit_type == 5`
+*   **I 帧 (非 IDR)**: `nal_unit_type == 1` && (`slice_type == 2 || 7`)
+*   **P 帧**: `nal_unit_type == 1` && (`slice_type == 0 || 5`)
+*   **B 帧**: `nal_unit_type == 1` && (`slice_type == 1 || 6`)
+
