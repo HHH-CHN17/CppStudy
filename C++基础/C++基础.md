@@ -118,7 +118,7 @@ void SomeFunc()
    { 
       // code made exception safe 
    } 
-   catch (const std::exception& exp) // catch bad_alloc, bad_cast, etc    { 
+   catch (const std::exception& exp){ // catch bad_alloc, bad_cast, etc     
       cout << "Exception encountered: " << exp.what() << endl;    } 
 }
 ```
@@ -1704,7 +1704,7 @@ X make_x(){
 }
 int main(){
 #ifdef 0
-    //对于该段代码，一共发生了三次拷贝构造
+    //对于该段代码，一共发生了一次拷贝构造，两次移动构造
     //第一次是函数中创建x1，第二次是通过x1创建返回值临时对象，第三次是通过返回值临时对象创建x2
     X x2(make_x());
     x2.show();					//此处是通过make_x()的返回值又构建了一个x2，调用了x2的拷贝构造函数
@@ -3525,7 +3525,7 @@ int main()
 
 decltype推导的类型有时候会忽略一些冗余的符号，包括const、volatile、引用符号&。
 
-### 指针的定义
+### 。。。指针的定义
 
 - 一级指针：是一个指针变量，该指针指向的地址保存着一个普通变量；
 
@@ -3580,7 +3580,7 @@ decltype推导的类型有时候会忽略一些冗余的符号，包括const、v
 >   int a = 1;
 >   int* p = &a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为sizeof(int)==4
->                                             
+>                                                 
 >   int a[5];
 >   int* p = a;
 >   auto p1 = p + 1; // p1比p大了四个字节，因为a表示的是数组首个元素的地址，所以p指向的地址中存储的是int，然后sizeof(int)==4
