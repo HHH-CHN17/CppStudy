@@ -582,7 +582,7 @@ int main() {
 - 问题代码
 
   ```c++
-  void f(const std::string&){}
+  void f(const std::string& s't'r){}
   void test(){
       char buffer[1024]{};
       //todo.. code
@@ -593,14 +593,18 @@ int main() {
 
   解释：
 
-  - buffer 是一个数组对象，作为 `std::thread` 构造参数的传递的时候会[*`decay-copy`*](https://zh.cppreference.com/w/cpp/standard_library/decay-copy) （确保实参在按值传递时会退化） **隐式转换为了指向这个数组的指针**。
+  - buffer 是一个具有**自动存储期**的数组对象，作为 `std::thread` 构造参数的传递的时候会[*`decay-copy`*](https://zh.cppreference.com/w/cpp/standard_library/decay-copy) （确保实参在按值传递时会退化） **隐式转换为了指向这个数组的指针`char*`**。
+
+    显然这个指针指向的内存具有自动存储期，生命周期和test函数绑定，test函数结束后指针指向内存的生命周期结束，内存被释放。
+
+    所以如果test函数结束后才运行线程函数，相当于是非法内存访问
 
   - 本例中线程创建，执行流程
 
     `std::thread` 的构造函数中调用了创建线程的函数（windows 下可能为 [`_beginthreadex`](https://learn.microsoft.com/zh-cn/cpp/c-runtime-library/reference/beginthread-beginthreadex?view=msvc-170)），它将我们传入的参数，f、buffer ，传递给这个函数，在新线程中执行函数 `f`。也就是说，调用和执行 `f(buffer)` 并不是说要在 `std::thread` 的构造函数中，而是在创建的新线程中，具体什么时候执行，取决于操作系统的调度，所以完全有可能函数 `test` 先执行完，而新线程此时还没有进行 `f(buffer)` 的调用，转换为`std::string`，那么 buffer 指针就**悬空**了，会导致问题。
-
+  
   解决办法：
-
+  
   - 将 `detach()` 替换为 `join()`。
   - `thread`构造时显式将 `buffer` 转换为 `std::string`。
 
